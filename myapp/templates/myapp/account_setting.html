@@ -7,13 +7,13 @@
 
 {% block content %}
 
-    <div class="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative w-full">
-        <div id="content-container" class="max-w-3xl w-full bg-white shadow-2xl rounded-xl p-8 transition-all duration-300 hover:shadow-3xl">
+    <div class="min-h-screen bg-[#0e1217] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative w-full">
+        <div id="content-container" class="max-w-3xl w-full bg-[#1a1f2b] border border-[#2d323b] shadow-2xl rounded-xl p-8 transition-all duration-300 hover:shadow-3xl">
             <!-- Header -->
-            <div class='flex'>
-                <p class="text-3xl font-extrabold text-gray-900 mb-6 text-center md:text-left">Account Settings</p>
+            <div class='flex mb-6 gap-x-2'>
+                <p class="text-3xl font-bold text-white text-center md:text-left">Account Settings</p>
                 <a href="/"
-                class="ml-auto transition border-black hover:bg-white border hover:border-black hover:text-black right-3 mt-1 bg-black text-white flex items-center gap-x-2 px-3 rounded"><i
+                class="ml-auto transition border-[#2d323b] hover:bg-[#262b34] border hover:border-green-600 hover:text-green-400 right-3 mt-1 bg-[#262b34] text-gray-300 flex items-center gap-x-2 px-3 rounded"><i
                     class="fa-solid fa-arrow-left"></i><span class="hidden md:block text-sm">Back</span></a>
             </div>
     
@@ -21,12 +21,12 @@
             <div class="flex flex-col sm:flex-row items-center gap-6 mb-8">
                 <div class="relative">
                     <img src="{{userinfo_obj.profile_image.url}}?v={{userinfo_obj.updated_at.timestamp}}" alt="Profile Picture" 
-                         class="w-24 h-24 rounded-lg object-cover shadow-md transition-transform duration-300 hover:scale-105">
-                    <span class="absolute bottom-0 right-0 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                         class="w-24 h-24 rounded-lg object-cover shadow-md ring-1 ring-[#2d323b] transition-transform duration-300 hover:scale-105">
+                    <span class="absolute bottom-0 right-0 w-6 h-6 bg-green-500 rounded-full border-2 border-[#1a1f2b] flex items-center justify-center">
                         <i class="fas fa-camera text-white text-xs"></i> <!-- FontAwesome camera icon -->
                     </span>
                 </div>
-                <a href='{% url "user_profile" user.username %}' class="px-6 py-2 bg-green-600 text-white rounded-lg font-medium shadow-md hover:bg-green-700 transition-all duration-200 transform hover:scale-105">
+                <a href='{% url "user_profile" user.username %}' class="px-6 py-2 bg-gradient-to-br from-green-600 to-green-900 hover:from-green-500 hover:to-green-800 text-white rounded-lg font-medium shadow-md transition-all duration-200 transform hover:scale-105">
                     {{user.username}}
                 </a>
 
@@ -35,31 +35,31 @@
             <!-- Account Details Section -->
             <div class="space-y-6">
                 <!-- Email -->
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-200 pb-4 transition-all duration-200 rounded-md px-2">
-                    <p class="text-gray-800 font-semibold text-lg">Email</p>
-                    <p class="text-gray-600 flex-1 text-center sm:text-right">{{user.email}}</p>
-                    <a href="{% url 'account_email' %}" class="text-green-600 font-medium hover:text-green-700 hover:underline transition-colors duration-200">Manage Email</a>
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[#2d323b] pb-4 transition-all duration-200 rounded-md px-2">
+                    <p class="text-gray-300 font-semibold text-lg">Email</p>
+                    <p class="text-gray-400 flex-1 text-center sm:text-right">{{user.email}}</p>
+                    <a href="{% url 'account_email' %}" class="text-green-400 font-medium hover:text-green-300 hover:underline transition-colors duration-200">Manage Email</a>
                 </div>
     
                 <!-- Password -->
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-200 pb-4 transition-all duration-200 rounded-md px-2">
-                    <p class="text-gray-800 font-semibold text-lg">Password</p>
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[#2d323b] pb-4 transition-all duration-200 rounded-md px-2">
+                    <p class="text-gray-300 font-semibold text-lg">Password</p>
                     {% if user.has_usable_password %}
-                    <p class="text-gray-600 flex-1 text-center sm:text-right">••••••••</p>
-                    <a href="{% url 'account_change_password' %}" class="text-green-600 font-medium hover:text-green-700 hover:underline transition-colors duration-200">
+                    <p class="text-gray-400 flex-1 text-center sm:text-right">••••••••</p>
+                    <a href="{% url 'account_change_password' %}" class="text-green-400 font-medium hover:text-green-300 hover:underline transition-colors duration-200">
                         {% trans "Change Password" %}
                     </a>
                     {% else %}
-                    <a href="{% url 'account_set_password' %}" class="text-green-600 font-medium hover:text-green-700 hover:underline transition-colors duration-200">
+                    <a href="{% url 'account_set_password' %}" class="text-green-400 font-medium hover:text-green-300 hover:underline transition-colors duration-200">
                         {% trans "Set Password" %}
                     </a>
                     {% endif %}
                 </div>
 
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-200 pb-4 transition-all duration-200 rounded-md px-2">
-                    <p class="text-gray-800 font-semibold text-lg">Social Accounts</p>
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[#2d323b] pb-4 transition-all duration-200 rounded-md px-2">
+                    <p class="text-gray-300 font-semibold text-lg">Social Accounts</p>
                 
-                    <a href="/accounts/3rdparty" class="text-green-600 font-medium hover:text-green-700 hover:underline transition-colors duration-200">
+                    <a href="/accounts/3rdparty" class="text-green-400 font-medium hover:text-green-300 hover:underline transition-colors duration-200">
                         Manage Connections
                     </a>
                 </div>
@@ -70,24 +70,24 @@
             <div class="mt-10 flex flex-row items-center gap-4 justify-between">
                 <form method="POST" action="{% url 'account_logout' %}" class="flex items-center">
                     {% csrf_token %}
-                    <button type="submit" class="px-4 py-3 bg-black text-white rounded-lg font-semibold shadow-md hover:bg-gray-900 transition-all duration-200 transform hover:scale-105 text-base">Sign Out</button>
+                    <button type="submit" class="px-4 py-3 bg-[#262b34] border border-[#2d323b] text-white rounded-lg font-semibold shadow-md hover:bg-[#2a2f3c] hover:border-gray-600 transition-all duration-200 transform hover:scale-105 text-sm">Sign Out</button>
                 </form>
-                <button id="delete-btn" class="px-4 py-3 bg-red-600 text-white rounded-lg font-semibold shadow-md hover:bg-red-700 transition-all duration-200 transform hover:scale-105 text-base">
+                <button id="delete-btn" class="px-4 py-3 bg-gradient-to-br from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white rounded-lg font-semibold shadow-md transition-all duration-200 transform hover:scale-105 text-sm">
                     Delete Account
                 </button>
             </div>
         </div>
     
         <!-- ✅ Confirmation Modal -->
-        <div id="modal" class="absolute inset-0 bg-white bg-opacity-50 items-center justify-center hidden">
-            <div class="bg-white rounded-lg p-6 shadow-2xl w-96">
-                <p class="text-lg font-semibold text-gray-800">Confirm Deletion</p>
-                <p class="text-gray-600 mt-2">Are you sure you want to delete your account? This action is irreversible.</p>
+        <div id="modal" class="absolute inset-0 bg-black bg-opacity-50 items-center justify-center hidden">
+            <div class="bg-[#1a1f2b] border border-[#2d323b] rounded-lg p-6 shadow-2xl w-96">
+                <p class="text-lg font-semibold text-white">Confirm Deletion</p>
+                <p class="text-gray-300 mt-2">Are you sure you want to delete your account? This action is irreversible.</p>
                 <div class="flex justify-end gap-3 mt-4">
-                    <button id="cancel-btn" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition">Cancel</button>
+                    <button id="cancel-btn" class="px-4 py-2 bg-[#262b34] border border-[#2d323b] text-gray-300 rounded-md hover:bg-[#2a2f3c] hover:text-white transition">Cancel</button>
                     <form method="POST" action="{% url 'delete_acount' user.info.uuid %}">
                         {% csrf_token %}
-                        <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">Delete</button>
+                        <button type="submit" class="px-4 py-2 bg-gradient-to-br from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white rounded-md transition">Delete</button>
                     </form>
                 </div>
             </div>

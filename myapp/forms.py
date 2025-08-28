@@ -35,6 +35,9 @@ class CustomSignupForm(SignupForm):
     def clean_username(self):
         username = self.cleaned_data.get("username")
         if username:
+            if len(username) > 24:
+                raise forms.ValidationError("Username cannot exceed 24 characters.")
+            
             is_valid = (
                 username[0].isalpha() and
                 bool(re.match(r'^[a-zA-Z0-9_.]+$', username)) and
@@ -128,7 +131,7 @@ class OrganizationForm(forms.ModelForm):
 
         widgets = {
             'logo': forms.ClearableFileInput(attrs={
-                'class': 'border border-gray-700 p-2 rounded-lg w-full file:bg-black file:text-white file:border-none file:px-4 file:py-2 file:rounded-lg cursor-pointer'
+                'class': 'border border-gray-700 p-2 rounded-lg w-full file:bg-black file:text-[#ffffff] file:border-none file:px-4 file:py-2 file:rounded-lg cursor-pointer'
             },),
             "name": forms.TextInput(attrs={"placeholder": "Enter organization name"}),
             "description": forms.Textarea(attrs={"placeholder": "Enter a brief description about your organization"}),
@@ -149,48 +152,48 @@ class EditOrgForm(forms.ModelForm):
         model = organization
         exclude = ['user', 'followers']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Organization Name'}),
-            'description': forms.Textarea(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Description...', 'rows': 8}),
-            'website': forms.URLInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'www.samplesite.com'}),
-            'industry': forms.Select(attrs={'class': 'outline-none border border-black px-2 py-1 bg-white'}),
-            'location': forms.TextInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Location'}),
-            'organization_type': forms.Select(attrs={'class': 'outline-none border border-black px-2 py-1 bg-white'}),
-            'founded_date': forms.DateInput(attrs={'type': 'date', 'class': 'outline-none border border-black px-2 py-1'}),
-            'contact_email': forms.EmailInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Email'}),
-            'phone': forms.TextInput(attrs={'type': 'tel', 'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Phone'}),
-            'github': forms.URLInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Github URL'}),
-            'linkedin': forms.URLInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'LinkedIn URL'}),
-            'instagram': forms.URLInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Instagram URL'}),
-            'twitter': forms.URLInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Twitter URL'}),
-            'discord': forms.URLInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Discord URL'}),
+            'name': forms.TextInput(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-1', 'placeholder': 'Organization Name'}),
+            'description': forms.Textarea(attrs={'class': 'outline-none border border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'Description...', 'rows': 8}),
+            'website': forms.URLInput(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-1', 'placeholder': 'www.samplesite.com'}),
+            'industry': forms.Select(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-1'}),
+            'location': forms.TextInput(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-1', 'placeholder': 'Location'}),
+            'organization_type': forms.Select(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-1'}),
+            'founded_date': forms.DateInput(attrs={'type': 'date', 'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-1'}),
+            'contact_email': forms.EmailInput(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-1', 'placeholder': 'Email'}),
+            'phone': forms.TextInput(attrs={'type': 'tel', 'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-1', 'placeholder': 'Phone'}),
+            'github': forms.URLInput(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-1', 'placeholder': 'Github URL'}),
+            'linkedin': forms.URLInput(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-1', 'placeholder': 'LinkedIn URL'}),
+            'instagram': forms.URLInput(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-1', 'placeholder': 'Instagram URL'}),
+            'twitter': forms.URLInput(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-1', 'placeholder': 'Twitter URL'}),
+            'discord': forms.URLInput(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-1', 'placeholder': 'Discord URL'}),
             'logo': forms.ClearableFileInput(attrs={'id': 'imgInput','class': 'hidden'}),
         }
 
 
 class EditProfileForm(forms.ModelForm):
-    first_name = forms.CharField(max_length=50, required=True, widget=forms.TextInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'First'}))
-    last_name = forms.CharField(max_length=50, required=False, widget=forms.TextInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Last'}))
-    username = forms.CharField(max_length = 50, required=True, widget=forms.TextInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Username'}))
+    first_name = forms.CharField(max_length=50, required=True, widget=forms.TextInput(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-1', 'placeholder': 'First'}))
+    last_name = forms.CharField(max_length=50, required=False, widget=forms.TextInput(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-1', 'placeholder': 'Last'}))
+    username = forms.CharField(max_length = 24, required=True, widget=forms.TextInput(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-1', 'placeholder': 'Username'}))
     
     class Meta:
         model = userinfo
         exclude = ['user', 'years_of_experience', 'skills', 'domains', 'profile_views', 'updated_at', 'needs_profile_completion', 'last_seen']
         
         widgets = {
-            'bio': forms.Textarea(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Bio...', 'rows': 7,'cols': 40,}),
-            'dob': forms.DateInput(attrs={'type': 'date', 'class': 'outline-none border border-black px-2 py-1', 'id':"dob"}),
-            'location': forms.TextInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Location'}),
-            'contact_email': forms.EmailInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Email'}),
-            'phone': forms.TextInput(attrs={'type': 'tel','class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Phone'}),
-            'gender': forms.Select(attrs={'class': 'outline-none border border-black px-2 py-1 bg-white', }),
-            'availability': forms.Select(attrs={'class': 'outline-none border border-black px-2 py-1 bg-white', }),
-            'status': forms.Select(attrs={'class': 'outline-none border border-black px-2 py-1 bg-white', }),
-            'website': forms.URLInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'www.samplesite.in'}),
-            'linkedin': forms.URLInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Linkedin URL'}),
-            'github': forms.URLInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Github URL'}),
-            'stackoverflow': forms.URLInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Stackoverflow URL'}),
+            'bio': forms.Textarea(attrs={'class': 'outline-none border border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'Bio...', 'rows': 7,'cols': 40,}),
+            'dob': forms.DateInput(attrs={'type': 'date', 'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'id':"dob"}),
+            'location': forms.TextInput(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'Location'}),
+            'contact_email': forms.EmailInput(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'Email'}),
+            'phone': forms.TextInput(attrs={'type': 'tel','class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'Phone'}),
+            'gender': forms.Select(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', }),
+            'availability': forms.Select(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', }),
+            'status': forms.Select(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', }),
+            'website': forms.URLInput(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'www.samplesite.in'}),
+            'linkedin': forms.URLInput(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'Linkedin URL'}),
+            'github': forms.URLInput(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'Github URL'}),
+            'stackoverflow': forms.URLInput(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'Stackoverflow URL'}),
             'profile_image': forms.ClearableFileInput(attrs={'id': 'imgInput','class': 'hidden'}),
-            'cringe_badge': forms.Select(attrs={'class': 'outline-none border border-black px-2 py-1 bg-white'})
+            'cringe_badge': forms.Select(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2'})
         }
         labels = {
             'bio': 'Short Bio',
@@ -254,20 +257,20 @@ class EditProfileForm(forms.ModelForm):
 class EditEducationForm(forms.ModelForm):
     start_date = forms.CharField(
         required=False,
-        widget=forms.TextInput(attrs={'type': 'month', 'class': 'outline-none border border-black px-2 py-1'})
+        widget=forms.TextInput(attrs={'type': 'month', 'class': 'outline-none border border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2'})
     )
     end_date = forms.CharField(
         required=False,
-        widget=forms.TextInput(attrs={'type': 'month', 'class': 'outline-none border border-black px-2 py-1'})
+        widget=forms.TextInput(attrs={'type': 'month', 'class': 'outline-none border border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2'})
     )
     class Meta:
         model = education
         exclude = ['user']
         
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Eg: Harvard University'}),
-            'field_of_study': forms.TextInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Eg: Computer Science'}),
-            'degree': forms.TextInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Eg: B.Tech'}),
+            'name': forms.TextInput(attrs={'class': 'outline-none border border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'Eg: Harvard University'}),
+            'field_of_study': forms.TextInput(attrs={'class': 'outline-none border border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'Eg: Computer Science'}),
+            'degree': forms.TextInput(attrs={'class': 'outline-none border border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'Eg: B.Tech'}),
             # 'start_date': forms.DateInput(attrs={'type': 'month', 'class': 'outline-none border border-black px-2 py-1'}),
             # 'end_date': forms.DateInput(attrs={'type': 'month', 'class': 'outline-none border border-black px-2 py-1', 'id':"endDate"}),
         }                                                               
@@ -322,7 +325,7 @@ class UserProjectForm(forms.ModelForm):
             'repo_link': forms.TextInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'https://github.com'}),
             'start_date': forms.DateInput(attrs={'type': 'date', 'class': 'outline-none border border-black px-2 py-1'}),
             'end_date': forms.DateInput(attrs={'type': 'date', 'class': 'outline-none border border-black px-2 py-1'}),
-            'media': forms.ClearableFileInput(attrs={'class': 'border border-gray-700 p-2 rounded-lg w-full file:bg-black file:text-white file:border-none file:px-4 file:py-2 file:rounded-lg cursor-pointer'})
+            'media': forms.ClearableFileInput(attrs={'class': 'border border-gray-700 p-2 rounded-lg w-full file:bg-black file:text-[#ffffff] file:border-none file:px-4 file:py-2 file:rounded-lg cursor-pointer'})
         }
         
 class EditCurrentPositionForm(forms.ModelForm):
@@ -375,11 +378,11 @@ class EditCurrentPositionForm(forms.ModelForm):
 class EditExperienceForm(forms.ModelForm):
     start_date = forms.CharField(
         required=False,
-        widget=forms.TextInput(attrs={'type': 'month', 'class': 'outline-none border border-black px-2 py-1'})
+        widget=forms.TextInput(attrs={'type': 'month', 'class': 'outline-none border border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2'})
     )
     end_date = forms.CharField(
         required=False,
-        widget=forms.TextInput(attrs={'type': 'month', 'class': 'outline-none border border-black px-2 py-1'})
+        widget=forms.TextInput(attrs={'type': 'month', 'class': 'outline-none border border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2'})
     )
     class Meta:
         model = experience
@@ -389,9 +392,9 @@ class EditExperienceForm(forms.ModelForm):
             'till_now': 'Currently Working',
         }
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Company Name'}),
-            'role': forms.TextInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Role'}),
-            'description': forms.Textarea(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Briefly Describe your Role.'}),
+            'name': forms.TextInput(attrs={'class': 'outline-none border border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'Company Name'}),
+            'role': forms.TextInput(attrs={'class': 'outline-none border border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'Role'}),
+            'description': forms.Textarea(attrs={'class': 'outline-none border border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'Briefly Describe your Role.', 'rows': 7}),
             'till_now': forms.CheckboxInput(attrs={'id': 'exp_presentDate'})
         }
         error_messages = {
@@ -436,9 +439,18 @@ class EditSkillForm(forms.ModelForm):
         
 class PostForm(forms.ModelForm):
     content = forms.CharField(widget=TinyMCE(attrs={
-                'class': 'text-gray-700 w-full h-36 mx-auto',
+                'class': 'text-white w-full h-36 mx-auto bg-[#1a1f26] border border-[#2d323b]',
                 'placeholder': 'Content....',
-                'id': 'eventDescription'
+                'id': 'eventDescription',
+                'data-mce-theme': 'dark'
+            }, mce_attrs={
+                'skin': 'oxide-dark',
+                'content_css': 'dark',
+                'toolbar_mode': 'sliding',
+                'menubar': False,
+                'plugins': 'advlist autolink lists link image charmap print preview anchor searchreplace visualblocks code fullscreen insertdatetime media table paste code help wordcount',
+                'toolbar': 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
+                'content_style': 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px; background-color: #1a1f26; color: #ffffff; }'
             }))
     class Meta:
         model = post
@@ -450,7 +462,7 @@ class PostForm(forms.ModelForm):
                 'name': 'post',
             }),
             # 'content': forms.Textarea(attrs={
-            #     'class': 'text-gray-700 w-full h-36 outline-none resize-none',
+            #     'class': 'text-white w-full h-36 outline-none resize-none bg-[#1a1f2b] border border-[#2d323b]',
             #     'placeholder': 'Content....'
             # }),
         }

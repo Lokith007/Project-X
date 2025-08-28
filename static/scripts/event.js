@@ -177,11 +177,16 @@ $(document).ready(function () {
                         $('#total_comments').text(response.comment_count);
                         if (response.comment_count === 0) {
                             $('#commentBox').html(`
-                            <div class="text-xl bg-black text-white p-2 rounded-lg text-center mb-4"> <span class="text-white" id='total_comments'>${response.comment_count}</span> Comments</div>
-                            <div id="commentList" class="flex flex-col gap-y-2 px-3 mt-2">
-                                <div class="flex flex-col gap-y-8 px-3" id='noCommentSVG'>
-                                    <img src="${commentSvgUrl}" class="h-1/2 w-1/2 mx-auto">
-                                    <p class="text-center text-lg mt-2 text-gray-600 pb-5">No comments Yet...</p>
+                            <div class="text-xl bg-gradient-to-br from-green-600 to-green-900 text-white p-4 rounded-t-xl text-center mb-2"> <span class="text-white" id='total_comments'>${response.comment_count}</span> Comments</div>
+                            <div id="commentList" class="flex flex-col gap-y-4 px-4 mt-2">
+                                <div class='flex flex-col gap-y-8 px-3' id='noCommentSVG'>
+                                    <div class="flex flex-col items-center justify-center py-8">
+                                        <div class="w-20 h-20 mb-4 bg-gradient-to-br from-green-500/20 to-green-700/20 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-comments text-2xl text-green-400"></i>
+                                        </div>
+                                        <p class='text-center text-lg text-gray-300 pb-5'>No comments yet...</p>
+                                        <div class="w-12 h-0.5 bg-gradient-to-r from-green-500 to-green-700 rounded-full"></div>
+                                    </div>
                                 </div>
                             </div>
                         `);

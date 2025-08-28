@@ -1,0 +1,553 @@
+{% extends "myapp/base.html" %} 
+{% load static %}
+{% load custom_filter %}
+
+{% block title %}DevMate{% endblock %} 
+{% block style %}<link rel="stylesheet" href="{% static 'styles/user_profile_page.css' %}"/>
+<link rel="stylesheet" href="{% static 'styles/banner.css' %}"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+{% endblock %} 
+{% block script %}
+<script src="{% static 'scripts/jquery-3.7.1.min.js' %}"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.css"
+        integrity="sha512-087vysR/jM0N5cp13Vlp+ZF9wx6tKbvJLwPO8Iit6J7R+n7uIMMjg37dEgexOshDmDITHYY5useeSmfD1MYiQA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"
+    integrity="sha512-JyCZjCOZoyeQZSd5+YEAcFgz2fowJ1F1hyJOXgtKu4llIa0KneLcidn5bwfutiehUTiOuK87A986BZJMko0eWQ=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+{% endblock %} 
+{% block body_class %}text-[15px] h-full bg-[#0e1217] text-[#a8b3cf] overflow-x-hidden{% endblock %}
+
+{% block content %} 
+
+    <!-- navbar -->
+    {% include "includes/navbar.html" %}
+
+    <!-- main section -->
+    <div id = 'entireSection' class="lg:w-full lg:flex-row lg:flex lg:gap-x-1 md:flex md:flex-col md:justify-start md:items-start justify-between">
+        <!-- sidenav -->
+        {% include "includes/sidenav.html" %}
+
+        
+        <aside class="order-1 lg:order-3 border-l border-[#2d323b] border-opacity-80 w-full lg:w-[36%] p-6 space-y-6 mt-16">
+            <!-- Profile Card -->
+            <div class="relative bg-[#1a1f2b] mt-2">
+                <!-- Banner -->
+                <div class="h-28 sm:h-32 md:h-36 w-full">
+                    <img src="https://media.daily.dev/image/upload/s--xDkKz00z--/f_auto/v1707920136/covers/cover_28849d86070e4c099c877ab6837c61f0" alt="Banner" class="object-cover w-full h-full rounded-t-xl"/>
+                </div>
+
+                <!-- Profile Image -->
+                <div class="absolute bottom-0 left-4 transform translate-y-1/2">
+                    <div class="relative">
+                        <img src="{{userinfo_obj.profile_image.url}}?v={{userinfo_obj.updated_at.timestamp}}" id="originalProfile" alt="Profile" class="w-22 h-22 md:w-28 md:h-28 rounded-xl border-4 border-[#1a1f2b] object-cover shadow-md cursor-pointer" onclick="viewProfile()"/>
+                        {% if userinfo_obj.last_seen|is_online %}
+                            <span class="absolute bottom-2 right-2 block w-4 h-4 bg-green-500 border-2 border-white rounded-full" title='Active'></span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-8 flex flex-col gap-y-2">
+
+                <!-- Name -->
+                <h2 class="text-2xl font-bold text-white tracking-tight">
+                    {{userinfo_obj.user.first_name}} {{userinfo_obj.user.last_name}}
+                </h2>
+
+                <!-- Username + Join Date -->
+                <p class="text-sm text-gray-300">
+                    <span class="text-[#00a63e] font-mono">@{{ userinfo_obj.user.username }}</span>
+                    <span class="text-xs text-gray-400 ml-1">• Joined {{ userinfo_obj.user.date_joined|date:"M, Y" }}</span>
+                    <!-- Location (if available) -->
+                    {% if userinfo_obj.location %}
+                    <div class="text-xs text-gray-400 flex items-center gap-1">
+                        <i class="fa-solid fa-location-dot text-blue-800"></i>
+                        <span>{{userinfo_obj.location}}</span>
+                    </div>
+                    {% endif %}
+                </p>
+
+                <!-- Follow/Edit Button -->
+                <div class='mt-1'>
+                    {% if user == userinfo_obj.user %}
+                        <button class="px-4 py-2 bg-[#6feb85] text-black font-semibold text-sm rounded-md hover:scale-[1.03] transition" onclick="openEdit()">
+                            Edit Profile
+                        </button>
+                    {% else %}
+                        {% if user.info|is_following:userinfo_obj %}
+                            <a href="javascript:void(0);" class="follow-btn px-4 py-2 bg-[#262b34] text-white font-mono text-sm rounded-md hover:scale-[1.03] transition" data-user-id="{{ userinfo_obj.id }}">
+                                <span class="btn-text">&lt;Unfollow/&gt;</span>
+                            </a>
+                        {% else %}
+                            <a href="javascript:void(0);" class="follow-btn px-4 py-2 bg-[#6feb85] text-black font-mono text-sm rounded-md hover:scale-[1.03] transition" data-user-id="{{ userinfo_obj.id }}">
+                                <span class="btn-text">&lt;Follow/&gt;</span>
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+
+                 <!-- Followers / Following Stats -->
+                <div class="flex gap-6 text-sm text-white font-medium border-t mt-2 border-[#2a2f3b] pt-4">
+                    <a href= "{% url 'follow_list' userinfo_obj.user.username %}" class="flex items-center gap-1 cursor-pointer">
+                        <span class="text-base font-bold text-[#f4f4f5] followers-count">{{userinfo_obj.get_followers.count}}</span>
+                        <span class="text-gray-400 hover:underline">Followers</span>
+                    </a>
+                    <a href = "{% url 'follow_list' userinfo_obj.user.username%}?list=following" class="flex items-center gap-1  cursor-pointer">
+                        <span class="text-base font-bold text-[#f4f4f5] following-count">{{ userinfo_obj.get_following.count }}</span>
+                        <span class="text-gray-400 hover:underline">Following</span>
+                    </a>
+                </div>
+
+                <!-- Cringe Badge -->
+                {% if userinfo_obj.cringe_badge.emoji %}
+                <div class="text-sm px-3 py-1 inline-block w-fit rounded-lg bg-[#262b34] text-white shadow-sm border border-[#333]">
+                    <span class="mr-2">{{userinfo_obj.cringe_badge.emoji}}</span>{{userinfo_obj.cringe_badge.name}}
+                </div>
+                {% endif %}
+
+                <!-- Status -->
+                <div class="text-sm mt-1 text-gray-400 italic">
+                    {{userinfo_obj.status.name}}
+                </div>
+
+                {% if link_available %}
+                    <p class="text-lg mt-1 font-bold text-gray-200 tracking-wide">Links</p>
+                    
+                    <div class="flex flex-wrap gap-3 -mt-2">
+                        {% for link, url in social_links.items %}
+                        {% if url %}
+                        <a href="{{ url }}" target="_blank" class="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#a8b3cf] text-[#a8b3cf] font-semibold bg-[#262b34] hover:shadow-md transition-all duration-200 group">
+                            {% if link == "website" %}
+                            <i class="fa fa-globe text-xl group-hover:text-green-700 transition-all"></i>
+                            {% else %}
+                            <i class="text-xl fa-brands fa-{{ link }} group-hover:text-green-700 transition-all"></i>
+                            {% endif %}
+                        </a>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                {% endif %}
+
+            </div>
+
+            <section class="w-full bg-[#0f131a] border border-[#2d323b] rounded-2xl p-4 shadow-xl">
+                <!-- Section Header -->
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="w-1.5 h-5 bg-gradient-to-b from-green-400 to-emerald-500 rounded"></div>
+                    <p class="text-white text-lg uppercase tracking-wide font-thin">Active Squads</p>
+                </div>
+
+                <!-- Squad List Container -->
+                <div class="flex md:space-y-3 space-y-0 md:overflow-visible overflow-x-auto md:flex-col flex-row gap-4 md:gap-0">
+                    
+                    <!-- Squad Card (Repeat for each squad) -->
+                    <div class="flex-shrink-0 md:w-full min-w-[260px] bg-[#161b23] border border-[#2d323b] rounded-xl p-4 shadow hover:shadow-lg transition duration-300">
+                    <div class="flex items-center gap-3">
+                        <img src="https://api.dicebear.com/7.x/identicon/svg?seed=squad1" alt="Squad Avatar" class="w-10 h-10 rounded-full border border-gray-700" />
+                        <div>
+                        <p class="text-white font-medium text-sm">Frontend Avengers
+                            &nbsp<i class="fa-solid fa-lock text-xs text-gray-400" title="Private Squad"></i>
+                        </p>
+                        <p class="text-gray-400 text-xs">@frontenddevs • 14-Developers</p>
+                        </div>
+                    </div>
+                    </div>
+
+                    <!-- Squad Card -->
+                    <div class="flex-shrink-0 md:w-full min-w-[260px] bg-[#161b23] border border-[#2d323b] rounded-xl p-4 shadow hover:shadow-lg transition duration-300">
+                    <div class="flex items-center gap-3">
+                        <img src="https://api.dicebear.com/7.x/identicon/svg?seed=squad2" alt="Squad Avatar" class="w-10 h-10 rounded-full border border-gray-700" />
+                        <div>
+                        <p class="text-white font-medium text-sm">Debug Ninjas</p>
+                        <p class="text-gray-400 text-xs">@debugninjas • 7-Developers</p>
+                        </div>
+                    </div>
+                    </div>
+
+                    <!-- Squad Card -->
+                    <div class="flex-shrink-0 md:w-full min-w-[260px] bg-[#161b23] border border-[#2d323b] rounded-xl p-4 shadow hover:shadow-lg transition duration-300">
+                    <div class="flex items-center gap-3">
+                        <img src="https://api.dicebear.com/7.x/identicon/svg?seed=squad3" alt="Squad Avatar" class="w-10 h-10 rounded-full border border-gray-700" />
+                        <div>
+                        <p class="text-white font-medium text-sm">API Storm</p>
+                        <p class="text-gray-400 text-xs">@apistorm • 22-Developers</p>
+                        </div>
+                    </div>
+                    </div>
+
+                </div>
+            </section>
+
+        </aside>
+
+
+        <!-- Center Main Content -->
+        <main class="order-2 lg:order-2 w-full lg:w-[52%] mb-12 px-4 lg:px-6 py-6 space-y-6 overflow-y-auto">
+            <!-- Tab Switcher -->
+            <div class="flex flex-wrap gap-4 w-full justify-start lg:mt-20 -mt-1 sm:justify-center">
+            
+                <!-- Active Tab Button -->
+                <a href="?section=overview" 
+                    class="flex items-center gap-2 px-4 py-2.5 rounded-xl {% if section == '' or section == 'overview' or section == none %}text-white bg-gradient-to-br from-green-600 to-green-900{% else %} text-gray-400 bg-[#1a1f29] border border-[#2d323b] hover:text-white hover:border-indigo-400{% endif %} shadow-md transition-all duration-200">
+                    <i class="fa-solid fa-eye text-sm"></i>
+                    <span class="text-sm font-semibold">Overview</span>
+                </a>
+
+                <!-- Inactive Tab Button -->
+                <a href="?section=posts" 
+                    class="flex items-center gap-2 px-4 py-2.5 {% if section == 'posts' %}text-white bg-gradient-to-br from-green-600 to-green-900{% else %} text-gray-400 bg-[#1a1f29] border border-[#2d323b] hover:text-white hover:border-indigo-400{% endif %} rounded-xl  transition-all duration-200">
+                    <i class="fa-solid fa-file-lines text-sm"></i>
+                    <span class="text-sm font-medium">Posts</span>
+                </a>
+
+                <!-- Inactive Tab Button -->
+                <a href="?section=info" 
+                    class="flex items-center gap-2 px-4 py-2.5 rounded-xl {% if section == 'info' %}text-white bg-gradient-to-br from-green-600 to-green-900{% else %} text-gray-400 bg-[#1a1f29] border border-[#2d323b] hover:text-white hover:border-indigo-400{% endif %} transition-all duration-200">
+                    <i class="fa-solid fa-circle-info text-sm"></i>
+                    <span class="text-sm font-medium">Info</span>
+                </a>
+
+            </div>
+
+        
+            
+            {% if section == "" or section == "overview" or section == none %}
+                <!-- Developer Bio / ReadMe Section -->
+                <section class="border border-[#2d323b] rounded-2xl p-6 shadow-lg">
+                    <h2 class="text-2xl -mt-1 font-thin text-white flex items-center gap-2">
+                        🧠 ReadMe
+                        <span class="text-sm font-normal text-gray-400 hidden sm:inline">(Bio)</span>
+                    </h2>
+                    
+                    {% if userinfo_obj.bio %}
+                        <p class="text-sm text-gray-300 leading-relaxed tracking-wide whitespace-pre-line">
+                        {{ userinfo_obj.bio }}
+                        </p>
+                    {% else %}
+                        <p class="italic text-gray-500">This developer hasn’t written a bio yet.</p>
+                    {% endif %}
+                </section>
+
+                <!-- Log Streak and heat map-->
+                <section class="w-full mb-6 bg-gradient-to-br from-[#0e1217] to-[#1a1f29] border border-[#2d323b] rounded-xl p-4 shadow-md">
+                    <!-- Header -->
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-fire text-orange-500 text-2xl"></i>
+                        <p class="text-white text-lg font-thin uppercase tracking-wider">Logging Streak</p>
+                        </div>
+                    </div>
+
+                    <!-- Streak Stats (Row layout always) -->
+                    <div class="flex flex-row gap-3">
+                        
+                        <!-- Longest Streak Card -->
+                        <div class="flex items-center justify-between bg-[#161b22] border border-[#2d323b] rounded-lg px-3 py-2 w-full hover:border-green-600 transition">
+                        <div>
+                            <p class="text-white text-xl font-bold">{{max_streak_count}}</p>
+                            <p class="text-xs text-gray-400">Longest streak</p>
+                        </div>
+                        <i class="fa-solid fa-fire-flame-curved text-[#00a63e] text-lg"></i>
+                        </div>
+
+                        <!-- Active Streak Card -->
+                        <div class="flex items-center justify-between bg-[#161b22] border border-[#2d323b] rounded-lg px-3 py-2 w-full hover:border-orange-500 transition">
+                        <div>
+                            <p class="text-white text-xl font-bold">{{streak_count}}</p>
+                            <p class="text-xs text-gray-400">Current streak</p>
+                        </div>
+                        <i class="fa-solid fa-bolt text-orange-400 text-lg"></i>
+                        </div>
+                    </div>
+
+                    {% comment %} heat map {% endcomment %}
+                    <div class="bg-[#0d1117] mt-4 rounded-xl shadow-lg w-full relative pb-4">
+
+                        <!-- Sticky Header -->
+                        <div class="sticky top-0 z-30 bg-[#0d1117] rounded-xl px-4 py-3 border-b border-[#161b22] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-md mt-1">
+
+                            <!-- Left Section -->
+                            <div class="flex items-center gap-3 text-white text-xs font-mono tracking-tight">
+                                <span class="text-green-500 font-semibold ">{{ log_year_count }}</span> 
+                                <span class="opacity-70">Logs in</span> 
+                                <span class="text-green-400">{{ year }}</span>
+                            </div>
+
+                            <!-- Right Section -->
+                            <div class="flex flex-wrap items-center text-xs gap-4 text-gray-400">
+
+                                <div class="whitespace-nowrap text-gray-500">
+                                    Active Days: 
+                                    <span class="text-white font-bold">{{ log_map|length }}</span>
+                                </div>
+
+                                <div class="whitespace-nowrap text-gray-500">
+                                    Max Streak: 
+                                    <span class="text-white font-bold">{{ max_streak_count }}</span>
+                                </div>
+
+                                {% if years_available %}
+                                <div class="flex items-center gap-1 whitespace-nowrap">
+                                        <span class="hidden sm:inline">Year:</span>
+                                        <select onchange="location.href='?year=' + this.value"
+                                                class="bg-[#161b22] text-white px-1 py-1 rounded border border-[#30363d] hover:border-green-400 focus:ring-green-500 focus:outline-none transition">
+                                            {% for y in years_available %}
+                                                <option value="{{ y.year }}" {% if y.year == year %}selected{% endif %}>
+                                                    {{ y.year }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div> 
+                                {% endif %}
+                                    
+
+                            </div>
+                        </div>
+
+                        <!-- Tooltip -->
+                        <div id="heatmap-tooltip"
+                            class="fixed bg-[#161b22] text-white text-xs px-3 py-1 rounded shadow-lg pointer-events-none hidden"
+                            style="white-space:nowrap; z-index:50; border:1px solid #2a2f35;">
+                        </div>
+
+                        <!-- Scrollable Heatmap -->
+                        <div id="heatmap-container" class="overflow-x-auto px-4 py-4 mr-4">
+
+                            <div class="flex gap-4 min-w-[900px] mr-2">
+
+                                {% for month_name, weeks in contribution_months %}
+                                    <div class="flex flex-col items-center">
+
+                                        <!-- Month Label -->
+                                        <div class="text-[12px] text-gray-500 font-medium mb-2">{{ month_name }}</div>
+
+                                        <!-- Weeks of this Month -->
+                                        <div class="flex gap-[4px] ">  <!-- Added more right margin for breathing -->
+                                            {% for week in weeks %}
+                                                <div class="flex flex-col gap-[4px]">
+                                                    {% for day in week %}
+                                                        <div class="w-3 h-3 rounded-sm transition duration-200 ease-out cursor-pointer"
+                                                            data-tooltip="{{ day.count }} log{{ day.count|pluralize }} on {{ day.date }}"
+                                                            style="
+                                                                background-color: 
+                                                                    {% if day.count > 0 %}
+                                                                        {% if day.count <= 2 %} #016620
+                                                                        {% elif day.count <= 5 %} #109932
+                                                                        {% elif day.count <= 10 %} #7fe18b 
+                                                                        {% else %} #6ee7b7
+                                                                        {% endif %}
+                                                                    {% else %}
+                                                                        #161b22
+                                                                    {% endif %}
+                                                            "
+                                                            onmouseover="showTooltip(event)"
+                                                            onmousemove="moveTooltip(event)"
+                                                            onmouseout="hideTooltip()">
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+
+                <section class="w-full bg-gradient-to-br from-[#0e1217] to-[#1a1f29] border border-[#2d323b] rounded-2xl p-6 shadow-xl">
+                    <!-- Section Header -->
+                    <div class="flex items-center gap-2 mb-6">
+                        <div class="w-1.5 h-6 bg-gradient-to-b from-indigo-500 to-purple-700 rounded"></div>
+                        <p class="text-white text-xl font-thin tracking-wide uppercase">Performance</p>
+                    </div>
+
+                    <!-- Grid Layout -->
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-4">
+
+                        <!-- Current Streak -->
+                        <div class="bg-[#13171d] border border-[#2d323b] rounded-lg p-4 hover:shadow-lg hover:border-orange-400 transition duration-200">
+                            <p class="text-gray-400 text-xs mb-1 flex items-center gap-1">
+                                <i class="fa-solid fa-fire text-[#a8b3cf] text-xs"></i> Current Streak
+                            </p>
+                            <p class="text-white text-xl font-medium">{{ streak_count }} <span class="text-sm text-gray-500">days</span></p>
+                        </div>
+
+                        <!-- Total Logs -->
+                        <div class="bg-[#13171d] border border-[#2d323b] rounded-lg p-4 hover:shadow-lg hover:border-blue-500 transition duration-200">
+                            <p class="text-gray-400 text-xs mb-1 flex items-center gap-1">
+                                <i class="fa-regular fa-file-lines text-[#a8b3cf] text-xs"></i> Logs Created
+                            </p>
+                            <p class="text-white text-xl font-medium">{{ total_logs }}</p>
+                        </div>
+
+                        <!-- Last Log -->
+                        <div class="bg-[#13171d] border border-[#2d323b] rounded-lg p-4 hover:shadow-lg hover:border-gray-500 transition duration-200">
+                            <p class="text-gray-400 text-xs mb-1 flex items-center gap-1">
+                                <i class="fa-regular fa-clock text-[#a8b3cf] text-xs"></i> Last Log
+                            </p>
+                            <p class="text-white text-base font-medium">{{ last_log_date|date:"M j, Y"|default:"-" }}</p>
+                        </div>
+                        <!-- Avg Mood Score -->
+                        <div class="bg-[#13171d] border border-[#2d323b] rounded-lg p-4 hover:shadow-lg hover:border-yellow-400 transition duration-200">
+                            <p class="text-gray-400 text-xs mb-1 flex items-center gap-1">
+                                <i class="fa-solid fa-heart-pulse text-[#a8b3cf] text-xs"></i> Avg Mood Score
+                            </p>
+                            <p class="text-white text-xl font-medium">{{ avg_latency }}<span class="text-sm text-gray-500">ms</span></p>
+                        </div>
+
+                        <!-- Top Mood -->
+                        <div class="bg-[#13171d] border border-[#2d323b] rounded-lg p-4 hover:shadow-lg hover:border-pink-400 transition duration-200">
+                            <p class="text-gray-400 text-xs mb-1 flex items-center gap-1">
+                                <i class="fa-solid fa-face-smile text-[#a8b3cf] text-xs"></i> Top Mood
+                            </p>
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-{{ top_color }}-400"></span>
+                                <span class="text-{{ top_color }}-400 text-sm font-medium mt-1">{{ top_color }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Clone Count -->
+                        <div class="bg-[#13171d] border border-[#2d323b] rounded-lg p-4 hover:shadow-lg hover:border-pink-600 transition duration-200">
+                            <p class="text-gray-400 text-xs mb-1 flex items-center gap-1">
+                                <i class="fa-solid fa-code-branch text-[#a8b3cf] text-xs"></i> Clone Count
+                            </p>
+                            <p class="text-white text-xl font-medium">{{ clone_impact }}</p>
+                        </div>
+
+                    </div>
+                    
+                </section>
+
+
+                <section class="w-full border border-gray-800 rounded-2xl px-2 lg:px-4 py-6  transition-all duration-300 ">
+                    <!-- Section Header -->
+                    <div class="flex justify-between items-center mb-4 -mt-2">
+                        <div class="flex items-center gap-2">
+                            <div class="bg-cyan-950/30 p-2 rounded-xl shadow-inner">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6a4 4 0 018 0v6M5 10h14" />
+                                </svg>
+                            </div>
+                            <p class="text-white text-lg lg:text-xl font-thin tracking-wide uppercase">Latest Logs</p>
+                        </div>
+                        <a href="{% url 'personal_logbook' userinfo_obj.user.username %}" class="text-xs lg:text-sm text-emerald-400 hover:text-emerald-300 hover:underline transition-all duration-200">
+                            View Logbook <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                        </a>
+                    </div>
+
+                    <!-- Logs Container -->
+                    {% if mindlogs %}
+                        <div id="log-container" class="flex flex-col gap-4">
+                            {% include 'mindlogs/partials/personal_log_cards.html' with mindlogs=mindlogs %}
+                        </div>
+
+                        <!-- View More Button -->
+                        <div class="mt-6 flex justify-center text-xs">
+                            <a href='{% url "personal_logbook" userinfo_obj.user.username %}' class="px-4 py-2.5 bg-[#262b34] text-white font-medium rounded-xl shadow-lg hover:scale-105 hover:shadow-xl transition-transform duration-300">
+                               <i class="fa fa-spinner" aria-hidden="true"></i> &nbsp;More Logs
+                            </a>
+                        </div>
+                    {% else %}
+                        <!-- Empty State -->
+                        <div class="w-full py-10 -mt-6 flex flex-col items-center justify-center text-center text-gray-400">
+                            <i class="fa-solid fa-notes-medical text-4xl mb-4 text-gray-600"></i>
+                            <p class="text-lg font-medium">This developer hasn’t posted any logs yet.</p>
+                            <p class="text-sm text-gray-500 mt-1">Showcase your grind, journey, and off-work moments — not just progress, but the real developer life.</p>
+                        </div>
+                    {% endif %}
+                </section>
+
+            {% endif %}
+
+            {% comment %} post section {% endcomment %}
+            {% include "myapp/post-section.html" %}
+
+            {% comment %} info section {% endcomment %}
+            {% include "myapp/user-info-section.html" %}
+
+
+        </main>
+
+
+    </div>
+
+    <!-- zooming profile section -->
+    <div id="zoomProfile" class="fixed hidden items-center justify-center  top-0 bottom-0  w-full">
+        <div class="relative">
+            <img src="{{userinfo_obj.profile_image.url}}?v={{userinfo_obj.updated_at.timestamp}}" alt=""
+                class="w-52 h-52 md:w-80 md:h-80 object-cover rounded-3xl border-4 border-[#00000070]">
+            <button
+                class="absolute -right-3 -top-3 md:top-0 md:right-0 rounded-full w-8 h-8 bg-gray-400" onclick="closeProfile()"><img src="{% static 'assets/close.svg' %}" alt=""></button>
+        </div>
+    </div>
+
+    {% include "includes/create-post.html" %}
+
+    {% if user == userinfo_obj.user %}
+    {% include "includes/edit-profile.html" %}
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#mySelect').select2({
+                placeholder: "Select skills you know",
+                allowClear: true,
+                width: '100%',
+            });
+        });
+    </script>
+    <script src="{% static 'scripts/profile.js' %}"></script>
+    <script src="{% static 'scripts/mindlogs.js' %}"></script>
+
+
+    {% endif %}
+
+    {% comment %} flags {% endcomment %}
+    {% if flag.open_editprofile_flag %}
+    <script>
+        // When the page loads, open the experience form
+        document.addEventListener("DOMContentLoaded", function() {
+        openEdit();
+        });
+    </script>
+    {% endif %}
+
+    
+    {% if flag.open_exp_flag %}
+    <script>
+        // When the page loads, open the experience form
+        document.addEventListener("DOMContentLoaded", function() {
+        openEditExp();
+        });
+    </script>
+    {% endif %}
+
+    {% if flag.open_edu_flag %}
+    <script>
+        document.addEventListener("DOMContentLoaded", function(){
+            openEditEducation();
+        });
+    </script>
+    {% endif %}
+
+    {% if flag.open_project_flag %}
+    <script>
+        document.addEventListener("DOMContentLoaded", function(){
+            openEditProject();
+        });
+    </script>
+    {% endif %}
+
+    <script>
+        // Project type dropdown
+        function toggleProjectDropdown() {
+        document.getElementById("dropdown-project-menu").classList.toggle("hidden");
+    }
+    </script>
+
+{% endblock %}

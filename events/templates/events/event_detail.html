@@ -4,7 +4,7 @@
 
 {% block title %}DevMate{% endblock %} 
 {% block style %}<link rel="stylesheet" href="{% static 'styles/user_profile_page.css' %}"/>{% endblock %} 
-{% block body_class %}text-[15px] h-full bg-[#f4f2ee] overflow-x-hidden{% endblock %}
+{% block body_class %}text-[15px] h-full bg-[#0e1217] text-[#a8b3cf] overflow-x-hidden{% endblock %}
 
 {% block content %}
 
@@ -17,34 +17,35 @@
 
     <div id = 'entireSection' class="mt-20 w-full pb-20 flex flex-col gap-y-5">
 
-        <a href="{% url 'explore_events' %}" class="w-fit transition border-black hover:bg-white border hover:border-black hover:text-black right-3  mt-1 bg-black text-white flex items-center gap-x-2 px-3 py-1 rounded ml-6"><i
-                            class="fa-solid fa-arrow-left"></i> <span class="hidden md:block">Explore More</span></a>
+        <a href="{% url 'explore_events' %}" class="w-fit transition bg-gradient-to-br from-green-600 to-green-900 hover:from-green-500 hover:to-green-800 border border-green-600 hover:border-green-500 text-white right-3 mt-1 flex items-center gap-x-2 px-4 py-2 rounded-lg shadow-lg hover:shadow-xl"><i class="fa-solid fa-arrow-left"></i> <span class="hidden md:block">Explore More</span></a>
         <div class="flex flex-col gap-y-10">
             <!-- add events section here -->
 
             <div class="flex flex-col md:mx-10 mx-4 lg:flex-row gap-y-5 gap-x-5 min-[1300px]:mx-32 items-start">
                 <div class="lg:w-[70%]">
-                    <div class="flex gap-x-5 bg-white p-6 rounded-xl shadow-md border border-gray-100">
-                        <div class="w-2 bg-black -ml-2"></div>
+                    <div class="flex gap-x-5 bg-[#1a1f2b] border border-[#2d323b] p-6 rounded-xl shadow-xl">
+                        <div class="w-2 bg-gradient-to-b from-green-600 to-green-900 -ml-2 rounded-full"></div>
                         <div class="flex flex-col gap-y-3">
                             {% if event_obj.banner %}
                             <div>
-                                <img src="{{event_obj.banner.url}}" alt="">
+                                <img src="{{event_obj.banner.url}}" alt="" class="rounded-lg border border-[#2d323b]">
                             </div>
                                                                            
                             {% endif %}
                             <div class="flex flex-col gap-y-5">
                                 <div class="w-full flex items-center justify-between gap-x-4">
                                     <div class="flex gap-x-3 items-center">
-                                        <img src="{% static 'assets/org_event.svg' %}" alt="" class="w-8 h-8">
-                                        <p class="text-sm lg:text-xl font-semibold underline underline-offset-4 text-gray-900">
+                                        <div class="p-2 bg-gradient-to-br from-green-600/20 to-green-800/20 rounded-lg">
+                                            <img src="{% static 'assets/org_event.svg' %}" alt="" class="w-6 h-6 filter brightness-0 invert">
+                                        </div>
+                                        <p class="text-sm lg:text-xl font-semibold underline underline-offset-4 text-white">
                                             {{event_obj.title}}
                                         </p>
                                     </div>
                                     <div class="flex items-center gap-x-4 ml-auto">
                                         {% if event_obj.organization in user.organization.all %}
                                             <a href="{% url 'event_form_edit' event_obj.organization.id event_obj.id %}" 
-                                               class="flex items-center gap-x-2 bg-gray-900 text-white px-2 py-1.5 rounded-lg hover:bg-gray-800 transition">
+                                               class="flex items-center gap-x-2 bg-gradient-to-br from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800 text-white px-3 py-2 rounded-lg transition shadow-lg">
                                                 <img src="{% static 'assets/pencil-white.svg' %}" alt="Edit" class="w-3 h-3 sm:w-4 sm:h-4 shrink-0">
                                                 <span class="hidden sm:inline font-medium text-sm">Edit</span>
                                             </a>
@@ -53,46 +54,58 @@
                                             <i class="text-xl fa-solid fa-bookmark {% if event_obj in user.info.saved_items.events.all %}text-[#6feb85]{% endif %}"></i>
                                         </div>
                                         <button onclick='copyCurrentURL()' class='cursor-pointer'>
-                                            <i class="fa fa-share-alt text-[#4a5565] text-2xl hover:text-black" aria-hidden="true"></i>
+                                            <i class="fa fa-share-alt text-gray-400 hover:text-white text-2xl transition-colors" aria-hidden="true"></i>
                                         </button>
                                     </div>
                                 </div>
                                 <div class="flex gap-x-3 ">
-                                    <img src="{% static 'assets/description.svg' %}" alt="" class="w-7 h-7">
-                                    <p>{{event_obj.short_description}}
+                                    <div class="p-2 bg-gradient-to-br from-blue-600/20 to-blue-800/20 rounded-lg">
+                                        <img src="{% static 'assets/description.svg' %}" alt="" class="w-5 h-5 filter brightness-0 invert">
+                                    </div>
+                                    <p class="text-gray-300">{{event_obj.short_description}}
                                     </p>
                                 </div>
                                 <div class="flex gap-x-3 items-center">
-                                    <img src="{% static 'assets/category.svg' %}" alt="" class="w-7 h-7">
-                                    <p>{{event_obj.get_event_type_display}}</p>
+                                    <div class="p-2 bg-gradient-to-br from-purple-600/20 to-purple-800/20 rounded-lg">
+                                        <img src="{% static 'assets/category.svg' %}" alt="" class="w-5 h-5 filter brightness-0 invert">
+                                    </div>
+                                    <p class="text-gray-300">{{event_obj.get_event_type_display}}</p>
                                 </div>                                
                                 {% if event_obj.mode %}
                                 <div class="flex gap-x-3 items-center">
-                                    <img src="{% static 'assets/mode2.svg' %}" alt="" class="w-6 h-6">
-                                    <p>{{event_obj.mode}}
+                                    <div class="p-2 bg-gradient-to-br from-indigo-600/20 to-indigo-800/20 rounded-lg">
+                                        <img src="{% static 'assets/mode2.svg' %}" alt="" class="w-4 h-4 filter brightness-0 invert">
+                                    </div>
+                                    <p class="text-gray-300">{{event_obj.mode}}
                                     </p>
                                 </div>
                                 {% endif %}
                             
                                 {% if event_obj.location %}
                                 <div class="flex gap-x-3 items-center">
-                                    <img src="{% static 'assets/location_icon.svg' %}" alt="" class="w-7 h-7">
-                                    <p>{{event_obj.location}}</p>
+                                    <div class="p-2 bg-gradient-to-br from-red-600/20 to-red-800/20 rounded-lg">
+                                        <img src="{% static 'assets/location_icon.svg' %}" alt="" class="w-5 h-5 filter brightness-0 invert">
+                                    </div>
+                                    <p class="text-gray-300">{{event_obj.location}}</p>
                                 </div>
                                 {% endif %}
 
                                 <div class="flex gap-x-3 items-center">
-                                    <img src="{% static 'assets/calendar.svg' %}" alt="" class="w-7 h-7">
-                                    <p>{{ event_obj.start_date|date:"F j, Y" }}</p>
+                                    <div class="p-2 bg-gradient-to-br from-orange-600/20 to-orange-800/20 rounded-lg">
+                                        <img src="{% static 'assets/calendar.svg' %}" alt="" class="w-5 h-5 filter brightness-0 invert">
+                                    </div>
+                                    <p class="text-gray-300">{{ event_obj.start_date|date:"F j, Y" }}</p>
                                 </div>
                                 
                                 {% if event_obj.registration_link %}
                                 <div class="flex gap-x-3 items-center">
-                                    <img src="{% static 'assets/link2.svg' %}" alt="" class="w-7 h-7">
+                                    <div class="p-2 bg-gradient-to-br from-cyan-600/20 to-cyan-800/20 rounded-lg">
+                                        <img src="{% static 'assets/link2.svg' %}" alt="" class="w-5 h-5 filter brightness-0 invert">
+                                    </div>
                                     {% if user.is_authenticated %}
-                                        <a href='{{event_obj.registration_link}}' class='bg-[#d2d2d2] text-black px-2 hover:bg-black hover:text-white py-1 rounded' target='_blank'>Register</a>
+                                        <a href='{{event_obj.registration_link}}' class='bg-gradient-to-br from-green-600 to-green-900 hover:from-green-500 hover:to-green-800 text-white px-4 py-2 rounded-lg transition hover:scale-105 shadow-lg' target='_blank'>Register</a>
                                     {% else %}
-                                        <a href='{% url "account_login" %}?next={{ request.get_full_path }}' class='bg-[#d2d2d2] text-black px-2 hover:bg-black hover:text-white py-1 rounded'>Register</a>
+                                        <a href='{% url "account_login" %}?next={{ request.get_full_path }}' class='bg-gradient-to-br from-green-600 to-green-900 hover:from-green-500 hover:to-green-800 text-white px-4 py-2 rounded-lg transition hover:scale-105 shadow-lg'>Register</a>
                                     {% endif %}
                                 </div>
                                 {% endif %}
@@ -100,31 +113,31 @@
                         </div>
                     </div>
 
-                    <div class="w-full mt-10 bg-white shadow-md border rounded-2xl border-gray-100">
-                        <div class="flex flex-col gap-y-3 bg-white py-5 ml-2 md:ml-3 lg:ml-5">
-                            <div class="font-bold text-2xl">Information</div><hr class="border-gray-300">
-                            <div class="prose max-w-none">{{event_obj.description|safe}}</div>
-                            <div class="flex flex-col items-center w-fit px-3 py-1 rounded bg-[#d2d2d2]">{% if event_obj.start_date %}{{event_obj.start_date}} {{ event_obj.start_time|time:"g:i A" }}{% endif %}  {% if event_obj.end_date %} -- {{event_obj.end_date}} {{ event_obj.end_time|time:"g:i A" }}{% endif %} {% if event_obj.start_time or event_obj.end_time %}(UTC){% endif %}</div>
+                    <div class="w-full mt-10 bg-[#1a1f2b] border border-[#2d323b] shadow-xl rounded-2xl">
+                        <div class="flex flex-col gap-y-3 bg-[#1a1f2b] py-5 ml-2 md:ml-3 lg:ml-5">
+                            <div class="font-bold text-2xl text-white">Information</div><hr class="border-[#2d323b]">
+                            <div class="prose prose-invert max-w-none text-gray-300 [&_ul]:text-gray-300 [&_ol]:text-gray-300 [&_li]:text-gray-300 [&_p]:text-gray-300 [&_h1]:text-white [&_h2]:text-white [&_h3]:text-white [&_h4]:text-white [&_h5]:text-white [&_h6]:text-white [&_strong]:text-white [&_em]:text-gray-300 [&_a]:text-blue-400 [&_a:hover]:text-blue-300">{{event_obj.description|safe}}</div>
+                            <div class="flex flex-col items-center w-fit px-4 py-2 rounded-lg bg-gradient-to-br from-green-600/20 to-green-800/20 border border-green-600 text-green-300">{% if event_obj.start_date %}{{event_obj.start_date}} {{ event_obj.start_time|time:"g:i A" }}{% endif %}  {% if event_obj.end_date %} -- {{event_obj.end_date}} {{ event_obj.end_time|time:"g:i A" }}{% endif %} {% if event_obj.start_time or event_obj.end_time %}(UTC){% endif %}</div>
                         </div>
                     </div>
                 </div>
                 
 
                 <div class="lg:w-[30%] flex flex-col gap-y-5 w-full sticky top-20">
-                    <div class="flex flex-col gap-y-2 bg-white">
-                        <p class="text-2xl bg-[#282828] text-white rounded text-center px-5 py-1">Organized By</p>
+                    <div class="flex flex-col gap-y-2 bg-[#1a1f2b] border border-[#2d323b] rounded-xl shadow-xl">
+                        <p class="text-2xl bg-gradient-to-br from-green-600 to-green-900 text-white rounded-t-xl text-center px-5 py-3">Organized By</p>
                         <div class="flex gap-x-3 px-5">
-                            <div class="bg-white w-full">
+                            <div class="bg-[#1a1f2b] w-full">
                                 <div class="flex gap-x-3 justify-between items-end w-full py-4 rounded-md">
                                     <div class="flex gap-x-4 items-start">
-                                        <a href='{% url "organization_detail" event_obj.organization.id %}' target = '_blank'><img src="{{event_obj.organization.logo.url}}?v={{event_obj.organization.updated_at.timestamp}}" class="w-14 h-14 rounded-md"></a>
+                                        <a href='{% url "organization_detail" event_obj.organization.id %}' target = '_blank'><img src="{{event_obj.organization.logo.url}}?v={{event_obj.organization.updated_at.timestamp}}" class="w-14 h-14 rounded-md border border-[#2d323b]"></a>
                                         <div class="flex flex-col gap-y-1">
-                                            <a href='{% url "organization_detail" event_obj.organization.id %}' target = '_blank' class="font-bold text-xl">{{event_obj.organization.name}}</a>
-                                            <p class="text-[#575656]">{{event_obj.organization.industry.name}}</p>
-                                            <p class='text-[#4f4e4e]' id = 'followers-count-{{event_obj.organization.id}}' >{{event_obj.organization.get_followers.count}} Followers</p>
+                                            <a href='{% url "organization_detail" event_obj.organization.id %}' target = '_blank' class="font-bold text-xl text-white hover:text-green-400 transition-colors">{{event_obj.organization.name}}</a>
+                                            <p class="text-gray-400">{{event_obj.organization.industry.name}}</p>
+                                            <p class='text-gray-400' id = 'followers-count-{{event_obj.organization.id}}' >{{event_obj.organization.get_followers.count}} Followers</p>
                                             {% if user.is_authenticated %}
                                                 {% if event_obj.organization.user == user %}
-                                                <a href='{% url "organization_detail" event_obj.organization.id %}' class="bg-green-100 px-3 py-1 w-1/2 text-center mt-1 rounded-md text-green-600 font-semibold border border-green-500 transition-all hover:bg-green-200">View</a>
+                                                <a href='{% url "organization_detail" event_obj.organization.id %}' class="bg-gradient-to-br from-green-600/20 to-green-800/20 border border-green-600 text-green-400 px-3 py-2 w-fit text-center mt-1 rounded-lg font-semibold transition-all hover:bg-green-600/30">View</a>
                                                 {% elif user.info|is_following_org:event_obj.organization %}
                                                 <a href="javascript:void(0);" class="px-4 py-2 rounded-md follow-toggle-org bg-[#464646] text-white w-fit mt-1" data-org-id="{{ event_obj.organization.id }}">
                                                     Unfollow
@@ -142,23 +155,27 @@
                         </div>
 
                         {% if event_obj.contact_email or event_obj.contact_phone %}
-                        <div class="flex flex-col gap-y-4 mt-2 p-5 shadow-md rounded-lg border border-gray-200">
+                        <div class="flex flex-col gap-y-4 mt-2 p-5 shadow-lg rounded-lg border border-[#2d323b] bg-[#262b34]">
                             <!-- Header -->
                             <div class="flex items-center gap-x-3">
-                                <img src="{% static 'assets/contact-us.svg' %}" alt="Contact Icon" class="h-6 w-6">
-                                <p class="text-xl font-semibold uppercase tracking-wide border-b-2 border-gray-500 pb-2">Contact</p>
+                                <div class="p-1.5 bg-gradient-to-br from-cyan-600/20 to-cyan-800/20 rounded-lg">
+                                    <img src="{% static 'assets/contact-us.svg' %}" alt="Contact Icon" class="h-5 w-5 filter brightness-0 invert">
+                                </div>
+                                <p class="text-xl font-semibold uppercase tracking-wide border-b-2 border-green-600 pb-2 text-white">Contact</p>
                             </div>
                         
                             <!-- Contact Name -->
-                            <p class="text-lg font-medium">{% if event_obj.contact_name %}{{ event_obj.contact_name }}{% endif %}</p>
+                            <p class="text-lg font-medium text-gray-300">{% if event_obj.contact_name %}{{ event_obj.contact_name }}{% endif %}</p>
                         
                             <!-- Contact Details -->
-                            <div class="flex items-start gap-x-4 mt-1 border-l-4 border-gray-600 pl-4">
+                            <div class="flex items-start gap-x-4 mt-1 border-l-4 border-green-600 pl-4">
                                 <div class="flex flex-col gap-y-3">
                                     {% if event_obj.contact_email %}
                                     <div class="flex items-center gap-2">
-                                        <img src="{% static 'assets/email_icon.svg' %}" class="h-5 w-5">
-                                        <a href="mailto:{{ event_obj.contact_email }}" class="hover:underline break-all transition duration-200">
+                                        <div class="p-1 bg-gradient-to-br from-blue-600/20 to-blue-800/20 rounded">
+                                            <img src="{% static 'assets/email_icon.svg' %}" class="h-4 w-4 filter brightness-0 invert">
+                                        </div>
+                                        <a href="mailto:{{ event_obj.contact_email }}" class="hover:underline break-all transition duration-200 text-blue-400 hover:text-blue-300">
                                             {{ event_obj.contact_email }}
                                         </a>
                                     </div>
@@ -166,8 +183,10 @@
                         
                                     {% if event_obj.contact_phone %}
                                     <div class="flex items-center gap-2">
-                                        <img src="{% static 'assets/call-receive.svg' %}" class="h-5 w-5">
-                                        <a href="tel:{{ event_obj.contact_phone }}" class="hover:underline transition duration-200">
+                                        <div class="p-1 bg-gradient-to-br from-green-600/20 to-green-800/20 rounded">
+                                            <img src="{% static 'assets/call-receive.svg' %}" class="h-4 w-4 filter brightness-0 invert">
+                                        </div>
+                                        <a href="tel:{{ event_obj.contact_phone }}" class="hover:underline transition duration-200 text-green-400 hover:text-green-300">
                                             {{ event_obj.contact_phone }}
                                         </a>
                                     </div>
@@ -182,49 +201,49 @@
             </div>
 
             <!-- comments section  -->
-            <div class="m-auto w-[90%] lg:w-[900px] flex flex-col gap-y-2" id = "commentsection">
+            <div class="m-auto w-[90%] lg:w-[900px] flex flex-col gap-y-4" id = "commentsection">
                 <!-- text area and submit btn -->
                 <div class="flex flex-col gap-y-3">
-                    <form method = 'post' id="commentForm" action='{% url "save_event_comment" event_obj.id %}'  class="flex flex-col gap-y-3">
+                    <form method = 'post' id="commentForm" action='{% url "save_event_comment" event_obj.id %}'  class="flex flex-col gap-y-4">
                         {% csrf_token %}
 
                         <textarea name="content" id="commentTextArea"
-                            class="h-44 outline-none p-2 border-dashed border-[#0000002c] border-2 rounded-md"
+                            class="h-44 outline-none p-4 border border-[#2d323b] bg-[#161b22] text-white placeholder:text-gray-400 rounded-xl focus:border-green-500 transition-colors"
                             required
-                            placeholder="Comment...."></textarea>
-                        <button type="submit" class="self-end bg-black text-white px-5 py-1 rounded transition hover:scale-105">Submit</button>
+                            placeholder="Share your thoughts about this event..."></textarea>
+                        <button type="submit" class="self-end bg-gradient-to-br from-green-600 to-green-900 hover:from-green-500 hover:to-green-800 text-white px-6 py-2 rounded-lg transition hover:scale-105 shadow-lg">Submit</button>
                     </form>
                 </div><br>
 
                 <!-- all comments section -->
-                <div class="flex flex-col gap-y-2 bg-white rounded-lg" id='commentBox'>
-                    <div class="text-xl bg-black text-white p-2 rounded-lg text-center mb-4"> <span class="text-white" id='total_comments'>{{event_obj.tot_comments}}</span> Comments</div>
+                <div class="flex flex-col gap-y-4 bg-[#1a1f2b] border border-[#2d323b] rounded-xl shadow-xl" id='commentBox'>
+                    <div class="text-xl bg-gradient-to-br from-green-600 to-green-900 text-white p-4 rounded-t-xl text-center mb-2"> <span class="text-white" id='total_comments'>{{event_obj.tot_comments}}</span> Comments</div>
 
-                    <div id="commentList" class="flex flex-col gap-y-2 px-3 mt-2">
+                    <div id="commentList" class="flex flex-col gap-y-4 px-4 mt-2">
                         {% if comments %}
                         <!-- single comment -->
                         {% for comment in comments %}    
                         <div id='comment-{{comment.id}}'>
                             <!-- question -->
-                            <div class="bg-gradient-to-br from-[#ffffff] via-[#efecec] to-[#d3dff0] border border-[#e0e7ff] shadow-md w-[95%] md:w-3/4 px-5 py-4 rounded-2xl transition hover:shadow-lg duration-300">
+                            <div class="bg-[#262b34] border border-[#2d323b] shadow-lg w-[95%] md:w-3/4 px-5 py-4 rounded-2xl transition hover:shadow-xl hover:border-green-600/30 duration-300">
                                 <!-- Header -->
                                 <div class="flex gap-3 items-center relative mb-2">
                                     <a href='{% url "user_profile" comment.user.user.username %}'>
-                                        <img src="{{comment.user.profile_image.url}}?v={{comment.user.updated_at.timestamp}}"  alt="" class="w-10 h-10 rounded-lg ring-1 ring-gray-300 object-cover">
+                                        <img src="{{comment.user.profile_image.url}}?v={{comment.user.updated_at.timestamp}}"  alt="" class="w-10 h-10 rounded-lg ring-1 ring-[#2d323b] object-cover">
                                     </a>
                                     <div>
-                                        <a href='{% url "user_profile" comment.user.user.username %}'><p class="font-semibold text-sm text-gray-800">{{ comment.user.user.first_name }} {{ comment.user.user.last_name }}</p></a>
-                                        <p class="text-xs text-gray-500">{{ comment.created_at|date:"M j, Y" }}</p>
+                                        <a href='{% url "user_profile" comment.user.user.username %}'><p class="font-semibold text-sm text-white hover:text-green-400 transition-colors">{{ comment.user.user.first_name }} {{ comment.user.user.last_name }}</p></a>
+                                        <p class="text-xs text-gray-400">{{ comment.created_at|date:"M j, Y" }}</p>
                                     </div>
                                     {% if comment.user == user.info %}
                                         <button class="absolute right-2 top-1 delete-event-comment cursor-pointer" data-id="{{ comment.id }}" data-type = "event_comment" title="Delete">
-                                            <img src="{% static 'assets/trash-bin.svg' %}" class="h-5 w-5 opacity-70 hover:opacity-100 transition">
+                                            <img src="{% static 'assets/trash-bin.svg' %}" class="h-5 w-5 opacity-70 hover:opacity-100 transition filter invert">
                                         </button>
                                     {% endif %}
                                 </div>
                                 
                                 <!-- Content -->
-                                <div class="text-sm text-gray-700 mb-4 whitespace-pre-line leading-relaxed">
+                                <div class="text-sm text-gray-300 mb-4 whitespace-pre-line leading-relaxed">
                                     {{ comment.content|linebreaksbr }}
                                 </div>
 
@@ -232,20 +251,20 @@
                                 <div class="flex justify-between items-center text-sm">
                                     <div class="flex items-center gap-4">
                                         <!-- Like (placeholder) -->
-                                        <button class="flex items-center gap-1 text-gray-600 comment-container cursor-pointer" data-comment-id="{{ comment.id }}">
+                                        <button class="flex items-center gap-1 text-gray-400 comment-container cursor-pointer transition-colors" data-comment-id="{{ comment.id }}">
                                             <i class="fa-solid fa-thumbs-up {% if user.info in comment.likes.all %}text-[#53d26a]{% endif %}"></i>
                                             <span>{{comment.total_likes}}</span>
                                         </button>
 
                                         <!-- Hide/Show replies (UI only) -->
-                                        <button class="text-gray-600 font-semibold hover:text-black transition text-xs lg:text-sm"
+                                        <button class="text-gray-400 hover:text-white font-semibold transition text-xs lg:text-sm"
                                                 onclick="toggleReplies({{ comment.id }}, this, {{ comment.replies.count }})">
                                             <i class="fa-solid fa-chevron-down text-xs"></i> Show Replies (<span id="show_reply_count_{{ comment.id }}">{{ comment.replies.count }}</span>)
                                         </button>
                                     </div>
 
                                     <!-- Reply -->
-                                    <div class="bg-black text-white inline-flex items-center gap-2 rounded-lg text-sm font-medium transition hover:scale-[1.03] shadow-sm px-4 py-1 cursor-pointer" onclick="toggleReplyForm({{ comment.id }})">    
+                                    <div class="bg-gradient-to-br from-green-600 to-green-900 hover:from-green-500 hover:to-green-800 text-white inline-flex items-center gap-2 rounded-lg text-sm font-medium transition hover:scale-[1.03] shadow-lg px-4 py-2 cursor-pointer" onclick="toggleReplyForm({{ comment.id }})">    
                                         <i class="fa-solid fa-paper-plane text-xs"></i> Reply
                                     </div>
                                 </div>
@@ -254,21 +273,21 @@
 
                             {% comment %} reply form {% endcomment %}
                             <div id="reply-form-{{ comment.id }}" class="w-[95%] md:w-3/4 ml-auto my-4 hidden">
-                                <form method="POST" action="{% url 'save_event_reply' %}" data-comment-id="{{ comment.id }}" class="bg-white border border-gray-200 p-5 rounded-xl duration-200 reply-form">
+                                <form method="POST" action="{% url 'save_event_reply' %}" data-comment-id="{{ comment.id }}" class="bg-[#262b34] border border-[#2d323b] p-5 rounded-xl duration-200 reply-form shadow-lg">
                                     {% csrf_token %}
                                     <input type="hidden" name="comment_id" value="{{ comment.id }}">
 
-                                    <label for="reply_content_{{ comment.id }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    <label for="reply_content_{{ comment.id }}" class="block text-sm font-medium text-gray-300 mb-2">
                                         Write a reply
                                     </label>
                                     <textarea id="reply_content_{{ comment.id }}" name="reply_content" rows="4"
                                             placeholder="Share your thoughts..."
                                             required
-                                            class="w-full resize-none border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition placeholder-gray-400"></textarea>
+                                            class="w-full resize-none border border-[#2d323b] bg-[#161b22] text-white placeholder:text-gray-400 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"></textarea>
                                     
                                     <div class="flex justify-end mt-3">
                                         <button type="submit"
-                                            class="inline-flex items-center gap-2 bg-black text-white px-5 py-1.5 rounded-lg text-sm font-medium hover:bg-gray-900 transition hover:scale-[1.03] shadow-sm">
+                                            class="inline-flex items-center gap-2 bg-gradient-to-br from-green-600 to-green-900 hover:from-green-500 hover:to-green-800 text-white px-5 py-1.5 rounded-lg text-sm font-medium transition hover:scale-[1.03] shadow-lg">
                                             <i class="fa-solid fa-paper-plane text-xs"></i> Submit
                                         </button>
                                     </div>
@@ -279,34 +298,34 @@
                             <!-- reply section -->
                             <div class="flex gap-x-2 mb-4 mt-2">
                                 <!-- Left vertical bar -->
-                                <div class="bg-black w-2 ml-5 rounded-full"></div>
+                                <div class="bg-gradient-to-b from-green-600 to-green-900 w-2 ml-5 rounded-full"></div>
 
                                 <!-- Replies container -->
                                 <div class="flex flex-col gap-y-4 ml-auto w-full" id="replies-for-{{ comment.id }}" style="display: none;">
                                     {% for reply in comment.replies.all %}
                                     <div id="reply-{{ reply.id }}"
-                                        class="ml-auto max-w-[95%] md:max-w-[75%] bg-[#f7f7f7] px-4 py-3 rounded-lg flex flex-col gap-y-2 relative transition shadow-md">
+                                        class="ml-auto max-w-[95%] md:max-w-[75%] bg-[#161b22] border border-[#2d323b] px-4 py-3 rounded-lg flex flex-col gap-y-2 relative transition shadow-lg hover:border-green-600/30">
 
                                         <!-- Header -->
                                         <div class="flex items-center gap-3">
                                             <a href='{% url "user_profile" reply.user.user.username %}' class='flex items-center gap-3'>
                                                 <img src="{{ reply.user.profile_image.url }}?v={{ reply.user.updated_at.timestamp }}" alt=""
-                                                class="w-10 h-10 rounded-lg object-cover ring-1 ring-gray-300">
-                                                <p class="font-semibold text-sm text-gray-800 pr-10">{{ reply.user.user.first_name }} {{ reply.user.user.last_name }}</p>
+                                                class="w-10 h-10 rounded-lg object-cover ring-1 ring-[#2d323b]">
+                                                <p class="font-semibold text-sm text-white hover:text-green-400 transition-colors pr-10">{{ reply.user.user.first_name }} {{ reply.user.user.last_name }}</p>
                                             </a>
 
                                             {% if reply.user == user.info %}
                                             <button class="absolute right-2 top-2 delete-event-reply" data-id="{{ reply.id }}" data-type = "event_reply" title="Delete Reply">
-                                                <img src="{% static 'assets/trash-bin.svg' %}" class="h-5 w-5 opacity-70 hover:opacity-100 transition cursor-pointer">
+                                                <img src="{% static 'assets/trash-bin.svg' %}" class="h-5 w-5 opacity-70 hover:opacity-100 transition cursor-pointer filter invert">
                                             </button>
                                             {% endif %}
                                         </div>
-                                        <div class="text-sm text-gray-700 whitespace-pre-line leading-relaxed">
+                                        <div class="text-sm text-gray-300 -mt-4 whitespace-pre-line leading-relaxed">
                                             {{ reply.content|linebreaksbr }}
                                         </div>
 
                                         <!-- Footer -->
-                                        <div class="flex justify-between items-center mt-1 text-xs text-gray-500">
+                                        <div class="flex justify-between items-center mt-1 text-xs text-gray-400">
                                             <p>{{ reply.created_at|date:"M j, Y" }}</p>
 
                                             <!-- Like (visual only) -->
@@ -323,8 +342,13 @@
                         {% endfor %}
                         {% else %}
                         <div class='flex flex-col gap-y-8 px-3' id='noCommentSVG'>
-                            <img src = "{% static 'assets/comment.svg' %}" class='h-1/2 w-1/2 mx-auto'>
-                            <p class='text-center text-lg mt-2 text-gray-600 pb-5'>No comments Yet...</p>
+                            <div class="flex flex-col items-center justify-center py-8">
+                                <div class="w-20 h-20 mb-4 bg-gradient-to-br from-green-500/20 to-green-700/20 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-comments text-2xl text-green-400"></i>
+                                </div>
+                                <p class='text-center text-lg text-gray-300 pb-5'>No comments yet...</p>
+                                <div class="w-12 h-0.5 bg-gradient-to-r from-green-500 to-green-700 rounded-full"></div>
+                            </div>
                         </div>
                         {% endif %}
                     </div>
@@ -336,8 +360,5 @@
     
     {% include "includes/create-post.html" %}
     <script src="{% static 'scripts/event.js' %}"></script>
-    <script>
-        const commentSvgUrl = "{% static 'assets/comment.svg' %}";
-    </script>
 
 {% endblock  %}

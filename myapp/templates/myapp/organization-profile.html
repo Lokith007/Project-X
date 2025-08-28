@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.css" integrity="sha512-087vysR/jM0N5cp13Vlp+ZF9wx6tKbvJLwPO8Iit6J7R+n7uIMMjg37dEgexOshDmDITHYY5useeSmfD1MYiQA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js" integrity="sha512-JyCZjCOZoyeQZSd5+YEAcFgz2fowJ1F1hyJOXgtKu4llIa0KneLcidn5bwfutiehUTiOuK87A986BZJMko0eWQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 {% endblock  %}
-{% block body_class %}text-[15px] h-full bg-[#f4f2ee] overflow-x-hidden{% endblock %}
+{% block body_class %}text-[15px] h-full bg-[#0e1217] text-[#a8b3cf] overflow-x-hidden{% endblock %}
 
 {% block content %}
 
@@ -26,25 +26,25 @@
         <div class="flex mt-16 lg:mt-28 md:w-full lg:pl-5 flex-[5] lg:px-3 lg:pb-10">
             <div class="flex flex-col items-center md:gap-y-2 w-full">
 
-                <div class="w-full flex flex-col items-center md:gap-y-10 bg-white">
+                <div class="w-full flex flex-col items-center md:gap-y-10 bg-[#161b22] border border-[#2d323b] rounded-lg">
                         {% include "includes/org-banner.html" %}
-                    <div class="flex-col flex items-center justify-between mt-14 md:mt-10  pb-5 bg-white rounded-md mr-auto md:ml-auto w-full md:mr-0 gap-y-2">
+                    <div class="flex-col flex items-center justify-between mt-14 md:mt-10  pb-5 bg-[#161b22] rounded-md mr-auto md:ml-auto w-full md:mr-0 gap-y-2">
                         <div class="flex flex-col py-3 pt-5 gap-y-2 md:gap-y-4 md:mt-0 items-center px-3">
-                            <div class="text-xl font-bold">{{organization.name}}</div>
+                            <div class="text-xl font-bold text-white">{{organization.name}}</div>
                             <!-- <div class="text-[#686868]">@night_owl</div> -->
                             {% if organization.industry %}
-                            <div class="text-[#686868] flex gap-x-3 items-center"><i class="text-lg fa-solid fa-building"></i><span>{{ organization.industry.name }}</span></div>
+                            <div class="text-gray-400 flex gap-x-3 items-center"><i class="text-lg fa-solid fa-building"></i><span>{{ organization.industry.name }}</span></div>
                             {% endif %}
                             {% if organization.location %}
-                            <div class="text-[#686868] flex gap-x-3 items-center"><i class="text-lg fa-solid fa-location-dot"></i><span>{{organization.location}}</span></div>
+                            <div class="text-gray-400 flex gap-x-3 items-center"><i class="text-lg fa-solid fa-location-dot"></i><span>{{organization.location}}</span></div>
                             {% endif %}
                             <div class="flex gap-x-2">
-                                <a href='{% url "org_follow_list" organization.id %}' id='followers-count-{{organization.id}}' class="border rounded border-black px-1 py-1 transition hover:bg-black hover:text-white">{{organization.get_followers.count}} Followers</a>
+                                <a href='{% url "org_follow_list" organization.id %}' id='followers-count-{{organization.id}}' class="border rounded border-[#2d323b] text-gray-400 px-1 py-1 transition hover:bg-gradient-to-r hover:from-green-600 hover:to-green-900 hover:text-white">{{organization.get_followers.count}} Followers</a>
                             </div>
                         </div>
                         {% if request.user == organization.user %}
                         <div class="pb-4">
-                            <button class="px-4 py-2 bg-[#6feb85] rounded-md" onclick="openEdit()">
+                            <button class="px-4 py-2 bg-gradient-to-r from-green-600 to-green-900 text-white rounded-md hover:shadow-lg transition-all duration-300" onclick="openEdit()">
                                 &lt;Edit Profile/&gt;
                             </button>
                         </div>
@@ -55,7 +55,7 @@
                                 Unfollow
                             </a>
                             {% else %}
-                            <a href="javascript:void(0);" class="px-4 py-2 rounded-md follow-toggle-org bg-[#6feb85]"  data-org-id="{{ organization.id }}">
+                            <a href="javascript:void(0);" class="px-4 py-2 rounded-md follow-toggle-org bg-[#6feb85] text-black"  data-org-id="{{ organization.id }}">
                                 Follow
                             </a>
                             {% endif %}
@@ -65,38 +65,55 @@
                 </div>
 
 
-                <div class="flex flex-col w-full p-3 lg:p-0 gap-y-3">
-                    <div
-                        class="flex px-2 py-2 overflow-x-scroll bg-[#00000034] rounded-md justify-evenly md:px-10 gap-x-20 max-[400px]:gap-x-10 md:gap-x-20">
+                <div class="flex flex-col w-full p-3 lg:p-0 gap-y-3 mt-1">
+                    <div class="flex px-2 py-2 overflow-x-auto bg-[#161b22] border border-[#23272f] rounded-xl justify-evenly md:px-10 gap-x-10 md:gap-x-20 shadow-lg">
                         <a href='?section=overview'
-                            class="px-2 md:px-4 py-2 rounded-md cursor-pointer hover:bg-white hover:text-black transition inline-block {% if section == 'overview' or section == '' %}{{color_active}}{% endif %}">
-                            Overview</a>
+                            class="px-3 md:px-5 py-2 rounded-lg cursor-pointer transition-colors duration-200 inline-block font-semibold
+                            {% if section == 'overview' or section == '' %}
+                                bg-gradient-to-r from-green-700 to-green-900 text-white shadow
+                            {% else %}
+                                bg-[#23272f] text-gray-300 hover:bg-[#23272f] hover:text-green-400
+                            {% endif %}">
+                            Overview
+                        </a>
                         <a href='?section=posts'
-                            class="px-2 py-2 rounded-md cursor-pointer md:px-4 hover:bg-white hover:text-black transition inline-block {% if section == 'posts' %}{{color_active}}{% endif %}">
-                            Posts</a>
+                            class="px-3 md:px-5 py-2 rounded-lg cursor-pointer transition-colors duration-200 inline-block font-semibold
+                            {% if section == 'posts' %}
+                                bg-gradient-to-r from-green-700 to-green-900 text-white shadow
+                            {% else %}
+                                bg-[#23272f] text-gray-300 hover:bg-[#23272f] hover:text-green-400
+                            {% endif %}">
+                            Posts
+                        </a>
                         <a href='?section=events'
-                            class="px-2 py-2 rounded-md cursor-pointer md:px-4 hover:bg-white hover:text-black transition inline-block {% if section == 'events'%}{{color_active}}{% endif %}">
-                            Events</a>
+                            class="px-3 md:px-5 py-2 rounded-lg cursor-pointer transition-colors duration-200 inline-block font-semibold
+                            {% if section == 'events' %}
+                                bg-gradient-to-r from-green-700 to-green-900 text-white shadow
+                            {% else %}
+                                bg-[#23272f] text-gray-300 hover:bg-[#23272f] hover:text-green-400
+                            {% endif %}">
+                            Events
+                        </a>
                     </div>
 
                     <!-- overview section -->
                     {% if section == 'overview' or section == '' %}
-                    <div class="flex flex-col px-3 py-2 bg-white rounded-md md:px-5 gap-y-10">
+                    <div class="flex flex-col px-3 py-2 bg-[#161b22] border border-[#2d323b] rounded-md md:px-5 gap-y-10">
                         <div class="flex flex-col text-justify gap-y-3 mt-3">
-                            <p class="text-xl font-bold">{ Description }</p>
-                            <p class="break-words">
+                            <p class="text-xl font-bold text-white">{ Description }</p>
+                            <p class="break-words text-gray-400">
                                 {{organization.description|linebreaks}}
                             </p>
                         </div>
                         
                         {% comment %} Links {% endcomment %}
-                        <div class="flex flex-col gap-y-2">
-                            <p class="text-xl font-bold">Links</p>
+                        <div class="flex flex-col gap-y-2 -mt-4">
+                            <p class="text-xl font-bold text-white">Links</p>
                             {% if link_available %}
                                 <div class="flex flex-wrap gap-x-5 gap-y-2">
                                     {% for link, url in social_links.items %}
                                     {% if url %}
-                                    <a href='{{url}}' target='_blank' class="flex items-center gap-x-3 bg-green-100 px-3 py-2 rounded-md text-green-600 font-semibold border border-green-500 transition-all hover:bg-green-200">
+                                    <a href='{{url}}' target='_blank' class="flex items-center gap-x-3 bg-gradient-to-r from-green-600 to-green-900 px-3 py-2 rounded-md text-white font-semibold border border-green-500 transition-all hover:shadow-lg hover:from-green-500 hover:to-green-800">
                                         <i class="text-2xl fa-brands fa-{{link}}"></i>
                                         <p class="hidden md:block">{{link|capfirst}}</p>
                                     </a>
@@ -104,7 +121,7 @@
                                     {% endfor %}
                                 </div>
                             {% else %}
-                            <div class='flex items-center gap-x-2'>
+                            <div class='flex items-center gap-x-2 text-gray-400'>
                             <i class="fa-solid fa-pen-nib"></i>
                             <p class="">Not Updated Yet</p>
                             </div>
@@ -112,51 +129,51 @@
                         </div>
 
                         <div class="flex flex-col gap-y-2">
-                            <div class="text-xl font-bold">Industry</div>
-                            <div>{{organization.industry.name}}</div>
+                            <div class="text-xl font-bold text-white">Industry</div>
+                            <div class="text-gray-400">{{organization.industry.name}}</div>
                         </div>
                     </div>
 
                     <!-- personal Info -->
-                    <div class=" bg-white rounded-md px-3 py-5">
+                    <div class=" bg-[#161b22] border border-[#2d323b] rounded-md px-3 py-5">
                         <div class="flex flex-col gap-y-5">
                             <div class="flex gap-x-3 items-start">
-                                <img class="w-10 h-10 lg:w-12 lg:h-12" src="{% static 'assets/birthday_icon.svg' %}"alt="">
+                                <img class="w-8 h-8 sm:w-10 sm:h-10" src="{% static 'assets/birthday_icon.svg' %}"alt="">
                                 <div class="w-full">
-                                    <p class="font-bold">Founded</p>
-                                    <p class="break-words text-justify text-[#686868]">{% if organization.founded_date %}{{organization.founded_date}}{% else %}Not Updated Yet.{% endif %}</p>
+                                    <p class="font-bold text-white">Founded</p>
+                                    <p class="break-words text-justify text-gray-400">{% if organization.founded_date %}{{organization.founded_date}}{% else %}Not Updated Yet.{% endif %}</p>
                                 </div>
                             </div>
                             <div class="flex gap-x-3 items-center">
-                                <img class="w-10 h-10 lg:w-12 lg:h-12" src="{% static 'assets/email_icon.svg' %}" alt="">
+                                <img class="w-8 h-8 sm:w-10 sm:h-10" src="{% static 'assets/email_icon.svg' %}" alt="">
                                 <div class="w-full">
-                                    <p class="font-bold">Email</p>
-                                    <p class="break-words text-justify text-[#686868]">{% if organization.contact_email %}{{organization.contact_email}}{% else %}Not Updated Yet.{% endif %}</p>
+                                    <p class="font-bold text-white">Email</p>
+                                    <p class="break-words text-justify text-gray-400">{% if organization.contact_email %}{{organization.contact_email}}{% else %}Not Updated Yet.{% endif %}</p>
                                 </div>
                             </div>
                             <div class="flex gap-x-3 items-start">
-                                <img class="w-10 h-10 lg:w-12 lg:h-12" src="{% static 'assets/call_icon.svg' %}" alt="">
+                                <img class="w-8 h-8 sm:w-10 sm:h-10" src="{% static 'assets/call_icon.svg' %}" alt="">
                                 <div class="w-full">
-                                    <p class="font-bold">Phone</p>
-                                    <p class="break-words text-justify text-[#686868]">{% if organization.phone %}{{organization.phone}}{% else %}Not Updated Yet.{% endif %}</p>
+                                    <p class="font-bold text-white">Phone</p>
+                                    <p class="break-words text-justify text-gray-400">{% if organization.phone %}{{organization.phone}}{% else %}Not Updated Yet.{% endif %}</p>
                                 </div>
                             </div>
 
                             {% if organization.website %}
                             <div class="flex gap-x-3 items-start">
-                                <img class="w-10 h-10 lg:w-12 lg:h-12" src="{% static 'assets/website.svg' %}" alt="">
+                                <img class="w-8 h-8 sm:w-10 sm:h-10" src="{% static 'assets/website.svg' %}" alt="">
                                 <div class="w-full">
-                                    <p class="font-bold">Website</p>
-                                    <a href='{{organization.website}}' class="break-words text-justify text-[#686868] underline underline-offset-2" target='_blank'>{% if organization.website %}{{organization.website}}{% else %}Not Updated Yet.{% endif %}</a>
+                                    <p class="font-bold text-white">Website</p>
+                                    <a href='{{organization.website}}' class="break-words text-justify text-blue-400 hover:text-blue-300 underline underline-offset-2" target='_blank'>{% if organization.website %}{{organization.website}}{% else %}Not Updated Yet.{% endif %}</a>
                                 </div>
                             </div>
                             {% endif %}
                             
                             <div class="flex gap-x-3 items-start">
-                                <img class="w-10 h-10 lg:w-12 lg:h-12" src="{% static 'assets/building.svg' %}" alt="">
+                                <img class="w-8 h-8 sm:w-10 sm:h-10" src="{% static 'assets/building.svg' %}" alt="">
                                 <div class="w-full">
-                                    <p class="font-bold">Organization Type</p>
-                                    <p class="break-words text-justify text-[#686868]">{{organization.get_organization_type_display}}</p>
+                                    <p class="font-bold text-white">Organization Type</p>
+                                    <p class="break-words text-justify text-gray-400">{{organization.get_organization_type_display}}</p>
                                 </div>
                             </div>
                         </div>
@@ -174,9 +191,9 @@
         </div>
 
         <!-- similar Orgainization -->
-        <div class="flex w-full lg:w-1/4 lg:mt-28 flex-col px-3 lg:px-2  gap-y-5 pb-14 lg:pb-0">
-            <div class="flex flex-col gap-y-6 bg-white">
-                <p class="text-center text-2xl font-bold bg-[#000000] px-3 py-2 text-white rounded-md">Similar Organization
+        <div class="flex w-full lg:w-1/4 lg:mt-28 flex-col px-3 lg:px-2  gap-y-5 pb-14 lg:pb-4">
+            <div class="flex flex-col gap-y-6 border border-[#2d323b] rounded-lg">
+                <p class="text-center text-2xl font-bold bg-gradient-to-r from-green-600 to-green-900 px-3 py-2 text-white rounded-t-lg">Similar Organization
                 </p>
                 {% if suggested_org %}
                 <!-- all Orgainization present inside this div -->
@@ -184,21 +201,21 @@
 
                     {% for org in suggested_org %}
                     <!-- single Orgainization -->
-                    <div class="flex gap-x-3  justify-between items-center border border-gray-300 w-full px-3 py-4 rounded-md">
+                    <div class="flex gap-x-3  justify-between items-center border border-[#2d323b] w-full px-3 py-4 rounded-md bg-[#161b23]">
                         <div class="flex gap-x-4 items-start">
                             <a href='{% url "organization_detail" org.id %}' class="flex-shrink-0"><img src="{{org.logo.url}}?v={{org.updated_at.timestamp}}" class="h-12 rounded-md w-12"></a>
                             <div class="flex flex-col gap-y-3">
-                                <a href='{% url "organization_detail" org.id %}' class="underline font-bold text-lg">{{org.name}}</a>
+                                <a href='{% url "organization_detail" org.id %}' class="underline font-bold text-lg text-white hover:text-blue-400">{{org.name}}</a>
                                 <div class='-mt-1'>
-                                    <p>{{organization.industry.name}}</p>
-                                    <p class='' id='followers-count-{{org.id}}'>{{org.get_followers.count}} Followers</p>
+                                    <p class="text-gray-400">{{organization.industry.name}}</p>
+                                    <p class='text-gray-400' id='followers-count-{{org.id}}'>{{org.get_followers.count}} Followers</p>
                                 </div>
                                 {% if user.info|is_following_org:org %}
                                 <a href="javascript:void(0);" class="px-4 py-1 rounded-md follow-toggle-org bg-[#464646] text-white w-fit" data-org-id="{{ org.id }}">
                                     Unfollow
                                 </a>
                                 {% else %}
-                                <a href="javascript:void(0);" class="px-4 py-1 rounded-md follow-toggle-org bg-[#6feb85] w-fit"  data-org-id="{{ org.id }}">
+                                <a href="javascript:void(0);" class="px-4 py-1 rounded-md follow-toggle-org bg-[#6feb85] text-black w-fit"  data-org-id="{{ org.id }}">
                                     Follow
                                 </a>
                                 {% endif %}
@@ -211,7 +228,7 @@
 
                 </div>
                 {% else %} 
-                <div class='mx-auto mb-14 mt-8 text-xl text-gray-900 flex flex-col gap-y-2 items-center'>
+                <div class='mx-auto mb-14 mt-8 text-xl text-gray-400 flex flex-col gap-y-2 items-center'>
                     <p>No Suggestions For You :(</p>
                     <img src='{% static "assets/sad.svg" %}' class='h-14 w-14'>
                     </div>
@@ -232,23 +249,23 @@
         </div>
     </div>
 
-    {% comment %} edit profile post {% endcomment %}
+    {% comment %} edit organization form {% endcomment %}
     {% if organization.user == request.user%}
     <div class="hidden fixed items-center justify-center top-20 bottom-12 left-0 right-0" id="editContainer">
-        <form method = "POST" class="relative flex flex-col gap-y-3 h-full overflow-y-scroll py-10 bg-white w-full lg:w-1/2 px-5 border">
+        <form method = "POST" class="relative flex flex-col gap-y-3 h-full overflow-y-scroll py-10 bg-[#0e1217] w-full lg:w-1/2 px-5 border border-gray-600">
             {% csrf_token %}
             <div class="cursor-pointer absolute top-5 right-5" onclick="closeEdit()"><i
-                    class="text-3xl fa-solid fa-circle-xmark"></i></div>
+                    class="text-3xl fa-solid fa-circle-xmark text-white"></i></div>
             <div class="max-[500px]:self-stretch self-center flex flex-col gap-y-3 w-full lg:w-[85%]">
-                <p class="mt-5 text-2xl font-bold bg-black text-white px-3 py-1 text-center rounded w-fit self-center">
-                    Edit Details
+                <p class="mt-2 mb-4 text-lg font-tjin text-white text-center px-6 py-3 w-fit self-center rounded-xl bg-gradient-to-r from-[#1a1a1a]/80 to-[#2a2a2a]/80 backdrop-blur-md border border-white/10 shadow-md shadow-black/50 tracking-wide">
+                    <i class="fa-solid fa-pen-to-square"></i>&nbsp Edit Details
                 </p>
                 <div class="self-center mb-4">
                     <div class="flex gap-x-5 items-center max-[500px]:flex-col gap-y-5">
                         <div class="relative">
                             <img src="{{organization.logo.url}}?v={{organization.updated_at.timestamp}}" alt="" class="rounded-lg w-40 h-40 object-cover" id="image">
                             <label id="imageContainer" for="imgInput"
-                                class="absolute -right-3 -bottom-3 bg-black rounded-full p-2 cursor-pointer"><img
+                                class="absolute -right-3 -bottom-3 bg-[#1a1f26] rounded-full p-2 cursor-pointer"><img
                                     src="{% static 'assets/edit.svg' %}" alt="" class="w-7 h-7"></label>
                         </div>
     
@@ -257,12 +274,12 @@
                         </div>
                         <input type="file" name="profileImg" class="hidden" id="imgInput" accept="image/*">
                         <input type="hidden" name="croppedImage" id="croppedImage"> <!-- Hidden field for cropped image -->
-                        <div class="cursor-pointer hidden bg-[#6feb85] px-2 py-1 rounded-md" id="cropBtn" onclick="crop()">Done</div>
+                        <div class="cursor-pointer hidden bg-[#00a63e] text-black font-medium px-3 py-1.5 rounded-lg shadow-sm transition-all duration-200 ease-in-out" id="cropBtn" onclick="crop()"><i class="fa-solid fa-circle-check"></i>&nbsp Done</div>
                     </div>
                 </div>
                 <div class="max-[500px]:flex-col gap-y-3 flex gap-x-3 ">
                     <div class="flex flex-col gap-y-1 w-full">
-                        <p>{{EditOrgForm.name.label}}</p>
+                        <p class="text-white">{{EditOrgForm.name.label}}</p>
                         {{EditOrgForm.name}}
                         {% if EditOrgForm.name.errors %}
                         <div class="text-red-500 text-sm">
@@ -275,7 +292,7 @@
                 </div>
                 <div>
                     <div class="flex flex-col gap-y-1">
-                        <p>{{EditOrgForm.description.label}}</p>
+                        <p class="text-white">{{EditOrgForm.description.label}}</p>
                         {{EditOrgForm.description}}
                         {% if EditOrgForm.description.errors %}
                         <div class="text-red-500 text-sm">
@@ -288,7 +305,7 @@
                 </div>
                 <div>
                     <div class="flex flex-col gap-y-1">
-                        <p>{{EditOrgForm.founded_date.label}}</p>
+                        <p class="text-white">{{EditOrgForm.founded_date.label}}</p>
                         {{EditOrgForm.founded_date}}
                         {% if EditOrgForm.founded_date.errors %}
                         <div class="text-red-500 text-sm">
@@ -302,7 +319,7 @@
 
                 <div class="max-[500px]:flex-col gap-y-3 flex gap-x-3">
                     <div class="flex flex-col gap-y-1 w-full lg:w-1/2">
-                        <p>{{EditOrgForm.industry.label}}</p>
+                        <p class="text-white">{{EditOrgForm.industry.label}}</p>
                         {{EditOrgForm.industry}}
                         {% if EditOrgForm.industry.errors %}
                         <div class="text-red-500 text-sm">
@@ -313,7 +330,7 @@
                         {% endif %}
                     </div>
                     <div class="flex flex-col gap-y-1 w-full lg:w-1/2">
-                        <p>{{EditOrgForm.location.label}}</p>
+                        <p class="text-white">{{EditOrgForm.location.label}}</p>
                         {{EditOrgForm.location}}
                         {% if EditOrgForm.location.errors %}
                         <div class="text-red-500 text-sm">
@@ -327,7 +344,7 @@
 
                 <div class="max-[500px]:flex-col gap-y-3 flex gap-x-3 ">
                     <div class="flex flex-col gap-y-1 w-full">
-                        <p>{{EditOrgForm.contact_email.label}}</p>
+                        <p class="text-white">{{EditOrgForm.contact_email.label}}</p>
                         {{EditOrgForm.contact_email}}
                         {% if EditOrgForm.contact_email.errors %}
                         <div class="text-red-500 text-sm">
@@ -338,7 +355,7 @@
                         {% endif %}
                     </div>
                     <div class="flex flex-col gap-y-1 w-full">
-                        <p>{{EditOrgForm.phone.label}}</p>
+                        <p class="text-white">{{EditOrgForm.phone.label}}</p>
                         {{EditOrgForm.phone}}
                         {% if EditOrgForm.phone.errors %}
                         <div class="text-red-500 text-sm">
@@ -351,7 +368,7 @@
                 </div>
                 <div class="max-[500px]:flex-col gap-y-3 flex gap-x-3 ">
                     <div class="flex flex-col gap-y-1 w-full">
-                        <p>{{EditOrgForm.organization_type.label}}</p>
+                        <p class="text-white">{{EditOrgForm.organization_type.label}}</p>
                         {{EditOrgForm.organization_type}}
                         {% if EditOrgForm.organization_type.errors %}
                         <div class="text-red-500 text-sm">
@@ -364,7 +381,7 @@
                 </div>
                 <div class="flex flex-col md:flex-row gap-x-3 gap-y-3">
                     <div class="flex flex-col gap-y-1 w-full">
-                        <p>{{EditOrgForm.website.label}}</p>
+                        <p class="text-white">{{EditOrgForm.website.label}}</p>
                         {{EditOrgForm.website}}
                         {% if EditOrgForm.website.errors %}
                         <div class="text-red-500 text-sm">
@@ -375,7 +392,7 @@
                         {% endif %}
                     </div>
                     <div class="flex flex-col gap-y-1 w-full">
-                        <p>{{EditOrgForm.linkedin.label}}</p>
+                        <p class="text-white">{{EditOrgForm.linkedin.label}}</p>
                         {{EditOrgForm.linkedin}}
                         {% if EditOrgForm.linkedin.errors %}
                         <div class="text-red-500 text-sm">
@@ -388,7 +405,7 @@
                 </div>
                 <div class="flex flex-col md:flex-row gap-x-3 gap-y-3">
                     <div class="flex flex-col gap-y-1 w-full">
-                        <p>X</p>
+                        <p class="text-white">X</p>
                         {{EditOrgForm.twitter}}
                         {% if EditOrgForm.twitter.errors %}
                         <div class="text-red-500 text-sm">
@@ -399,7 +416,7 @@
                         {% endif %}
                     </div>
                     <div class="flex flex-col gap-y-1 w-full">
-                        <p>{{EditOrgForm.instagram.label}}</p>
+                        <p class="text-white">{{EditOrgForm.instagram.label}}</p>
                         {{EditOrgForm.instagram}}
                         {% if EditOrgForm.instagram.errors %}
                         <div class="text-red-500 text-sm">
@@ -412,7 +429,7 @@
                 </div>
                 <div class="flex flex-col md:flex-row gap-x-3 gap-y-3">
                     <div class="flex flex-col gap-y-1 w-full">
-                        <p>{{EditOrgForm.github.label}}</p>
+                        <p class="text-white">{{EditOrgForm.github.label}}</p>
                         {{EditOrgForm.github}}
                         {% if EditOrgForm.github.errors %}
                         <div class="text-red-500 text-sm">
@@ -423,7 +440,7 @@
                         {% endif %}
                     </div>
                     <div class="flex flex-col gap-y-1 w-full">
-                        <p>{{EditOrgForm.discord.label}}</p>
+                        <p class="text-white">{{EditOrgForm.discord.label}}</p>
                         {{EditOrgForm.discord}}
                         {% if EditOrgForm.discord.errors %}
                         <div class="text-red-500 text-sm">
@@ -444,8 +461,8 @@
                         </div>
                     {% endif %}
                 </div>
-                <div class="self-center">
-                    <button class="bg-[#6feb85] px-3 py-1 rounded-lg" type="submit">Save</button>
+                <div class="self-center mt-5">
+                    <button class="bg-[#00a63e] px-3 py-1 text-black rounded-lg cursor-pointer" type="submit"><i class="fa-solid fa-circle-check"></i>&nbsp; Save</button>
                 </div>
             </div>
         </form>

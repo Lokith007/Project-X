@@ -2,25 +2,25 @@
 
 <div id='comment-{{comment.id}}'>
     <!-- question -->
-    <div class="bg-gradient-to-br from-[#ffffff] via-[#efecec] to-[#d3dff0] border border-[#e0e7ff] shadow-md w-[95%] md:w-3/4 px-5 py-4 rounded-2xl transition hover:shadow-lg duration-300">
+    <div class="bg-[#262b34] border border-[#2d323b] shadow-lg w-[95%] md:w-3/4 px-5 py-4 rounded-2xl transition hover:shadow-xl hover:border-green-600/30 duration-300">
         <!-- Header -->
         <div class="flex gap-3 items-center relative mb-2">
             <a href='{% url "user_profile" comment.user.user.username %}'>
-                <img src="{{comment.user.profile_image.url}}?v={{comment.user.updated_at.timestamp}}"  alt="" class="w-10 h-10 rounded-lg ring-1 ring-gray-300 object-cover">
+                <img src="{{comment.user.profile_image.url}}?v={{comment.user.updated_at.timestamp}}"  alt="" class="w-10 h-10 rounded-lg ring-1 ring-[#2d323b] object-cover">
             </a>
             <div>
-                <a href='{% url "user_profile" comment.user.user.username %}'><p class="font-semibold text-sm text-gray-800">{{ comment.user.user.first_name }} {{ comment.user.user.last_name }}</p></a>
-                <p class="text-xs text-gray-500">{{ comment.created_at|date:"M j, Y" }}</p>
+                <a href='{% url "user_profile" comment.user.user.username %}'><p class="font-semibold text-sm text-white hover:text-green-400 transition-colors">{{ comment.user.user.first_name }} {{ comment.user.user.last_name }}</p></a>
+                <p class="text-xs text-gray-400">{{ comment.created_at|date:"M j, Y" }}</p>
             </div>
             {% if comment.user == user.info %}
                 <button class="absolute right-2 top-1 delete-event-comment cursor-pointer" data-id="{{ comment.id }}" data-type = "event_comment" title="Delete">
-                    <img src="{% static 'assets/trash-bin.svg' %}" class="h-5 w-5 opacity-70 hover:opacity-100 transition">
+                    <img src="{% static 'assets/trash-bin.svg' %}" class="h-5 w-5 opacity-70 hover:opacity-100 transition filter invert">
                 </button>
             {% endif %}
         </div>
         
         <!-- Content -->
-        <div class="text-sm text-gray-700 mb-4 whitespace-pre-line leading-relaxed">
+        <div class="text-sm text-gray-300 mb-4 whitespace-pre-line leading-relaxed">
             {{ comment.content|linebreaksbr }}
         </div>
 
@@ -28,20 +28,20 @@
         <div class="flex justify-between items-center text-sm">
             <div class="flex items-center gap-4">
                 <!-- Like (placeholder) -->
-                <button class="flex items-center gap-1 text-gray-600 comment-container cursor-pointer" data-comment-id="{{ comment.id }}">
+                <button class="flex items-center gap-1 text-gray-400 comment-container cursor-pointer transition-colors" data-comment-id="{{ comment.id }}">
                     <i class="fa-solid fa-thumbs-up {% if user.info in comment.likes.all %}text-[#53d26a]{% endif %}"></i>
                     <span>{{comment.total_likes}}</span>
                 </button>
 
                 <!-- Hide/Show replies (UI only) -->
-                <button class="text-gray-600 font-semibold hover:text-black transition text-xs lg:text-sm"
+                <button class="text-gray-400 hover:text-white font-semibold transition text-xs lg:text-sm"
                         onclick="toggleReplies({{ comment.id }}, this, {{ comment.replies.count }})">
                     <i class="fa-solid fa-chevron-down text-xs"></i> Show Replies (<span id="show_reply_count_{{ comment.id }}">{{ comment.replies.count }}</span>)
                 </button>
             </div>
 
             <!-- Reply -->
-            <div class="bg-black text-white inline-flex items-center gap-2 rounded-lg text-sm font-medium transition hover:scale-[1.03] shadow-sm px-4 py-1 cursor-pointer" onclick="toggleReplyForm({{ comment.id }})">    
+            <div class="bg-gradient-to-br from-green-600 to-green-900 hover:from-green-500 hover:to-green-800 text-white inline-flex items-center gap-2 rounded-lg text-sm font-medium transition hover:scale-[1.03] shadow-lg px-4 py-2 cursor-pointer" onclick="toggleReplyForm({{ comment.id }})">    
                 <i class="fa-solid fa-paper-plane text-xs"></i> Reply
             </div>
         </div>
@@ -50,21 +50,21 @@
 
     {% comment %} reply form {% endcomment %}
     <div id="reply-form-{{ comment.id }}" class="w-[95%] md:w-3/4 ml-auto my-4 hidden">
-        <form method="POST" action="{% url 'save_event_reply' %}" data-comment-id="{{ comment.id }}" class="bg-white border border-gray-200 p-5 rounded-xl duration-200 reply-form">
+        <form method="POST" action="{% url 'save_event_reply' %}" data-comment-id="{{ comment.id }}" class="bg-[#262b34] border border-[#2d323b] p-5 rounded-xl duration-200 reply-form shadow-lg">
             {% csrf_token %}
             <input type="hidden" name="comment_id" value="{{ comment.id }}">
 
-            <label for="reply_content_{{ comment.id }}" class="block text-sm font-medium text-gray-700 mb-2">
+            <label for="reply_content_{{ comment.id }}" class="block text-sm font-medium text-gray-300 mb-2">
                 Write a reply
             </label>
             <textarea id="reply_content_{{ comment.id }}" name="reply_content" rows="4"
                     placeholder="Share your thoughts..."
                     required
-                    class="w-full resize-none border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition placeholder-gray-400"></textarea>
+                    class="w-full resize-none border border-[#2d323b] bg-[#161b22] text-white placeholder:text-gray-400 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"></textarea>
             
             <div class="flex justify-end mt-3">
                 <button type="submit"
-                    class="inline-flex items-center gap-2 bg-black text-white px-5 py-1.5 rounded-lg text-sm font-medium hover:bg-gray-900 transition hover:scale-[1.03] shadow-sm">
+                    class="inline-flex items-center gap-2 bg-gradient-to-br from-green-600 to-green-900 hover:from-green-500 hover:to-green-800 text-white px-5 py-1.5 rounded-lg text-sm font-medium transition hover:scale-[1.03] shadow-lg">
                     <i class="fa-solid fa-paper-plane text-xs"></i> Submit
                 </button>
             </div>
@@ -75,39 +75,39 @@
     <!-- reply section -->
     <div class="flex gap-x-2 mb-4 mt-2">
         <!-- Left vertical bar -->
-        <div class="bg-black w-2 ml-5 rounded-full"></div>
+        <div class="bg-gradient-to-b from-green-600 to-green-900 w-2 ml-5 rounded-full"></div>
 
         <!-- Replies container -->
         <div class="flex flex-col gap-y-4 ml-auto w-full" id="replies-for-{{ comment.id }}" style="display: none;">
             {% for reply in comment.replies.all %}
             <div id="reply-{{ reply.id }}"
-                class="ml-auto max-w-[95%] md:max-w-[75%] bg-[#f7f7f7] px-4 py-3 rounded-lg flex flex-col gap-y-2 relative transition shadow-md">
+                class="ml-auto max-w-[95%] md:max-w-[75%] bg-[#161b22] border border-[#2d323b] px-4 py-3 rounded-lg flex flex-col gap-y-2 relative transition shadow-lg hover:border-green-600/30">
 
                 <!-- Header -->
                 <div class="flex items-center gap-3">
                     <a href='{% url "user_profile" reply.user.user.username %}' class='flex items-center gap-3'>
                         <img src="{{ reply.user.profile_image.url }}?v={{ reply.user.updated_at.timestamp }}" alt=""
-                        class="w-10 h-10 rounded-lg object-cover ring-1 ring-gray-300">
-                        <p class="font-semibold text-sm text-gray-800 pr-10">{{ reply.user.user.first_name }} {{ reply.user.user.last_name }}</p>
+                        class="w-10 h-10 rounded-lg object-cover ring-1 ring-[#2d323b]">
+                        <p class="font-semibold text-sm text-white hover:text-green-400 transition-colors pr-10">{{ reply.user.user.first_name }} {{ reply.user.user.last_name }}</p>
                     </a>
 
                     {% if reply.user == user.info %}
                     <button class="absolute right-2 top-2 delete-event-reply" data-id="{{ reply.id }}" data-type = "event_reply" title="Delete Reply">
-                        <img src="{% static 'assets/trash-bin.svg' %}" class="h-5 w-5 opacity-70 hover:opacity-100 transition cursor-pointer">
+                        <img src="{% static 'assets/trash-bin.svg' %}" class="h-5 w-5 opacity-70 hover:opacity-100 transition cursor-pointer filter invert">
                     </button>
                     {% endif %}
                 </div>
-                <div class="text-sm text-gray-700 whitespace-pre-line leading-relaxed">
+                <div class="text-sm text-gray-300 whitespace-pre-line leading-relaxed">
                     {{ reply.content|linebreaksbr }}
                 </div>
 
                 <!-- Footer -->
-                <div class="flex justify-between items-center mt-1 text-xs text-gray-500">
+                <div class="flex justify-between items-center mt-1 text-xs text-gray-400">
                     <p>{{ reply.created_at|date:"M j, Y" }}</p>
 
                     <!-- Like (visual only) -->
-                    <button class="flex items-center gap-1 text-gray-600 reply-container cursor-pointer" data-reply-id="{{ reply.id }}">
-                        <i class="fa-solid text-base fa-thumbs-up {% if user.info in reply.likes.all %}text-[#53d26a]{% endif %}"></i>
+                    <button class="flex items-center gap-1 text-gray-400 reply-container cursor-pointer transition-colors" data-reply-id="{{ reply.id }}">
+                        <i class="fa-solid text-base fa-thumbs-up {% if user.info in reply.likes.all %}text-green-400{% endif %}"></i>
                         <span class='text-base'>{{reply.total_likes}}</span>
                     </button>
                 </div>

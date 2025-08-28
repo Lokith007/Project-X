@@ -1,55 +1,228 @@
 {% load static %}
 
 {% if section == 'info' %}
-<div class=" bg-white rounded-md px-3 py-5">
-    <div class="flex flex-col gap-y-5 text-sm">
-        <div class="flex gap-x-3 items-start">
-            <img class="w-10 h-10 lg:w-12 lg:h-12" src="{% static 'assets/birthday_icon.svg' %}" alt="">
-            <div class="w-full">
-                <p class="font-bold">DOB</p>
-                <p class="break-words text-justify text-[#686868]">{% if userinfo_obj.dob %}{{userinfo_obj.dob}}{% else %}Not Updated yet..{% endif %}</p>
-            </div>
-        </div>
-        <div class="flex gap-x-4 items-start">
-            <img class="w-10 h-10 lg:w-10 lg:h-10" src="{% static 'assets/status-icon.svg' %}" alt="">
-            <div class="w-full">
-                <p class="font-bold">Status</p>
-                <p class="break-words text-[#686868]">{% if userinfo_obj.status %}{{userinfo_obj.status}}{% else %}Not Updated yet..{% endif %}</p>
-            </div>
-        </div>
-        {% if userinfo_obj.gender %}
-        <div class="flex gap-x-3 items-start">
-            <img class="w-10 h-10 lg:w-12 lg:h-12" src="{% static 'assets/gender_icon.svg' %}" alt="">
-            <div class="w-full">
-                <p class="font-bold">Gender</p>
-                <p class="break-words text-justify text-[#686868]">{{userinfo_obj.get_gender_display}}</p>
-            </div>
-        </div>
-        {% endif %}
-        <div class="flex gap-x-3 items-start">
-            <img class="w-10 h-10 lg:w-12 lg:h-12" src="{% static 'assets/email_icon.svg' %}" alt="">
-            <div class="w-full">
-                <p class="font-bold">Email</p>
-                <p class="break-words text-justify text-[#686868]">{% if userinfo_obj.contact_email %}{{userinfo_obj.contact_email}}{% else %}Not Updated yet..{% endif %}</p>
-            </div>
-        </div>
-        {% if userinfo_obj.phone %}
-        <div class="flex gap-x-3 items-start">
-            <img class="w-10 h-10 lg:w-12 lg:h-12" src="{% static 'assets/call_icon.svg' %}" alt="">
-            <div class="w-full">
-                <p class="font-bold">Phone</p>
-                <p class="break-words text-justify text-[#686868]">{{userinfo_obj.phone}}</p>
-            </div>
-        </div>
-        {% endif %}
 
-        <div class="flex gap-x-3 items-start">
-            <img class="w-10 h-10 lg:w-12 lg:h-12" src="{% static 'assets/location_icon.svg' %}" alt="">
-            <div class="w-full">
-                <p class="font-bold">Location</p>
-                <p class="break-words text-justify text-[#686868]">{% if userinfo_obj.location %}{{userinfo_obj.location}}{% else %}Not Updated yet..{% endif %}</p>
+<div class="flex flex-col px-2 py-4 bg-[#161b23] gap-y-3 w-full relative border border-gray-800 rounded-xl shadow-sm">
+    {% if request.user.info == userinfo_obj %}
+        <i class="fa-solid fa-pen-to-square h-6 w-6 cursor-pointer absolute top-4 right-4 text-gray-400 hover:scale-105 transition-transform duration-200" 
+          onclick="openAddSkill()" id="addSkillBtn"></i>
+    {% endif %}
+    <div class='flex flex-row gap-x-1 mx-auto items-center'>
+        <p class="text-xl font-thin text-white text-center">Skills</p>
+        <i class="fa-solid fa-code text-lg text-white"></i>
+    </div><hr class="border-t border-gray-700">
+    <form method='POST' class="flex-col gap-y-3 p-3 hidden" id="addSkillContainer">
+        {% csrf_token %}
+        <p class='text-sm'>Add Skills</p>
+        <input type="hidden" name="form_type" value="skill">
+        <div class="flex flex-col gap-y-1 w-full">
+            {{ skill_form.skills }}
+            {% if skill_form.skills.errors %}
+                <div class="text-red-500 text-sm">
+                    {{ skill_form.skills.errors }}
+                </div>
+            {% endif %}
+        </div>
+        <div class="self-center">
+            <button type="submit" class="bg-[#6feb85] text-black px-3 py-1">Save</button>
+        </div>
+    </form>
+
+    {% comment %} Skill List {% endcomment %}
+    <div class="flex flex-col pl-3 gap-y-3 mt-2" id="skill_list_section">
+      <div class="flex flex-wrap gap-2.5">
+        {% if skill_list %}
+          {% for skill in skill_list %}
+          <a href="{% url 'explore-project' %}?skill={{ skill.id }}"
+             title="Explore projects with {{ skill.name }}"
+             class="group inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-semibold text-[#71dd83] bg-[#6feb8620] hover:bg-[#6feb8633] border border-[#74e288] hover:border-[#8ff3a0] cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#6feb85]/50">
+            <span class="truncate">{{ skill.name }}</span>
+          </a>
+          {% endfor %}
+        {% else %}
+        <div class="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-semibold text-[#64c073] bg-[#6feb8614] border-2 border-dashed border-[#6feb85] mx-auto">
+          <i class="fa-regular fa-face-frown text-[#64c073]/80"></i>
+          <span>Not Updated Yet...</span>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+</div>
+
+{% comment %} education {% endcomment %}
+<div class="relative w-full p-5 bg-[#161b23] text-[#a8b3cf] rounded-xl shadow-sm border border-gray-800 transition-all duration-300">
+    {% if user == userinfo_obj.user %}
+    <div class="absolute right-5 top-5">
+        <i class="fa-solid fa-pen-to-square h-6 w-6 text-gray-400 cursor-pointer hover:scale-105 transition-transform duration-200" 
+           onclick="openEditEducation()"></i>
+    </div>
+    {% endif %}
+
+    <div class="mb-4">
+        <h2 class="text-xl font-thin text-white border-b border-[#2d323b] pb-3 mt-1"><i class="fa-solid fa-school text-gray-400"></i> &nbspEducation</h2>
+    </div>
+
+    <div class="flex flex-row items-center gap-4">
+        <div class="flex-shrink-0">
+            <div class="rounded-lg lg:w-16 lg:h-16 w-14 h-14 border border-gray-600 p-1.5 flex items-center justify-center">
+                <i class="fa-solid fa-graduation-cap text-2xl text-gray-400"></i>
             </div>
+        </div>
+
+        <div class="w-full" id="edu">
+            {% if userinfo_obj.education.name %}
+                <p class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ userinfo_obj.education.name }}</p>
+
+                {% if userinfo_obj.education.degree != none %}
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        {{ userinfo_obj.education.degree }}, {{ userinfo_obj.education.field_of_study }}
+                    </p>
+                {% else %}
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        {{ userinfo_obj.education.field_of_study }}
+                    </p>
+                {% endif %}
+
+                <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">
+                    {% if userinfo_obj.education.start_date and userinfo_obj.education.end_date %}
+                        {{ userinfo_obj.education.start_date|date:"Y" }} - {{ userinfo_obj.education.end_date|date:"Y" }}
+                    {% else %}
+                        {{ userinfo_obj.education.start_date|date:"Y" }}{{ userinfo_obj.education.end_date|date:"Y" }}
+                    {% endif %}
+                </p>
+            {% else %}
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-3">Not Updated Yet...</p>
+            {% endif %}
         </div>
     </div>
 </div>
+
+<!-- Experience Section -->
+<div class="relative bg-[#161b23] text-[#a8b3cf] rounded-xl p-5 shadow-md border border-gray-800">
+    {% if user == userinfo_obj.user %}
+    <div class="absolute right-5 top-5">
+        <i class="fa-solid fa-pen-to-square text-gray-400 h-6 w-6 cursor-pointer" onclick="openEditExp()"></i>
+    </div>
+    {% endif %}
+
+    <div class="flex flex-col gap-6">
+        <div>
+            <p class="text-xl font-thin text-white border-b border-[#2d323b] pb-3">
+                <i class="fa-solid fa-briefcase mr-2 text-gray-400"></i> Experience
+            </p>
+        </div>
+
+        {% if exp_obj %}
+        {% for exp in exp_obj %}
+        <div class="flex items-start gap-4 border-l-4 pl-5 relative">
+            <i class="fa-solid fa-building-user text-2xl mt-1 flex-shrink-0"></i>
+
+            <div class="flex flex-col gap-1 w-full min-w-0">
+                <p class="text-lg font-semibold text-gray-400">{{ exp.name }}</p>
+                <p class="text-sm text-gray-400">{{ exp.role }}</p>
+
+                {% if exp.description %}
+                <p class="text-sm text-gray-300 mt-2 leading-relaxed">{{ exp.description }}</p>
+                {% endif %}
+
+                {% if exp.start_date and exp.end_date %}
+                <p class="text-sm text-gray-500 mt-3">{{ exp.start_date|date:"M Y" }} – {{ exp.end_date|date:"M Y" }}</p>
+                {% elif exp.start_date and exp.till_now %}
+                <p class="text-sm text-gray-500 mt-3">{{ exp.start_date|date:"M Y" }} – Present</p>
+                {% elif exp.end_date %}
+                <p class="text-sm text-gray-500 mt-3">{{ exp.end_date|date:"M Y" }}</p>
+                {% endif %}
+            </div>
+
+            {% if user == userinfo_obj.user %}
+            <form method="POST" action="{% url 'delete_data' %}" class="absolute right-0 top-1">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="delete_exp_obj">
+                <input type="hidden" name="exp_id" value="{{exp.id}}">
+                <button type="submit" class="group">
+                    <i class="fa-solid fa-trash-can text-red-400 hover:text-red-600 transition duration-150 text-lg cursor-pointer"></i>
+                </button>
+            </form>
+            {% endif %}
+        </div>
+
+        {% if not forloop.last %}
+        <hr class="border-t border-[#2d323b] mt-5 mb-2">
+        {% endif %}
+        {% endfor %}
+        {% else %}
+        <p class="text-gray-400">Not Updated Yet...</p>
+        {% endif %}
+    </div>
+</div>
+
+{% comment %} info {% endcomment %}
+<div class="border border-gray-800  bg-[#161b23] rounded-2xl p-6 shadow-sm w-full">
+  <div class="flex flex-col space-y-6 text-sm text-[#a8b3cf]">
+
+    <!-- Info Row -->
+    <div class="flex items-start gap-4">
+      <img class="w-8 h-8 sm:w-10 sm:h-10" src="{% static 'assets/birthday_icon.svg' %}" alt="">
+      <div>
+        <p class="text-sm font-thin">Date of Birth</p>
+        <p>
+          {% if userinfo_obj.dob %}{{userinfo_obj.dob}}{% else %}Not Updated yet..{% endif %}
+        </p>
+      </div>
+    </div>
+
+    <div class="flex items-start gap-4">
+      <img class="w-8 h-8 sm:w-10 sm:h-10" src="{% static 'assets/status-icon.svg' %}" alt="">
+      <div>
+        <p class="text-sm font-thin">Status</p>
+        <p>
+          {% if userinfo_obj.status %}{{userinfo_obj.status}}{% else %}Not Updated yet..{% endif %}
+        </p>
+      </div>
+    </div>
+
+    {% if userinfo_obj.gender %}
+    <div class="flex items-start gap-4">
+      <img class="w-8 h-8 sm:w-10 sm:h-10" src="{% static 'assets/gender_icon.svg' %}" alt="">
+      <div>
+        <p class="text-sm font-thin">Gender</p>
+        <p>{{userinfo_obj.get_gender_display}}</p>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="flex items-start gap-4">
+      <img class="w-8 h-8 sm:w-10 sm:h-10" src="{% static 'assets/email_icon.svg' %}" alt="">
+      <div>
+        <p class="text-sm font-thin">Email</p>
+        <p>
+          {% if userinfo_obj.contact_email %}{{userinfo_obj.contact_email}}{% else %}Not Updated yet..{% endif %}
+        </p>
+      </div>
+    </div>
+
+    {% if userinfo_obj.phone %}
+    <div class="flex items-start gap-4">
+      <img class="w-8 h-8 sm:w-10 sm:h-10" src="{% static 'assets/call_icon.svg' %}" alt="">
+      <div>
+        <p class="text-sm font-thin">Phone</p>
+        <p>{{userinfo_obj.phone}}</p>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="flex items-start gap-4">
+      <img class="w-8 h-8 sm:w-10 sm:h-10" src="{% static 'assets/location_icon.svg' %}" alt="">
+      <div>
+        <p class="text-sm font-thin">Location</p>
+        <p>
+          {% if userinfo_obj.location %}{{userinfo_obj.location}}{% else %}Not Updated yet..{% endif %}
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
 {% endif %}

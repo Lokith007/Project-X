@@ -88,7 +88,7 @@ def load_more_logs(request):
     for log in logs_page.object_list:
         log.increment_view_count()
 
-    html = render_to_string("partials/log_cards.html", {"logs_qs": logs_page.object_list, "user": request.user}, request=request )
+    html = render_to_string("mindlogs/partials/log_cards.html", {"logs_qs": logs_page.object_list, "user": request.user}, request=request )
     return JsonResponse({
         "logs_html": html,
         "has_next": logs_page.has_next()
@@ -201,7 +201,7 @@ def load_more_personal_logs(request, username):
     for log in logs_page.object_list:
         log.increment_view_count()
 
-    html = render_to_string("partials/personal_log_cards.html", {"mindlogs": logs_page.object_list, "user": request.user}, request=request)
+    html = render_to_string("mindlogs/partials/personal_log_cards.html", {"mindlogs": logs_page.object_list, "user": request.user}, request=request)
     return JsonResponse({
         "logs_html": html,
         "has_next": logs_page.has_next()

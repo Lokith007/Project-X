@@ -8,43 +8,51 @@
         <!-- start of 1st event -->
         {% if org_events %}
         {% if organization.user == request.user %}
-        <a href='{% url "org_event_form" organization.id %}' class="self-end border border-black px-3 py-1 flex gap-x-2 items-center cursor-pointer bg-white">
+        <a href='{% url "org_event_form" organization.id %}' class="self-end border border-[#2d323b] px-3 py-1 mt-2 flex gap-x-2 items-center cursor-pointer bg-[#1a1f2b] text-white hover:bg-gradient-to-r hover:from-green-600 hover:to-green-900 transition-all duration-300">
             <img src="{% static 'assets/plus-edit.svg' %}" alt="" class="w-4 h-4">
             <p>New Event</p>
         </a >
         {% endif %}
         {% for event in org_events %}                        
-        <div class="flex flex-col w-full md:w-[34rem] bg-white -mt-1 p-3">
-            <div class="w-full aspect-video overflow-hidden bg-[#d4d4d4] relative dot">
-                <img src="{{event.banner.url}}" alt="Post" class="w-full h-full object-cover">
+        <div class="flex flex-col w-full max-w-[40rem] bg-[#1a1f2b] border border-[#2d323b] p-4 pb-5 shadow-lg rounded-xl hover:shadow-xl hover:border-green-600/30 transition-all duration-300">
+            <div class="w-full aspect-video overflow-hidden bg-[#262b34] relative rounded-lg">
+                <img src="{{event.banner.url}}" alt="Event Banner" class="w-full h-full object-cover">
             </div>
-            <div class=" flex justify-between pt-2 items-end">
-                <div class="flex flex-col gap-y-2 mt-2">
-                    <div class="flex gap-x-2 items-start">
-                        <img src="{% static 'assets/org_event.svg' %}" alt="" class="w-7 h-7">
-                        <div class="font-bold">{{event.title}}</div>
+            <div class=" flex justify-between pt-3 items-end">
+                <div class="flex flex-col gap-y-3 mt-2">
+                    <div class="flex gap-x-3 items-start">
+                        <div class="p-1.5 bg-gradient-to-br from-green-600/20 to-green-800/20 rounded-lg">
+                            <img src="{% static 'assets/org_event.svg' %}" alt="" class="w-5 h-5 filter brightness-0 invert">
+                        </div>
+                        <div class="font-bold text-white text-lg">{{event.title}}</div>
                     </div>
                     <!-- <div>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Aut quo eum suscipit aliquid enim porro quos, iste quaerat cumque, omnis delectus aperiam, dolores earum tempora cum! Quas veritatis inventore consectetur!</div> -->
-                    <div class="flex gap-x-2 items-start">
-                        <img src="{% static 'assets/category.svg' %}" alt="" class="w-7 h-7">
-                        <div class="text-[#686868]">{{event.event_type}}</div>
+                    <div class="flex gap-x-3 items-start">
+                        <div class="p-1.5 bg-gradient-to-br from-blue-600/20 to-blue-800/20 rounded-lg">
+                            <img src="{% static 'assets/category.svg' %}" alt="" class="w-5 h-5 filter brightness-0 invert">
+                        </div>
+                        <div class="text-gray-300">{{event.event_type}}</div>
                     </div>
                     
-                    <div class="flex gap-x-2 items-start">
-                        <img src="{% static 'assets/organization.svg' %}" alt="" class="w-7 h-7">
-                        <div class="text-[#686868]">{{event.organization.name}}</div>
+                    <div class="flex gap-x-3 items-start">
+                        <div class="p-1.5 bg-gradient-to-br from-purple-600/20 to-purple-800/20 rounded-lg">
+                            <img src="{% static 'assets/organization.svg' %}" alt="" class="w-5 h-5 filter brightness-0 invert">
+                        </div>
+                        <div class="text-gray-300">{{event.organization.name}}</div>
                     </div>
     
-                    <div class="flex gap-x-2 items-center">
-                        <img src="{% static 'assets/calendar.svg' %}" alt="" class="w-7 h-7">
-                        <p class='text-[#686868]'>{{event.start_date|date:"M j, Y"}}</p>
+                    <div class="flex gap-x-3 items-center">
+                        <div class="p-1.5 bg-gradient-to-br from-orange-600/20 to-orange-800/20 rounded-lg">
+                            <img src="{% static 'assets/calendar.svg' %}" alt="" class="w-5 h-5 filter brightness-0 invert">
+                        </div>
+                        <p class='text-gray-300'>{{ event.start_date|date:"F j, Y" }}</p>
                     </div>
     
                 </div>
             </div>
-            <div class='flex flex-row mt-1'>
-                <a href='{% url "event_detail" event.id %}' class="bg-black px-5 text-white py-1 rounded hover:bg-[#00000067] transition cursor-pointer text-center mx-auto">
-                    View
+            <div class='flex flex-row mt-4 justify-between items-center'>
+                <a href='{% url "event_detail" event.id %}' class="bg-gradient-to-br from-green-600 to-green-900 hover:from-green-500 hover:to-green-800 px-6 py-2 text-white rounded-lg transition hover:scale-[1.03] cursor-pointer text-center shadow-lg font-medium">
+                    View Event
                 </a>
     
                 <div class="bookmarkBtn cursor-pointer bookmark-container-event text-[#4a5565]" data-event-id = "{{ event.id }}">
@@ -54,15 +62,17 @@
         </div>
         {% endfor %}
         {% else %}
-        <div class='flex flex-col gap-y-6'>
-            <img src='{% static "assets/no-event.svg" %}' class='w-24 h-24 mx-auto mt-20'>
+        <div class="flex flex-col items-center justify-center p-4 mt-8">
+            <div class="w-24 h-24 mb-6 bg-gradient-to-br from-green-600/20 to-green-900/20 rounded-full flex items-center justify-center">
+            <img src="{% static 'assets/org_event.svg' %}" alt="" class="w-12 h-12 filter brightness-0 invert">
+            </div>
             {% if organization.user == request.user %}
-            <a href='{% url "org_event_form" organization.id %}' class="flex flex-row gap-x-2 items-center bg-gray-300 text-black mx-auto p-2 rounded-2xl cursor-pointer -mt-3">
-                <img src = '{% static "assets/plus-edit.svg" %}' class='w-4 h-4'>
-                <p>Add Events</p>
+            <a href='{% url "org_event_form" organization.id %}' class="flex flex-row gap-x-2 items-center bg-[#1a1f2b] border border-[#2d323b] text-white mx-auto px-4 py-2 rounded-xl cursor-pointer mb-4 hover:bg-gradient-to-r hover:from-green-600 hover:to-green-900 transition-all duration-300">
+            <img src = '{% static "assets/plus-edit.svg" %}' class='w-4 h-4'>
+            <p>Add Event</p>
             </a>
             {% endif %}
-            <p class='text-center text-lg text-gray-800 pb-20 -mt-3'>No Events Yet...</p>
+            <p class='text-center text-lg text-gray-300 pb-20 -mt-2'>No Events Yet...</p>
         </div>
         {% endif %}
             

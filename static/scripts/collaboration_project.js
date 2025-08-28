@@ -35,28 +35,32 @@ function toggleJoinRequest(projectId){
             const helpDiv = $("#join_help_text_div");
 
             if(data.requested){
-                // Apply success styles
+                // Apply success styles - dark theme
                 helpDiv
-                    .removeClass("bg-[#fffaf3] border-[#fbbf24] bg-[#fef2f2] border-[#f87171]")
-                    .addClass("bg-[#f0fdf4] border-[#22c55e]");
+                    .removeClass("bg-yellow-600/20 border-yellow-600 bg-red-600/20 border-red-600")
+                    .addClass("bg-green-600/20 border-green-600")
+                    .removeClass("border-l-yellow-500 border-l-red-500")
+                    .addClass("border-l-green-500");
 
                 helpDiv.find("i")
-                    .removeClass("text-[#f59e0b] text-[#dc2626]")
-                    .addClass("text-[#16a34a]");
+                    .removeClass("text-yellow-400 text-red-400")
+                    .addClass("text-green-400");
 
                 helpDiv.find("#join_help_text_div").html(
                     "Request sent successfully 🎉. Updation takes a few seconds."
                 );
 
             } else {
-                // Apply cancelled styles
+                // Apply cancelled styles - dark theme
                 helpDiv
-                    .removeClass("bg-[#fffaf3] border-[#fbbf24] bg-[#f0fdf4] border-[#22c55e]")
-                    .addClass("bg-[#fef2f2] border-[#f87171]");
+                    .removeClass("bg-yellow-600/20 border-yellow-600 bg-green-600/20 border-green-600")
+                    .addClass("bg-red-600/20 border-red-600")
+                    .removeClass("border-l-yellow-500 border-l-green-500")
+                    .addClass("border-l-red-500");
 
                 helpDiv.find("i")
-                    .removeClass("text-[#f59e0b] text-[#16a34a]")
-                    .addClass("text-[#dc2626]");
+                    .removeClass("text-yellow-400 text-green-400")
+                    .addClass("text-red-400");
 
                 helpDiv.find("#join_help_text_div").html(
                     "Request cancelled. You can re-apply anytime!"
@@ -126,14 +130,6 @@ function leaveProjectMembers(projectId){
                 }
                 $("#show_status").hide();
                 const helpDiv = $("#join_help_text_div");
-                helpDiv
-                    .removeClass("bg-[#fffaf3] border-[#fbbf24] bg-[#fef2f2] border-[#f87171]")
-                    .addClass("bg-[#f0fdf4] border-[#22c55e]");
-
-                helpDiv.find("i")
-                    .removeClass("text-[#f59e0b] text-[#dc2626]")
-                    .addClass("text-[#16a34a]");
-
                 helpDiv.find("#join_help_text_div").html(
                     "You’ve left the project 👋. Request again later if you're still interested."
                 );
@@ -313,11 +309,16 @@ $(document).ready(function () {
                     $('#total_comments').text(response.comment_count);
                     if (response.comment_count === 0) {
                         $('#commentBox').html(`
-                        <div class="text-xl bg-black text-white p-2 rounded-lg text-center mb-4"> <span class="text-white"  id='total_comments'>${response.comment_count}</span> Comments</div>
-                        <div id="commentList" class="flex flex-col gap-y-2 px-3 mt-2">
-                            <div class="flex flex-col gap-y-8 px-3" id='noCommentSVG'>
-                                <img src="${commentSvgUrl}" class="h-1/2 w-1/2 mx-auto">
-                                <p class="text-center text-lg mt-2 text-gray-600 pb-5">No comments Yet...</p>
+                        <div class="text-xl bg-gradient-to-br from-green-600 to-green-900 text-white p-4 rounded-t-xl text-center mb-2"> <span class="text-white"  id='total_comments'>${response.comment_count}</span> Comments</div>
+                        <div id="commentList" class="flex flex-col gap-y-4 px-4 mt-2">
+                            <div class='flex flex-col gap-y-8 px-3' id='noCommentSVG'>
+                                <div class="flex flex-col items-center justify-center py-8">
+                                    <div class="w-20 h-20 mb-4 bg-gradient-to-br from-green-500/20 to-green-700/20 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-comments text-2xl text-green-400"></i>
+                                    </div>
+                                    <p class='text-center text-lg text-gray-300 pb-5'>No comments yet...</p>
+                                    <div class="w-12 h-0.5 bg-gradient-to-r from-green-500 to-green-700 rounded-full"></div>
+                                </div>
                             </div>
                         </div>`
                         );
@@ -332,6 +333,9 @@ $(document).ready(function () {
         });
     });
 });
+
+
+
 
 //Delete reply comment
 $(document).ready(function () {

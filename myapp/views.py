@@ -3,7 +3,7 @@ from django.core.files.base import ContentFile
 from django.utils import timezone
 from django.utils.timezone import now, localtime
 from datetime import timedelta
-from django.db.models import F
+from django.db.models import F, Avg
 from django.http import Http404, HttpResponse, HttpResponseNotAllowed, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth import login,logout,authenticate
@@ -22,7 +22,13 @@ from .algorithms import get_explore_users, get_personalized_feed, top_skills_lis
 from allauth.account.views import PasswordChangeView
 from django.contrib import messages
 from .utils import send_notification_email, verified_user_ids
-from mindlogs.utils import get_24h_mindlog_stats
+from datetime import date, timedelta
+from collections import Counter, defaultdict
+
+#Logs
+from mindlogs.utils import get_24h_mindlog_stats, streak_calculation
+from mindlogs.models import MindLog
+from mindlogs.views import get_max_streak, build_contribution_months
 
 # Create your views here.
 class CustomPasswordChangeView(PasswordChangeView):
@@ -137,7 +143,7 @@ def index(request):
     logform = MindLogForm()
     mindlog_obj = get_24h_mindlog_stats()
     context = {
-        'active_home': "px-5 py-1 -ml-5 text-lg text-black font-semibold bg-[#0000002a] rounded-xl w-[calc(100%+1.25rem)]",
+        'active_home': True,
         'post_form': post_form,
         'logform': logform,
         'feed_items': feed_page,
@@ -214,7 +220,7 @@ def get_notification_count(request):
 @login_required
 def user_profile(request, user_name):
     userinfo_obj = get_object_or_404(userinfo, user__username = user_name)
-    user_project = user_created_project = post_qs= link_available = open_exp_flag = open_edu_flag = open_editprofile_flag = open_project_flag = open_cp_flag =editprofile_form = edu_form = exp_form = project_form = skill_form = cp_form = False
+    user_project = user_created_project = post_qs= link_available = open_exp_flag = open_edu_flag = open_editprofile_flag = open_project_flag =editprofile_form = edu_form = exp_form = project_form = skill_form  = False
     social_links = { 
     'github': userinfo_obj.github if userinfo_obj.github else None,
     'linkedin': userinfo_obj.linkedin if userinfo_obj.linkedin else None,
@@ -227,16 +233,52 @@ def user_profile(request, user_name):
     exp_obj = userinfo_obj.experiences.all().order_by('-start_date')
     post_form = PostForm()
     
+    #streak and other logs calculations
+    logs = MindLog.objects.filter(user = userinfo_obj).order_by("-timestamp")
+    
+    total_logs = logs.count()
+    last_log_date = timezone.localtime(logs.first().timestamp).date() if total_logs else None
+    
+    avg_latency = int(logs.aggregate(avg=Avg('latency'))['avg']) if total_logs else 0 # Avg Latency
+    colors = list(logs.exclude(neuro_color__isnull=True).values_list('neuro_color', flat=True)) 
+    top_color = Counter(colors).most_common(1)[0][0] if colors else None #color vibe
+    clone_impact = MindLog.objects.filter(original_log__user=userinfo_obj).count()  #total clone count
+    
+    streak_count = streak_calculation(logs)
+    max_streak_count = get_max_streak(logs)
+    
+    year = int(request.GET.get('year', timezone.now().year))
+    log_heat_map = logs.filter(
+        timestamp__year=year
+    ).values_list('timestamp', flat=True)
+
+    log_map = defaultdict(int)
+    for ts in log_heat_map:
+        date_str = timezone.localtime(ts).strftime('%Y-%m-%d')
+        log_map[date_str] += 1
+
+    # Prepare full 1-year grid
+    start_date = date(year, 1, 1)
+    end_date = date(year, 12, 31)
+    total_days = (end_date - start_date).days + 1
+
+    contribution_days = []
+    for i in range(total_days):
+        current_day = start_date + timedelta(days=i)
+        contribution_days.append({
+            'date': current_day.strftime('%Y-%m-%d'),
+            'count': log_map.get(current_day.strftime('%Y-%m-%d'), 0)
+        })
+        
+    contribution_months = build_contribution_months(contribution_days)
+    log_year_count =  sum(log_map.values())
+    years_available = logs.dates('timestamp', 'year')
+    
+    #latest 5 logs 
+    mindlogs = logs[:5]
+    
     section = request.GET.get('section', 'overview') 
-    if section == 'projects':
-        project = request.GET.get('project')
-        if project == 'created':
-            user_created_project = userinfo_obj.created_projects.all()
-        else:
-            user_project = userinfo_obj.projects.all().order_by('-start_date')
-            if not user_project and userinfo_obj.created_projects.all():
-                redirect_url = reverse("user_profile", args=[userinfo_obj.user.username])
-                return redirect(f'{redirect_url}?section=projects&project=created')
+    print(section)
         
     if section == 'posts':
         post_qs = post.objects.filter(user = userinfo_obj).order_by('-created_at')
@@ -252,7 +294,6 @@ def user_profile(request, user_name):
         editprofile_form = EditProfileForm(instance=request.user.info)
         project_form = UserProjectForm()
         skill_form = EditSkillForm(instance=request.user.info)
-        cp_form = EditCurrentPositionForm(instance=request.user.info.current_position)
     else:
         session_key = f'user_viewed_{user_name}'
         if not request.session.get(session_key, False):
@@ -283,7 +324,7 @@ def user_profile(request, user_name):
                 request.user.info.education.delete()
                 education.objects.create(user = request.user.info)
                 redirect_url = reverse("user_profile", args=[request.user.username])
-                return redirect(f"{redirect_url}")
+                return redirect(f"{redirect_url}?section=info")
                 
         elif form_type == 'editprofile':
             editprofile_form = EditProfileForm(request.POST, request.FILES, instance = request.user.info)
@@ -305,36 +346,12 @@ def user_profile(request, user_name):
                 return redirect(redirect_url)
             else:
                 open_editprofile_flag = True
-        elif form_type == 'project':
-            project_form = UserProjectForm(request.POST, request.FILES)
-            if project_form.is_valid():
-                form = project_form.save(commit=False)
-                form.user = request.user.info
-                form.save()
-                project_form = UserProjectForm()
-                redirect_url = reverse('user_profile', args=[request.user.username])
-                return redirect(f'{redirect_url}?section=projects')
-            else:
-                open_project_flag = True
-        elif form_type ==  'current_position':
-            action = request.POST.get('action')
-            if action == 'save':
-                cp_form = EditCurrentPositionForm(request.POST, instance=request.user.info.current_position)
-                if cp_form.is_valid():
-                    form = cp_form.save()       
-                else: 
-                    open_cp_flag = True   
-            elif action == 'delete':
-                request.user.info.current_position.delete()
-                current_position.objects.create(user = request.user.info)
-                redirect_url = reverse("user_profile", args=[request.user.username])
-                return redirect(f"{redirect_url}")
         elif form_type == 'skill':
             skill_form = EditSkillForm(request.POST, instance=request.user.info)
             if skill_form.is_valid():
                 skill_form.save()
                 redirect_url = reverse('user_profile', args=[request.user.username])
-                return redirect(f'{redirect_url}')  
+                return redirect(f'{redirect_url}?section=info')  
                 
     context = {
         'userinfo_obj': userinfo_obj,
@@ -342,10 +359,6 @@ def user_profile(request, user_name):
         'link_available': link_available,
         'exp_obj': exp_obj,
         'section': section,
-        'color': {
-            'active':"bg-black px-2 md:px-4 py-2 cursor-pointer rounded-md text-white font-bold hover:bg-[white] transition hover:text-black",
-            'normal':"px-2 py-2 rounded-md cursor-pointer md:px-2 hover:bg-[white] transition"
-            },
         'is_following': is_following,
         'user_project': user_project,
         'user_created_project': user_created_project,
@@ -357,12 +370,25 @@ def user_profile(request, user_name):
         'post_form': post_form,
         'skill_form': skill_form,
         'project_form': project_form,
-        'cp_form': cp_form,
         'skill_list': skill_list,
         'profile_type': 'user',
-        'flag': {'open_edu_flag': open_edu_flag, 'open_exp_flag': open_exp_flag, 'open_editprofile_flag': open_editprofile_flag, 'open_project_flag': open_project_flag, 'open_cp_flag': open_cp_flag}
+        'flag': {'open_edu_flag': open_edu_flag, 'open_exp_flag': open_exp_flag, 'open_editprofile_flag': open_editprofile_flag, 'open_project_flag': open_project_flag},
+
+        'streak_count': streak_count,
+        'max_streak_count': max_streak_count,
+        'log_map': dict(log_map),
+        'year': year,
+        'years_available': years_available,
+        'contribution_months': contribution_months,
+        'log_year_count': log_year_count,
+        'total_logs': total_logs,
+        'last_log_date': last_log_date,
+        'avg_latency': avg_latency,
+        'top_color': top_color,
+        'clone_impact': clone_impact,
+        'mindlogs': mindlogs
     }
-    return render(request, 'myapp/user-profile_1.html', context)
+    return render(request, 'myapp/user_profile_v2.html', context)
 
 #follow request:
 @login_required
@@ -484,7 +510,7 @@ def explore_organization(request):
     context = {
         'filtered_org': page_obj,
         'post_form': post_form,
-        'active_explore': "px-5 py-1 -ml-5 text-lg text-black font-semibold bg-[#0000002a] rounded-xl w-[calc(100%+1.25rem)]",
+        'active_explore': True,
         'result_count': result_count,
         'query': query,
         'applied_filter': applied_filter,
@@ -704,7 +730,7 @@ def explore_project(request):
         'applied_filter': applied_filter,
         'post_form': post_form,
         'query': query,
-        'active_explore': "px-5 py-1 -ml-5 text-lg text-black font-semibold bg-[#0000002a] rounded-xl w-[calc(100%+1.25rem)]"
+        'active_explore': True
     }
     # print(request.GET)
     return render(request,"myapp/explore-projects.html", context)
@@ -764,7 +790,7 @@ def explore_dev(request):
         'post_form': post_form,  
         'query': query,
         'applied_filter': applied_filter,
-        'active_explore_dev': "px-5 py-1 -ml-5 text-lg text-black font-semibold bg-[#0000002a] rounded-xl w-[calc(100%+1.25rem)]"
+        'active_explore_dev': True
     }
     return render(request, 'myapp/explore_dev.html', context)
 
@@ -800,7 +826,7 @@ def explore_events(request):
     if not (applied_filter or query):
         filtered_events = filtered_events[:100]
         
-    p = Paginator(filtered_events, 12)
+    p = Paginator(filtered_events, 20)
     page_number = request.GET.get('page')
     try:
         page_obj = p.get_page(page_number)
@@ -816,7 +842,7 @@ def explore_events(request):
         'filtered_event': page_obj,
         'result_count': result_count,
         'query': query,
-        'active_explore': "px-5 py-1 -ml-5 text-lg text-black font-semibold bg-[#0000002a] rounded-xl w-[calc(100%+1.25rem)]",
+        'active_explore': True,
         'modes': modes,
         'types': types,
     }
@@ -1056,7 +1082,7 @@ def delete_data(request):
             print(Id)
             experience.objects.get(id = Id).delete()
             redirect_url = reverse("user_profile", args=[request.user.username])
-            return redirect(f"{redirect_url}")
+            return redirect(f"{redirect_url}?section=info")
         elif form_type == 'user_work':
             Id = request.POST.get('id')
             work_obj = get_object_or_404(user_project, id = Id)

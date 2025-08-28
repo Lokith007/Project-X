@@ -8,7 +8,7 @@
 {% block script %}
     <script src="{% static 'scripts/jquery-3.7.1.min.js' %}"></script>
 {% endblock %} 
-{% block body_class %}text-[15px] h-full bg-[#f4f2ee] overflow-x-hidden{% endblock %}
+{% block body_class %}text-[15px] h-full bg-[#0e1217] overflow-x-hidden{% endblock %}
 
 {% block content %} 
 
@@ -25,46 +25,48 @@
 
             <div class="flex gap-x-1 flex-wrap gap-y-2 items-center justify-center absolute top-20">
                 <div class="flex flex-col gap-y-2 items-center">
-                    <div id="exploreTrigger" class="flex items-center bg-black text-white px-2 py-1 rounded-lg cursor-pointer">
-                        <div id="exploreTitle" class="text-lg">Events</div>
-                        <img src="{% static 'assets/down.svg' %}" alt="" class="w-7 h-7">
+                    <div id="exploreTrigger" class="flex items-center bg-gradient-to-br from-green-600 to-green-900 text-white px-3 py-1 rounded-lg cursor-pointer shadow-lg border border-[#2d323b]">
+                        <div id="exploreTitle" class="font-medium"><span>Events</div>
+                        <img src="{% static 'assets/down.svg' %}" alt="" class="w-7 h-7 ml-1">
                     </div>
-                    <div class="hidden flex-col gap-y-2 bg-[#1a1a1acc] px-4 py-3 absolute top-12 left-0 z-10 backdrop-blur-md rounded-xl shadow-lg" id="allExplore">
+                    <div class="hidden flex-col gap-y-2 bg-[#1a1f2b] px-4 py-3 absolute top-12 left-0 z-10 backdrop-blur-md rounded-xl shadow-lg border border-[#2d323b]" id="allExplore">
                         <a href="{% url 'explore_dev' %}" 
-                        class="flex items-center gap-3 text-sm text-white hover:bg-[#2e2e2e] px-4 py-2 rounded-md transition-all cursor-pointer">
-                            <i class="fa-solid fa-code"></i>
+                        class="flex items-center gap-3 text-sm text-white hover:bg-[#262b34] px-4 py-2 rounded-md transition-all cursor-pointer">
+                            <i class="fa-solid fa-code text-green-400"></i>
                             <span>Developers</span>
                         </a>
                         <a href="{% url 'explore-project' %}" 
-                        class="flex items-center gap-3 text-sm text-white hover:bg-[#2e2e2e] px-4 py-2 rounded-md transition-all cursor-pointer">
-                            <i class="fa-solid fa-diagram-project"></i>
+                        class="flex items-center gap-3 text-sm text-white hover:bg-[#262b34] px-4 py-2 rounded-md transition-all cursor-pointer">
+                            <i class="fa-solid fa-diagram-project text-green-400"></i>
                             <span>Projects</span>
                         </a>
                         <a href="{% url 'explore_events' %}" 
-                        class="flex items-center gap-3 text-sm text-white hover:bg-[#2e2e2e] px-4 py-2 rounded-md transition-all cursor-pointer">
-                            <i class="fa-solid fa-calendar text-white"></i>
+                        class="flex items-center gap-3 text-sm text-white hover:bg-[#262b34] px-4 py-2 rounded-md transition-all cursor-pointer">
+                            <i class="fa-solid fa-calendar text-green-400"></i>
                             <span>Events</span>
                         </a>
                         <a href="{% url 'explore_organization' %}" 
-                        class="flex items-center gap-3 text-sm text-white hover:bg-[#2e2e2e] px-4 py-2 rounded-md transition-all cursor-pointer">
-                            <i class="fa-solid fa-building"></i>
+                        class="flex items-center gap-3 text-sm text-white hover:bg-[#262b34] px-4 py-2 rounded-md transition-all cursor-pointer">
+                            <i class="fa-solid fa-building text-green-400"></i>
                             <span>Organizations</span>
                         </a>
                     </div>
                 </div>
             </div>
 
-            <div class="flex flex-col gap-y-5 mt-1 w-full mb-10">
+            <div class="flex flex-col gap-y-5 mt-1 w-full mb-8">
                 <!-- top section, search bar and filter option -->
                 <div class="w-full flex flex-row items-center justify-evenly  md:flex-row gap-x-5 gap-y-5 max-[450px]:flex-col mt-10 md:mt-0">
-                    <div class="text-[#686868] text-xs">({{result_count}} Results)</div>
+                    <div class="text-gray-400 text-xs">({{result_count}} Results)</div>
                     <div class="flex items-center gap-x-4  w-fit justify-center max-[450px]:w-full">
                         <form method="GET" action="{% url 'explore_events' %}" class="flex gap-x-3 items-center">
-                            <input type="text" name="q" value="{{ query }}" class="w-70 outline-none border border-black rounded-full border- bg-[#f6f6f6] text-[16px] px-4 py-1 text-black placeholder:text-xs" placeholder="Search...">
-                                <button type="submit"><img src="{% static 'assets/search.svg' %}" alt="" class="w-6 h-6"></button>
+                            <input type="text" name="q" value="{{ query }}" class="w-70 outline-none border border-[#2d323b] rounded-full bg-[#161b22] text-[16px] px-4 py-2 text-white placeholder:text-gray-400 placeholder:text-xs focus:ring-1 focus:ring-green-500 focus:border-green-500 transition" placeholder="Search events...">
+                                <button type="submit" class="p-2 bg-gradient-to-br from-green-600 to-green-900 hover:from-green-500 hover:to-green-800 rounded-full transition hover:scale-110">
+                                    <img src="{% static 'assets/search.svg' %}" alt="" class="w-5 h-5 filter invert">
+                                </button>
                         </form>
                         <div class="lg:hidden flex" onclick="openFilter()">
-                            <button class="flex items-center gap-x-2"><i class="fa-solid fa-filter"></i> <span
+                            <button class="flex items-center gap-x-2 text-gray-300 hover:text-green-400 transition"><i class="fa-solid fa-filter text-xl"></i> <span
                                     class="hidden md:block">Filter</span></button>
                         </div>
                     </div>
@@ -74,41 +76,49 @@
 
                     <!-- start of 1st event -->
                     {% for event in filtered_event %}                        
-                    <div class="flex flex-col w-full max-w-[40rem] bg-white p-3 pb-4 shadow-lg rounded-xl">
-                        <div class="w-full aspect-video overflow-hidden bg-[#d4d4d4] relative dot">
-                            <img src="{{event.banner.url}}" alt="Post" class="w-full h-full object-cover">
+                    <div class="flex flex-col w-full max-w-[40rem] bg-[#1a1f2b] border border-[#2d323b] p-4 pb-5 shadow-lg rounded-xl hover:shadow-xl hover:border-green-600/30 transition-all duration-300">
+                        <div class="w-full aspect-video overflow-hidden bg-[#262b34] relative rounded-lg">
+                            <img src="{{event.banner.url}}" alt="Event Banner" class="w-full h-full object-cover">
                         </div>
-                        <div class=" flex justify-between pt-2 items-end">
-                            <div class="flex flex-col gap-y-2 mt-2">
-                                <div class="flex gap-x-2 items-start">
-                                    <img src="{% static 'assets/org_event.svg' %}" alt="" class="w-7 h-7">
-                                    <div class="font-bold">{{event.title}}</div>
-                                </div>
-                                <!-- <div>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Aut quo eum suscipit aliquid enim porro quos, iste quaerat cumque, omnis delectus aperiam, dolores earum tempora cum! Quas veritatis inventore consectetur!</div> -->
-                                <div class="flex gap-x-2 items-start">
-                                    <img src="{% static 'assets/category.svg' %}" alt="" class="w-7 h-7">
-                                    <div class="text-[#686868]">{{event.event_type}}</div>
+                        <div class=" flex justify-between pt-3 items-end">
+                            <div class="flex flex-col gap-y-3 mt-2">
+                                <div class="flex gap-x-3 items-start">
+                                    <div class="p-1.5 bg-gradient-to-br from-green-600/20 to-green-800/20 rounded-lg">
+                                        <img src="{% static 'assets/org_event.svg' %}" alt="" class="w-5 h-5 filter brightness-0 invert">
+                                    </div>
+                                    <div class="font-bold text-white text-lg">{{event.title}}</div>
                                 </div>
                                 
-                                <div class="flex gap-x-2 items-start">
-                                    <img src="{% static 'assets/organization.svg' %}" alt="" class="w-7 h-7">
-                                    <div class="text-[#686868]">{{event.organization.name}}</div>
+                                <div class="flex gap-x-3 items-start">
+                                    <div class="p-1.5 bg-gradient-to-br from-blue-600/20 to-blue-800/20 rounded-lg">
+                                        <img src="{% static 'assets/category.svg' %}" alt="" class="w-5 h-5 filter brightness-0 invert">
+                                    </div>
+                                    <div class="text-gray-300">{{event.event_type}}</div>
+                                </div>
+                                
+                                <div class="flex gap-x-3 items-start">
+                                    <div class="p-1.5 bg-gradient-to-br from-purple-600/20 to-purple-800/20 rounded-lg">
+                                        <img src="{% static 'assets/organization.svg' %}" alt="" class="w-5 h-5 filter brightness-0 invert">
+                                    </div>
+                                    <div class="text-gray-300">{{event.organization.name}}</div>
                                 </div>
 
-                                <div class="flex gap-x-2 items-center">
-                                    <img src="{% static 'assets/calendar.svg' %}" alt="" class="w-7 h-7">
-                                    <p class='text-[#686868]'>{{ event.start_date|date:"F j, Y" }}</p>
+                                <div class="flex gap-x-3 items-center">
+                                    <div class="p-1.5 bg-gradient-to-br from-orange-600/20 to-orange-800/20 rounded-lg">
+                                        <img src="{% static 'assets/calendar.svg' %}" alt="" class="w-5 h-5 filter brightness-0 invert">
+                                    </div>
+                                    <p class='text-gray-300'>{{ event.start_date|date:"F j, Y" }}</p>
                                 </div>
 
                             </div>
                         </div>
-                        <div class='flex flex-row mt-2'>
-                            <a href='{% url "event_detail" event.id %}' class="bg-black px-5 text-white py-1 rounded hover:bg-[#00000067] transition cursor-pointer text-center mx-auto">
-                                View
+                        <div class='flex flex-row mt-4 justify-between items-center'>
+                            <a href='{% url "event_detail" event.id %}' class="bg-gradient-to-br from-green-600 to-green-900 hover:from-green-500 hover:to-green-800 px-6 py-2 text-white rounded-lg transition hover:scale-[1.03] cursor-pointer text-center shadow-lg font-medium">
+                                View Event
                             </a>
 
                             <div class="bookmarkBtn cursor-pointer bookmark-container-event text-[#4a5565]" data-event-id = "{{ event.id }}">
-                                <i class="text-xl fa-solid fa-bookmark {% if event in user.info.saved_items.events.all %}text-[#6feb85]{% endif %}"></i>
+                                <i class="text-2xl fa-solid fa-bookmark {% if event in user.info.saved_items.events.all %}text-[#6feb85]{% endif %}"></i>
                             </div>
                         </div>
                         
@@ -124,26 +134,32 @@
                 <div class="flex justify-center mb-20 lg:mb-12">
                     <div class="flex flex-wrap items-center gap-2 md:gap-3 text-xs md:text-sm">
                         {% if filtered_event.has_previous %}
-                            <a href="?page=1" class="px-2 py-1 border border-black text-black rounded-md hover:bg-black hover:text-white transition duration-200">&laquo; First</a>
-                            <a href="?page={{filtered_event.previous_page_number}}" class="px-2 py-1 border border-black text-black rounded-md hover:bg-black hover:text-white transition duration-200">Previous</a>
+                            <a href="?page=1&mode={{request.GET.mode}}&type={{request.GET.type}}" class="px-2 py-1 md:px-3 md:py-2 bg-[#1a1f2b] border border-[#2d323b] text-gray-300 rounded-lg hover:bg-gradient-to-br hover:from-green-600 hover:to-green-800 hover:text-white hover:border-green-600 transition duration-200 text-xs md:text-sm">&laquo; First</a>
+                            <a href="?page={{filtered_event.previous_page_number}}&mode={{request.GET.mode}}&type={{request.GET.type}}" class="px-2 py-1 md:px-3 md:py-2 bg-[#1a1f2b] border border-[#2d323b] text-gray-300 rounded-lg hover:bg-gradient-to-br hover:from-green-600 hover:to-green-800 hover:text-white hover:border-green-600 transition duration-200 text-xs md:text-sm">Previous</a>
                         {% endif %}
-                
-                        <span class="text-black">
-                            <span class="font-semibold">Page {{ filtered_event.number }}</span> of {{ filtered_event.paginator.num_pages }}
+
+                        <span class="text-gray-300 px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm">
+                            <span class="font-semibold text-green-400">Page {{ filtered_event.number }}</span> of {{ filtered_event.paginator.num_pages }}
                         </span>
-                
+
                         {% if filtered_event.has_next %}
-                            <a href="?page={{filtered_event.next_page_number}}" class="px-2 py-1 border border-black text-black rounded-md hover:bg-black hover:text-white transition duration-200">Next</a>
-                            <a href="?page={{filtered_event.paginator.num_pages}}" class="px-2 py-1 border border-black text-black rounded-md hover:bg-black hover:text-white transition duration-200">Last &raquo;</a>
+                            <a href="?page={{filtered_event.next_page_number}}&mode={{request.GET.mode}}&type={{request.GET.type}}" class="px-2 py-1 md:px-3 md:py-2 bg-[#1a1f2b] border border-[#2d323b] text-gray-300 rounded-lg hover:bg-gradient-to-br hover:from-green-600 hover:to-green-800 hover:text-white hover:border-green-600 transition duration-200 text-xs md:text-sm">Next</a>
+                            <a href="?page={{filtered_event.paginator.num_pages}}&mode={{request.GET.mode}}&type={{request.GET.type}}" class="px-2 py-1 md:px-3 md:py-2 bg-[#1a1f2b] border border-[#2d323b] text-gray-300 rounded-lg hover:bg-gradient-to-br hover:from-green-600 hover:to-green-800 hover:text-white hover:border-green-600 transition duration-200 text-xs md:text-sm">Last &raquo;</a>
                         {% endif %}
                     </div>
                 </div>
                 {% else %}
                 <div class="flex flex-col items-center justify-center p-4">
-                    <span class="text-lg md:text-xl lg:text-2xl font-normal text-gray-700 mb-4">
-                        Oops! No results Found!
+                    <div class="w-24 h-24 mb-6 bg-gradient-to-br from-green-500/20 to-green-700/20 rounded-full flex items-center justify-center">
+                        <i class="fas fa-calendar-times text-3xl text-green-400"></i>
+                    </div>
+                    <span class="text-lg md:text-xl lg:text-2xl font-normal text-gray-300 mb-4">
+                        Oops! No events found!
                     </span>
-                    <img src="{% static 'assets/not-found.png' %}" alt="Not Found" class="w-full rounded-2xl max-w-xs md:max-w-sm lg:max-w-md">
+                    <p class="text-gray-400 text-center max-w-md mb-6">
+                        Try adjusting your search or filters to find the events you're looking for.
+                    </p>
+                    <div class="w-16 h-1 bg-gradient-to-r from-green-500 to-green-700 rounded-full"></div>
                 </div>
                 {% endif %}     
             </div>
@@ -152,25 +168,25 @@
 
         <!-- filter section -->
         <div class="absolute lg:sticky top-0 flex-col hidden mr-2 lg:mr-4 lg:w-1/4 lg:h-[calc(100vh-1.5rem)] gap-y-6 lg:flex z-10 shadow-lg" id="openFilterParent">
-            <div class="lg:relative bg-white w-[calc(100%-5rem)] md:w-3/4 lg:w-full top-16 right-0 flex-col hidden px-6 py-8 overflow-y-auto lg:bg-white rounded-xl border border-gray-100 h-[100%] bottom-2 gap-y-6 lg:flex"
+            <div class="lg:relative bg-[#1a1f2b] border border-[#2d323b] w-[calc(100%-5rem)] md:w-3/4 lg:w-full top-16 right-0 flex-col hidden px-6 py-8 overflow-y-auto rounded-xl h-[100%] bottom-2 gap-y-6 lg:flex"
                 id="filterElement">
                 
                 <!-- Close Button (Mobile) -->
-                <button class="absolute lg:hidden top-5 right-5 text-gray-400 hover:text-gray-600 transition-colors duration-150" 
+                <button class="absolute lg:hidden top-5 right-5 text-gray-400 hover:text-white transition-colors duration-150" 
                         onclick="closeFilter()">
                     <i class="text-2xl fa-solid fa-xmark"></i>
                 </button>
 
                 <!-- Header -->
-                <div class="flex flex-row items-center justify-between w-full pb-4 border-b border-gray-100 mt-3 lg:mt-0">
+                <div class="flex flex-row items-center justify-between w-full pb-4 border-b border-[#2d323b] mt-3 lg:mt-0">
                     <div class="flex items-center gap-x-3">
-                        <p class="text-xl font-semibold text-gray-800">Filters</p>
-                        <div class="p-1.5 rounded-md bg-green-50">
-                            <img src="{% static 'assets/filter.svg' %}" alt="Filter Icon" class="w-5 h-5 text-green-600">
+                        <p class="text-xl font-semibold text-white">Filters</p>
+                        <div class="p-1.5 rounded-lg bg-gradient-to-br from-green-600/20 to-green-800/20">
+                            <img src="{% static 'assets/filter.svg' %}" alt="Filter Icon" class="w-5 h-5 filter brightness-0 invert">
                         </div>
                     </div>
                     {% if applied_filter %}
-                    <a href='{% url "explore_events" %}' class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-500 hover:text-green-600 rounded-lg transition-all duration-300 group">
+                    <a href='{% url "explore_events" %}' class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-400 hover:text-green-400 rounded-lg transition-all duration-300 group">
                         <span class="transition-all duration-200 group-hover:font-medium">Reset</span>
                         <i class="fa-solid fa-arrow-rotate-left text-xs transition-transform duration-500 group-hover:rotate-180"></i>
                     </a>
@@ -179,19 +195,19 @@
 
                 <!-- Type Filter -->
                 <div class="space-y-3">
-                    <p class="text-base font-medium text-gray-700 flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-[#00a63e]"></span>
+                    <p class="text-base font-medium text-gray-300 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
                         Type
-                        <i class="fa fa-dot-circle-o" aria-hidden="true"></i>
+                        <i class="fa fa-dot-circle-o text-green-400" aria-hidden="true"></i>
                     </p>
                     <div class="flex flex-wrap gap-2">
                         {% for type in types %}
                         <a href="?mode={{ request.GET.mode|default:'' }}&type={% if request.GET.type == type.value %}{% else %}{{ type.value }}{% endif %}"
                         class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg border transition-all duration-200
                                 {% if request.GET.type == type.value %} 
-                                    bg-green-50 border-green-200 text-green-700
+                                    bg-gradient-to-br from-green-600/20 to-green-800/20 border-green-600 text-green-400
                                 {% else %} 
-                                    bg-white border-gray-200 text-gray-600 hover:border-green-300 hover:text-gray-800
+                                    bg-[#262b34] border-[#2d323b] text-gray-300 hover:border-green-600/50 hover:text-green-400
                                 {% endif %}">
                             {{type.label}}
                             {% if request.GET.type == type.value %}
@@ -204,19 +220,19 @@
 
                 <!-- Mode Filter -->
                 <div class="space-y-3">
-                    <p class="text-base font-medium text-gray-700 flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-[#00a63e]"></span>
+                    <p class="text-base font-medium text-gray-300 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
                         Mode
-                        <i class="fa-solid fa-map-pin"></i>
+                        <i class="fa-solid fa-map-pin text-green-400"></i>
                     </p>
                     <div class="flex flex-wrap gap-2">
                         {% for mode in modes %}
                         <a href="?type={{ request.GET.type|default:'' }}&mode={% if request.GET.mode == mode.value %}{% else %}{{ mode.value }}{% endif %}"
                         class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg border transition-all duration-200
                                 {% if request.GET.mode == mode.value %} 
-                                    bg-green-50 border-green-200 text-green-700
+                                    bg-gradient-to-br from-green-600/20 to-green-800/20 border-green-600 text-green-400
                                 {% else %} 
-                                    bg-white border-gray-200 text-gray-600 hover:border-green-300 hover:text-gray-800
+                                    bg-[#262b34] border-[#2d323b] text-gray-300 hover:border-green-600/50 hover:text-green-400
                                 {% endif %}">
                             {{mode.label}}
                             {% if request.GET.mode == mode.value %}

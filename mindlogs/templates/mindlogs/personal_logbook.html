@@ -191,7 +191,7 @@
         <!-- 🧠 Logs Feed -->
         {% if mindlogs %}
         <div class="space-y-4" id="log-container">
-            {% include 'partials/personal_log_cards.html' with mindlogs=mindlogs %}
+            {% include 'mindlogs/partials/personal_log_cards.html' with mindlogs=mindlogs %}
         </div>
 
         {% if has_next %}
@@ -256,29 +256,26 @@
         statsPanel.classList.remove("max-h-[500px]", "opacity-100", "pointer-events-auto");
         }
     });
-    </script>
 
-    <script>
-        const tooltip = document.getElementById('heatmap-tooltip');
+    const tooltip = document.getElementById('heatmap-tooltip');
 
-        function showTooltip(event) {
-            const text = event.target.getAttribute('data-tooltip');
-            tooltip.textContent = text;
-            tooltip.style.display = 'block';
-        }
+    function showTooltip(event) {
+        const text = event.target.getAttribute('data-tooltip');
+        tooltip.textContent = text;
+        tooltip.style.display = 'block';
+    }
 
-        function moveTooltip(event) {
-            const offsetX = 8;   // Slightly right of pointer
-            const offsetY = 16;  // Slightly above pointer
+    function moveTooltip(event) {
+        const offsetX = 8;   // Slightly right of pointer
+        const offsetY = 16;  // Slightly above pointer
 
-            tooltip.style.left = (event.pageX + offsetX) + 'px';
-            tooltip.style.top = (event.pageY - offsetY) + 'px';
-        }
+        tooltip.style.left = (event.pageX + offsetX) + 'px';
+        tooltip.style.top = (event.pageY - offsetY) + 'px';
+    }
 
-        function hideTooltip() {
-            tooltip.style.display = 'none';
-        }
-
+    function hideTooltip() {
+        tooltip.style.display = 'none';
+    }
     </script>
 
 {% endblock %}

@@ -1,35 +1,35 @@
 {% load static %}
 
 <div id="reply-{{ reply.id }}"
-    class="ml-auto max-w-[95%] md:max-w-[75%] bg-[#f7f7f7] px-4 py-3 rounded-lg flex flex-col gap-y-2 relative transition shadow-md">
+    class="ml-auto max-w-[95%] md:max-w-[75%] bg-[#161b22] border border-[#2d323b] px-4 py-3 rounded-lg flex flex-col gap-y-2 relative transition shadow-lg hover:border-green-600/30">
 
     <!-- Header -->
     <div class="flex items-center gap-3">
         <a href='{% url "user_profile" reply.user.user.username %}' class='flex items-center gap-3'>
             <img src="{{ reply.user.profile_image.url }}?v={{ reply.user.updated_at.timestamp }}" alt=""
-                class="w-10 h-10 rounded-lg object-cover ring-1 ring-gray-300">
-            <p class="font-semibold text-sm text-gray-800 pr-10">{{ reply.user.user.first_name }} {{ reply.user.user.last_name }}</p>
+            class="w-10 h-10 rounded-lg object-cover ring-1 ring-[#2d323b]">
+            <p class="font-semibold text-sm text-white hover:text-green-400 pr-10 transition-colors">{{ reply.user.user.first_name }} {{ reply.user.user.last_name }}</p>
         </a>
 
         {% if reply.user == user.info %}
         <button class="absolute right-2 top-2 delete-reply-comment" data-id="{{ reply.id }}" data-type="project_reply" title="Delete Reply">
-            <img src="{% static 'assets/trash-bin.svg' %}" class="h-5 w-5 opacity-70 hover:opacity-100 transition cursor-pointer">
+            <img src="{% static 'assets/trash-bin.svg' %}" class="h-5 w-5 opacity-70 hover:opacity-100 transition cursor-pointer filter invert">
         </button>
         {% endif %}
     </div>
 
     <!-- Content -->
-    <div class="text-sm text-gray-700 whitespace-pre-line leading-relaxed">
+    <div class="text-sm text-gray-300 whitespace-pre-line leading-relaxed">
         {{ reply.content|linebreaksbr }}
     </div>
 
     <!-- Footer -->
-    <div class="flex justify-between items-center mt-1 text-xs text-gray-500">
+    <div class="flex justify-between items-center mt-1 text-xs text-gray-400">
         <p>{{ reply.created_at|date:"M j, Y" }}</p>
 
         <!-- Like (visual only) -->
-        <button class="flex items-center gap-1 text-gray-600 reply-container cursor-pointer" data-reply-id="{{ reply.id }}">
-            <i class="fa-solid text-base fa-thumbs-up {% if user.info in reply.likes.all %}text-[#53d26a]{% endif %}"></i>
+        <button class="flex items-center gap-1 text-gray-400 hover:text-green-400 reply-container cursor-pointer transition-colors" data-reply-id="{{ reply.id }}">
+            <i class="fa-solid text-base fa-thumbs-up {% if user.info in reply.likes.all %}text-green-400{% endif %}"></i>
             <span class='text-base'>{{reply.total_likes}}</span>
         </button>
     </div>

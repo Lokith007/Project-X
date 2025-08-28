@@ -4,14 +4,15 @@
 
 {% for log in mindlogs %}
     {% if not log.original_log %}
+    
     <div id="log-{{ log.sig }}" class="log-card relative bg-gray-900 border border-gray-800 rounded-xl px-6 py-5 pb-6 shadow-md group hover:shadow-lg transition duration-200">
 
         <!-- Vertical NeuroColor Strip -->
-        <div class="animate-pulse  absolute top-0 left-0 h-full w-1 rounded-l-md bg-gradient-to-b {{ log.neuro_color|neuro_gradient }} shadow-[0_0_8px_rgba(255,255,255,0.1)]"></div>
+        <div class="  absolute top-0 left-0 h-full w-1 rounded-l-md bg-gradient-to-b {{ log.neuro_color|neuro_gradient }} shadow-[0_0_8px_rgba(255,255,255,0.1)]"></div>
 
         <!-- Latency & Reaction Badge -->
         <div class="absolute bottom-1 left-6">
-            <div class="bg-gray-800 border border-gray-700 text-green-300 text-[11px] sm:text-xs font-mono px-2 py-0.5 rounded-md shadow-md tracking-tight animate-pulse">
+            <div class="bg-gray-800 border border-gray-700 text-green-300 text-[11px] sm:text-xs font-mono px-2 py-0.5 rounded-md shadow-md tracking-tight">
                 latency ▸ <span class="font-semibold">{{log.latency}}ms</span>
             </div>
 
@@ -118,7 +119,7 @@
     <div id="log-{{ log.sig }}" class="log-card relative bg-gray-950 border border-gray-800 rounded-xl px-6 py-5 shadow-lg group hover:shadow-xl transition duration-200">
 
         <!-- Left Vertical Strip (Special for Cloned Logs) -->
-        <div class="absolute top-0 left-0 h-full w-1 rounded-l-md bg-gradient-to-b from-yellow-400 to-red-500 animate-pulse"></div>
+        <div class="absolute top-0 left-0 h-full w-1 rounded-l-md bg-gradient-to-b from-yellow-400 to-red-500 "></div>
 
         <!-- Top Meta: Timestamp + Cloned Badge -->
         <div class="flex justify-between items-center text-sm text-gray-400">
@@ -191,7 +192,7 @@
         <div class="mt-4 flex justify-between items-center">
             
             <!-- Latency -->
-            <div class="bg-gray-800 border border-gray-700 text-green-300 text-[11px] sm:text-xs font-mono px-2 py-0.5 rounded-md shadow-md tracking-tight animate-pulse">
+            <div class="bg-gray-800 border border-gray-700 text-green-300 text-[11px] sm:text-xs font-mono px-2 py-0.5 rounded-md shadow-md tracking-tight ">
             latency ▸ <span class="font-semibold">{{log.latency}}ms</span>
             </div>
 

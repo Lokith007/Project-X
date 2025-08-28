@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="{% static 'styles/banner.css' %}"/>
 {% endblock %} 
 
-{% block body_class %}text-[15px] h-full bg-[#f4f2ee] overflow-x-hidden{% endblock %}
+{% block body_class %}text-[15px] h-full bg-[#0e1217] overflow-x-hidden{% endblock %}
 
 {% block content %}
         
@@ -26,20 +26,20 @@
                 {% comment %} Accept, Reject, Joined UI bar {% endcomment %}
                 {% if request.user.info == project_obj.creator %}
                 <div class="w-full overflow-x-auto mb-4">
-                    <div class="inline-flex items-center gap-2 sm:gap-4 bg-white rounded-xl px-2 py-3 whitespace-nowrap">
+                    <div class="inline-flex items-center gap-2 sm:gap-4 bg-[#1a1f2b] border border-[#2d323b] rounded-xl px-2 py-3 whitespace-nowrap">
 
                         <!-- Pending -->
                         <a href="?status=pending"
                         class="flex items-center gap-2 px-4 py-1.5 rounded-md
                                 {% if status == 'pending' or status == None %}
-                                    bg-black text-white
+                                    bg-white/10 backdrop-blur-sm border border-white/20 text-white
                                 {% else %}
-                                    bg-gradient-to-r from-yellow-300 to-yellow-50 text-yellow-800
+                                    bg-gradient-to-r from-yellow-600/20 to-yellow-500/20 border border-yellow-600/30 text-yellow-400
                                 {% endif %}
                                 text-[11px] font-medium shadow transition-all duration-200 hover:scale-[1.02]">
-                        <i class="fa-regular fa-clock {% if status == 'pending' or status == None  %}text-white{% else %}text-[#1a1a1a]{% endif %} text-sm"></i>
+                        <i class="fa-regular fa-clock {% if status == 'pending' or status == None  %}text-white{% else %}text-yellow-400{% endif %} text-sm"></i>
                         <span>Pending</span>
-                        <span id='pending_count' class="{% if status == 'pending' %}bg-white text-black{% else %}bg-white text-black{% endif %} text-[11px] font-semibold px-2 py-0.5 rounded-full" >
+                        <span id='pending_count' class="{% if status == 'pending' %}bg-white/20 text-white{% else %}bg-yellow-600/20 text-yellow-300{% endif %} text-[11px] font-semibold px-2 py-0.5 rounded-full" >
                             {{ project_obj.requested_users.count }}
                         </span>
                         </a>
@@ -48,14 +48,14 @@
                         <a href="?status=members"
                         class="flex items-center gap-2 px-4 py-1.5 rounded-md
                                 {% if status == 'members' %}
-                                    bg-black text-white
+                                    bg-white/10 backdrop-blur-sm border border-white/20 text-white
                                 {% else %}
-                                    bg-gradient-to-r from-[#d6f5df] to-[#f5fff9] text-[#14532d]
+                                    bg-gradient-to-r from-green-600/20 to-green-500/20 border border-green-600/30 text-green-400
                                 {% endif %}
                                 text-[11px] font-medium hover:scale-[1.02] transition-all duration-200">
-                        <i class="fa-regular fa-circle-check {% if status == 'members' %}text-white{% else %}text-[#17863a]{% endif %} text-sm"></i>
+                        <i class="fa-regular fa-circle-check {% if status == 'members' %}text-white{% else %}text-green-400{% endif %} text-sm"></i>
                         <span>Accepted</span>
-                        <span id='accepted_count' class="{% if status == 'members' %}bg-white text-black{% else %}bg-[#d6f5e1] text-[#14532d]{% endif %} text-[11px] font-semibold px-2 py-0.5 rounded-full">
+                        <span id='accepted_count' class="{% if status == 'members' %}bg-white/20 text-white{% else %}bg-green-600/20 text-green-300{% endif %} text-[11px] font-semibold px-2 py-0.5 rounded-full">
                             {{ project_obj.members.count }}
                         </span>
                         </a>
@@ -64,14 +64,14 @@
                         <a href="?status=rejected"
                         class="flex items-center gap-2 px-4 py-1.5 rounded-md
                                 {% if status == 'rejected' %}
-                                    bg-black text-white
+                                    bg-white/10 backdrop-blur-sm border border-white/20 text-white
                                 {% else %}
-                                    bg-gradient-to-r from-[#fbe6e6] to-[#fefcfc] text-[#7f1d1d]
+                                    bg-gradient-to-r from-red-600/20 to-red-500/20 border border-red-600/30 text-red-400
                                 {% endif %}
                                 text-[11px] font-medium hover:scale-[1.02] transition-all duration-200">
-                        <i class="fa-regular fa-circle-xmark {% if status == 'rejected' %}text-white{% else %}text-[#d93025]{% endif %} text-sm"></i>
+                        <i class="fa-regular fa-circle-xmark {% if status == 'rejected' %}text-white{% else %}text-red-400{% endif %} text-sm"></i>
                         <span>Rejected</span>
-                        <span id='rejected_count' class="{% if status == 'rejected' %}bg-white text-black{% else %}bg-[#f9d6d4] text-[#7f1d1d]{% endif %} text-[11px] font-semibold px-2 py-0.5 rounded-full">
+                        <span id='rejected_count' class="{% if status == 'rejected' %}bg-white/20 text-white{% else %}bg-red-600/20 text-red-300{% endif %} text-[11px] font-semibold px-2 py-0.5 rounded-full">
                             {{ project_obj.rejected_users.count }}
                         </span>
                         </a>
@@ -79,30 +79,30 @@
                     </div>
                 </div>
                 {% else %}
-                    <div class="flex flex-wrap items-center gap-6 bg-white border border-gray-100 rounded-2xl shadow-sm px-6 py-4 w-fit max-w-full mb-4">
+                    <div class="flex flex-wrap items-center gap-6 bg-[#1a1f2b] border border-[#2d323b] rounded-2xl shadow-sm px-6 py-4 w-fit max-w-full mb-4">
 
                         <!-- Members Count -->
                         <div class="flex items-center gap-3">
-                            <div class="h-10 w-10 rounded-xl bg-green-50 flex items-center justify-center shadow-inner">
-                            <i class="fa-solid fa-users text-green-600 text-lg"></i>
+                            <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-green-600/20 to-green-800/20 flex items-center justify-center shadow-inner">
+                            <i class="fa-solid fa-users text-green-400 text-lg"></i>
                             </div>
                             <div class="flex flex-col">
-                            <span class="text-xs text-gray-500">Team Members</span>
-                            <span class="text-base font-semibold text-gray-800">{{ project_obj.members.count }}</span>
+                            <span class="text-xs text-gray-400">Team Members</span>
+                            <span class="text-base font-semibold text-white">{{ project_obj.members.count }}</span>
                             </div>
                         </div>
 
                         <!-- Divider -->
-                        <div class="w-px h-10 bg-gray-200 hidden sm:block"></div>
+                        <div class="w-px h-10 bg-[#2d323b] hidden sm:block"></div>
 
                         <!-- Acceptance Rate -->
                         <div class="flex items-center gap-3">
-                            <div class="h-10 w-10 rounded-xl bg-yellow-50 flex items-center justify-center shadow-inner">
-                            <i class="fa-solid fa-chart-line text-yellow-500 text-lg"></i>
+                            <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-yellow-600/20 to-yellow-800/20 flex items-center justify-center shadow-inner">
+                            <i class="fa-solid fa-chart-line text-yellow-400 text-lg"></i>
                             </div>
                             <div class="flex flex-col">
-                            <span class="text-xs text-gray-500">Acceptance Rate</span>
-                            <span class="text-base font-semibold text-gray-800">{{acceptance_rate}} %</span>
+                            <span class="text-xs text-gray-400">Acceptance Rate</span>
+                            <span class="text-base font-semibold text-white">{{acceptance_rate}} %</span>
                             </div>
                         </div>
                     </div>
@@ -110,7 +110,7 @@
                 {% endif %}
 
                 {% if joined_members %}
-                <div class="flex flex-col gap-y-3 mt-4 p-2 bg-white rounded-md {% if has_more %}mb-10{% else %}mb-22{% endif %} lg:mb-12" id='parent_user_div'>
+                <div class="flex flex-col gap-y-3 mt-4 p-2 bg-[#1a1f2b] border border-[#2d323b] rounded-md {% if has_more %}mb-10{% else %}mb-22{% endif %} lg:mb-12" id='parent_user_div'>
                     {% include "collaboration_project/member_card.html" %}
                 </div>
                 {% comment %} pagination {% endcomment %}
@@ -118,26 +118,26 @@
                     <div class="text-center mb-22 lg:mb-12 cursor-pointer">
                         <button id="loadMoreBtn"
                                 data-last-id="{{ last_id }}"
-                                class="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-black transition">
+                                class="px-4 py-2 bg-gradient-to-br from-green-600 to-green-900 hover:from-green-500 hover:to-green-800 text-white rounded-md transition">
                             Load More
                         </button>
                     </div>
                 {% endif %}
                 {% else %}
                 <div class='flex flex-col gap-y-4 items-center mt-10'>
-                   <img src="{% static 'assets/people-undraw.svg' %}" class="w-1/3 h-1/3 lg:w-1/2 lg:h-1/2" />
-                    <p class='text-gray-700'>No Users in this List.</p>
+                   <img src="{% static 'assets/people-undraw.svg' %}" class="w-1/3 h-1/3 lg:w-1/2 lg:h-1/2 filter brightness-0 invert opacity-60" />
+                    <p class='text-gray-400'>No Users in this List.</p>
                 </div>
                 {% endif %}
             </div>
             
             <!-- your event ui -->
-            <div class="flex flex-col w-full md:w-[34rem] rounded-lg shadow-lg overflow-hidden max-[1300px]:static sticky top-20">
+            <div class="flex flex-col w-full md:w-[34rem] rounded-lg shadow-lg overflow-hidden max-[1300px]:static sticky top-20 bg-[#1a1f2b] border border-[#2d323b]">
                 <svg class="w-full h-48" xmlns="http://www.w3.org/2000/svg">
                     <defs>
                         <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" style="stop-color:#000000; stop-opacity:1" />
-                            <stop offset="100%" style="stop-color:#1a1a1a; stop-opacity:1" />
+                            <stop offset="0%" style="stop-color:#0e1217; stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#1a1f2b; stop-opacity:1" />
                         </linearGradient>
                         <filter id="glow">
                             <feGaussianBlur stdDeviation="3.5" result="coloredBlur"/>
@@ -179,11 +179,11 @@
                     </circle>
                 </svg>
             
-                <div class="flex justify-between p-4 bg-white">
-                    <div class="border px-4 py-2 border-black rounded-md text-center text-gray-800 font-medium">
+                <div class="flex justify-between p-4 bg-[#0e1217]">
+                    <div class="border px-4 py-2 border-[#2d323b] rounded-md text-center text-white font-medium">
                         {{project_obj.created_at|date:"F j, Y" }}
                     </div>
-                    <a href='{% url "project_detail" project_obj.id %}' class="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 transition font-medium">
+                    <a href='{% url "project_detail" project_obj.id %}' class="bg-gradient-to-br from-green-600 to-green-900 hover:from-green-500 hover:to-green-800 text-white px-4 py-2 rounded-md transition font-medium">
                         View
                     </a>
                 </div>

@@ -2,20 +2,21 @@
 <!-- edit profile -->
 <div class="hidden fixed items-center justify-center top-20 bottom-12 left-0 right-0" id="editContainer">
     <form method='POST' enctype="multipart/form-data"
-        class="relative flex flex-col gap-y-3 h-full overflow-y-scroll py-10 bg-white w-full lg:w-1/2 px-5 border">
+        class="relative flex flex-col gap-y-3 h-full overflow-y-scroll py-10 bg-[#0e1217] w-full lg:w-1/2 px-5 border border-gray-600">
         {% csrf_token %}
         <div class="cursor-pointer absolute top-5 right-5" onclick="closeEdit()"><i
                 class="text-3xl fa-solid fa-circle-xmark"></i></div>
         <div class="max-[500px]:self-stretch self-center flex flex-col gap-y-3 w-full lg:w-[85%]">
-            <p class="mt-5 text-2xl font-bold bg-black text-white px-3 py-1 text-center rounded w-fit self-center">
-                Edit Details
+            <p class="mt-2 mb-4 text-lg font-tjin text-white text-center px-6 py-3 w-fit self-center rounded-xl bg-gradient-to-r from-[#1a1a1a]/80 to-[#2a2a2a]/80 backdrop-blur-md border border-white/10 shadow-md shadow-black/50 tracking-wide">
+                <i class="fa-solid fa-pen-to-square"></i>&nbsp Edit Details
             </p>
+
             <div class="self-center mb-4">
                 <div class="flex gap-x-5 items-center max-[500px]:flex-col gap-y-5">
                     <div class="relative">
                         <img src="{{userinfo_obj.profile_image.url}}?v={{userinfo_obj.updated_at.timestamp}}" alt="" class="rounded-lg w-40 h-40" id="image">
                         <label id="imageContainer" for="imgInput"
-                            class="absolute -right-3 -bottom-3 bg-black rounded-full p-2 cursor-pointer"><img
+                            class="absolute -right-3 -bottom-3 bg-[#1a1f26] rounded-full p-2 cursor-pointer"><img
                                 src="{% static 'assets/edit.svg' %}" alt="" class="w-7 h-7"></label>
                     </div>
 
@@ -25,7 +26,9 @@
 
                     <input type="file" name="profileImg" class="hidden" id="imgInput" accept="image/*">
                     <input type="hidden" name="croppedImage" id="croppedImage"> <!-- Hidden field for cropped image -->
-                    <div class="cursor-pointer hidden bg-[#6feb85] px-2 py-1 rounded-md" id="cropBtn" onclick="crop()">Done</div>
+                    {% comment %} <div class="cursor-pointer hidden bg-[#6feb85] text-black px-2 py-1 rounded-md" id="cropBtn" onclick="crop()">Done</div> {% endcomment %}
+                    <div class="cursor-pointer hidden bg-[#00a63e] text-black font-medium px-3 py-1.5 rounded-lg shadow-sm transition-all duration-200 ease-in-out" id="cropBtn" onclick="crop()"><i class="fa-solid fa-circle-check"></i>&nbsp Done</div>
+
                 </div>
             </div>
             <div class="max-[500px]:flex-col gap-y-3 flex gap-x-3 ">
@@ -168,7 +171,7 @@
             </div>
 
             <div class="self-center mt-5">
-                <button class="bg-[#6feb85] px-3 py-1 rounded-lg" type="submit">Save</button>
+                <button class="bg-[#00a63e] px-3 py-1 text-black rounded-lg cursor-pointer" type="submit"><i class="fa-solid fa-circle-check"></i>&nbsp; Save</button>
             </div>
         </div>
     </form>
@@ -236,10 +239,10 @@
 <form method = 'POST' class=" hidden fixed items-center justify-center top-20 left-0 right-0 w-full" id="editExp">
     {% csrf_token %}
     <div
-        class="relative flex flex-col gap-y-4 h-full overflow-y-scroll item-c py-10 bg-white w-full lg:w-2/5 px-5 border">
+        class="relative flex flex-col gap-y-4 h-full overflow-y-scroll item-c py-10 bg-[#0e1217] w-full lg:w-2/5 px-5 border border-gray-600">
         <div class="cursor-pointer absolute top-5 right-5" onclick="closeEditExp()"><i
                 class="text-3xl fa-solid fa-circle-xmark"></i></div>
-        <p class="mt-5 text-2xl font-bold bg-black text-white px-3 py-1 text-center rounded w-fit self-center">Edit
+        <p class="text-xl font-semibold bg-black text-white px-3 py-1 text-center rounded w-fit self-center">Add
             Experience</p>
         <input type ='hidden' name = 'form_type' value='experience'>
         <div class="flex flex-col gap-y-1 w-full">
@@ -269,11 +272,11 @@
             {{exp_form.description}}
         </div>
         <div class="flex gap-x-3 w-full" id="dateSec">
-            <div class="flex flex-col gap-y-1 w-full">
+            <div class="flex flex-col gap-y-1 w-1/2 lg:w-full">
                 <p>{{exp_form.start_date.label}}</p>
                 {{exp_form.start_date}}
             </div>
-            <div class="flex flex-col gap-y-1 w-full">
+            <div class="flex flex-col gap-y-1 w-1/2 lg:w-full">
                 <p>{{exp_form.end_date.label}}</p>
                {{exp_form.end_date}}
                 <div class="flex gap-x-2">
@@ -287,10 +290,10 @@
 </form>
 
 <!-- edit education -->
-<form method='post' action = '' class="hidden fixed items-center justify-center top-20 left-0 right-0 w-full" id="editEducation">
+<form method='post' action = '' class="hidden fixed items-center justify-center top-30 left-0 right-0 w-full" id="editEducation">
     {% csrf_token %}
     <div
-        class="relative flex flex-col gap-y-4 h-full overflow-y-scroll item-c py-10 bg-white w-full md:w-3/4 lg:w-2/5 px-5 border">
+        class="relative flex flex-col gap-y-4 h-full overflow-y-scroll item-c py-10 bg-[#0e1217] w-full md:w-3/4 lg:w-2/5 px-5 border border-gray-600">
         <div class="cursor-pointer absolute top-5 right-5" onclick="closeEditEducation()"><i
                 class="text-3xl fa-solid fa-circle-xmark"></i></div>
         <p class="mt-5 w-fit self-center text-2xl font-bold bg-black text-white px-3 py-1 text-center rounded">Edit
@@ -324,11 +327,11 @@
         </div>
 
         <div class="flex gap-x-3 w-full">
-            <div class="flex flex-col gap-y-1 w-full">
+            <div class="flex flex-col gap-y-1 w-1/2 lg:w-full">
                 <p>{{edu_form.start_date.label}}</p>
                 {{edu_form.start_date}}
             </div>
-            <div class="flex flex-col gap-y-1 w-full">
+            <div class="flex flex-col gap-y-1 w-1/2 lg:w-full">
                 <p>{{edu_form.end_date.label}}</p>
                {{edu_form.end_date}}
             </div>

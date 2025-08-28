@@ -345,18 +345,18 @@ $(document).ready(function () {
             success: function (response) {
                 if (response.status === "followed") {
                     btn.find(".btn-text").text("<Unfollow/>");
-                    btn.removeClass("bg-[#6feb85]");
-                    btn.addClass("bg-[#464646] text-white")
+                    btn.removeClass("bg-[#6feb85] text-black");
+                    btn.addClass("bg-[#262b34] text-white")
                     document.getElementById("clickSound").play();
                 } 
                 else if (response.status === "unfollowed") {
                     btn.find(".btn-text").text("<Follow/>");
-                    btn.removeClass('bg-[#464646] text-white')
-                    btn.addClass("bg-[#6feb85]")
+                    btn.removeClass('bg-[#262b34] text-white')
+                    btn.addClass("bg-[#6feb85] text-black")
                 }
 
-                $(`.followers-count`).text(`${response.followers_count} Followers`);
-                $(`.following-count`).text(`${response.following_count} Following`);
+                $(`.followers-count`).text(`${response.followers_count}`);
+                $(`.following-count`).text(`${response.following_count}`);
             },
             error: function (xhr) {
                 console.error("Error:", xhr.responseText);
@@ -396,7 +396,7 @@ $(document).ready(function() {
                 } else if (data.status === 'unfollowed') {
                     button.text('Follow');
                     button.removeClass('bg-[#464646] text-white');
-                    button.addClass("bg-[#6feb85]");
+                    button.addClass("bg-[#6feb85] text-black");
                 }
                 $(`#followers-count-${orgId}`).text(`${data.followers_count} Followers`);
             },
@@ -485,7 +485,7 @@ $(document).ready(function(){
                                         "<a href='/user-profile/" + response.username + "'/>" +
                                            "<img src='" + response.profile_image_url + "' alt='User' class='w-8 h-8 rounded-sm object-cover'>" +
                                         "</a>" +
-                                        "<div class='bg-gray-50 p-2 rounded-lg w-full flex flex-row items-center justify-between'>" +
+                                        "<div class='bg-[#1a1f26] border border-gray-700 p-2 rounded-lg w-full flex flex-row items-center justify-between'>" +
                                             "<div>" +
                                                 "<a href='/user_profile/" + response.username + "/' class='text-sm font-semibold -mt-2'>" + response.username + "</a>" +
                                                 "<p class='text-sm mt-2'>" + response.comment + "</p>" +
@@ -700,4 +700,3 @@ function triggerDevmateReward(message, emojis) {
         setTimeout(() => banner.classList.add('hidden'), 500);
     }, 6000);
 }
-//Filters, popup for mobile, comments reply for project, dp view for profile, add posts
