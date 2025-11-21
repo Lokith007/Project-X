@@ -63,9 +63,6 @@ def explore_logs_page(request):
     paginator = Paginator(logs_qs, 20)  # 20 logs per page
     page_obj = paginator.page(1)
     
-    for log in page_obj.object_list:
-        log.increment_view_count()
-   
     context = {
         "mindlog_obj": mindlog_obj,
         "logs_qs": page_obj.object_list,
@@ -84,9 +81,6 @@ def load_more_logs(request):
         logs_page = paginator.page(page)
     except:
         return JsonResponse({"logs_html": "", "has_next": False})
-    
-    for log in logs_page.object_list:
-        log.increment_view_count()
 
     html = render_to_string("mindlogs/partials/log_cards.html", {"logs_qs": logs_page.object_list, "user": request.user}, request=request )
     return JsonResponse({
@@ -115,12 +109,6 @@ def personal_logbook(request, username):
     logs = MindLog.objects.filter(user = info).order_by("-timestamp")
     total_logs = logs.count()
     last_log_date = timezone.localtime(logs.first().timestamp).date() if total_logs else None
-    # Avg Latency
-    avg_latency = int(logs.aggregate(avg=Avg('latency'))['avg']) if total_logs else 0
-
-    # Top Used Neurocolor
-    colors = list(logs.exclude(neuro_color__isnull=True).values_list('neuro_color', flat=True))
-    top_color = Counter(colors).most_common(1)[0][0] if colors else None
     
     # Streak calculation
     streak = streak_calculation(logs)
@@ -158,18 +146,12 @@ def personal_logbook(request, username):
     
     paginator = Paginator(logs, 20)  # 20 logs per page
     page_obj = paginator.page(1)
-    
-    # for increasing views
-    for log in page_obj.object_list:
-        log.increment_view_count()
 
     context = {
         "mindlogs": page_obj.object_list,
         'userinfo_obj': info,
         "total_logs": total_logs,
         "last_log_date": last_log_date.strftime("%b %d, %Y") if last_log_date else "—",
-        "avg_latency": avg_latency,
-        "top_color": top_color,
         "streak": streak,
         "clone_impact": clone_impact,
         "has_next": page_obj.has_next(),
@@ -196,10 +178,6 @@ def load_more_personal_logs(request, username):
         logs_page = paginator.page(page)
     except:
         return JsonResponse({"logs_html": "", "has_next": False})
-    
-    # for increasing view count
-    for log in logs_page.object_list:
-        log.increment_view_count()
 
     html = render_to_string("mindlogs/partials/personal_log_cards.html", {"mindlogs": logs_page.object_list, "user": request.user}, request=request)
     return JsonResponse({
@@ -217,6 +195,7 @@ def save_mindlog(request):
             log.user = request.user.info
             raw_snippet = request.POST.get('code_snippet', '').strip()
             log.code_snippet = raw_snippet[:1000] if raw_snippet else None
+            log.link = request.POST.get('link', '').strip()
 
             log.save()
             
@@ -249,8 +228,6 @@ def save_clone_log(request, sig):
     clone = MindLog.objects.create(
         user=user,
         content=original_log.content,
-        neuro_color=original_log.neuro_color,
-        latency=original_log.latency,
         original_log=root_log
     )
     root_log.clone_count = root_log.clones.count()
@@ -283,19 +260,6 @@ def delete_log(request, sig):
 
     log.delete()
     return JsonResponse({'success': True})
-
-@login_required
-def toggle_log_like(request, sig):
-    log_obj = get_object_or_404(MindLog, sig=sig)
-    userinfo_obj = request.user.info
-    log_owner = log_obj.user
-    if userinfo_obj in log_obj.likes.all():
-        log_obj.likes.remove(userinfo_obj)
-        liked = False
-    else:
-        log_obj.likes.add(userinfo_obj)
-        liked = True
-    return JsonResponse({'liked': liked, 'total_likes': log_obj.total_likes()}) 
 
 def mindbook(request):
     return render(request, "mindlogs/mindbook.html")

@@ -11,7 +11,6 @@ urlpatterns = [
     path('save-clone-log/<str:sig>/', views.save_clone_log, name='save_clone_log'),
     path("delete-log/<str:sig>/", views.delete_log, name="delete_log"),
     
-    path("toggle_log_like/<str:sig>/", views.toggle_log_like, name="toggle_log_like"),
     path("load-more/", views.load_more_logs, name="load_more_logs"),
     path("personal-load-more/<str:username>/", views.load_more_personal_logs, name="load_more_personal_logs"),
 ]

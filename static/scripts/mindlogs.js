@@ -37,50 +37,7 @@ document.addEventListener('DOMContentLoaded', function () {
       });
   }
 });
-
-document.addEventListener('DOMContentLoaded', () => {
-    const latencyRange = document.getElementById('latencyRange');
-    const latencyValue = document.getElementById('latencyValue');
-    const selectedColorInput = document.getElementById('selectedColor');
-    const colorPicker = document.getElementById('colorPicker');
-
-    // 💡 Update latency output live
-    if (latencyRange && latencyValue) {
-        latencyValue.textContent = latencyRange.value + 'ms';
-
-        latencyRange.addEventListener('input', () => {
-        latencyValue.textContent = latencyRange.value + 'ms';
-        });
-    }
-
-    // 🎨 Color picker logic
-    if (colorPicker && selectedColorInput) {
-        const colorDivs = colorPicker.querySelectorAll('div');
-
-        // Set initial selection if already has value
-        const initialColor = selectedColorInput.value;
-        if (initialColor) {
-        colorDivs.forEach(div => {
-            if (div.dataset.color === initialColor) {
-            div.classList.add('ring-2');
-            }
-        });
-        }
-
-        colorDivs.forEach(div => {
-        div.addEventListener('click', () => {
-            const selected = div.dataset.color;
-            selectedColorInput.value = selected;
-
-            // Remove highlight from others
-            colorDivs.forEach(d => d.classList.remove('ring-2'));
-            div.classList.add('ring-2');
-        });
-        });
-    }
-});
-
-
+   
 // For opening and closing navigation menu
 document.addEventListener('DOMContentLoaded', function () {
   const navToggle = document.getElementById('navToggle');
@@ -311,7 +268,12 @@ function toggleCodeSnippet() {
     const container = document.getElementById('codeSnippetContainer');
     container.classList.toggle('hidden');
 }
-  
+
+function toggleLinkInput() {
+    const container = document.getElementById('linkInputContainer');
+    container.classList.toggle('hidden');
+}
+
 
 
 

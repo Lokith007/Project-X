@@ -14,7 +14,6 @@ def get_24h_mindlog_stats():
         "logs_qs": logs_qs,
         "logs_fired": logs_qs.count(),
         "logs_per_min": math.ceil(logs_qs.count() / (24 * 60)),
-        "mean_latency": round(logs_qs.aggregate(Avg('latency'))['latency__avg'] or 0),
         "clones_today": logs_qs.filter(original_log__isnull=False).count(),
     }
     return stats

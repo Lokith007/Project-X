@@ -126,6 +126,21 @@ def contribute_page(request):
 def feedback_page(request):
     return render(request, 'myapp/feedback.html')
 
+def home_page(request):
+    if not request.user.is_authenticated:
+        return render(request, 'myapp/landing_page.html')
+    
+    if request.user.info.needs_profile_completion:
+        return redirect('signup_about', uuid=request.user.info.uuid)
+    
+    logform = MindLogForm()
+    context = {
+        'logform': logform,
+    }
+
+    # User is authenticated and profile is complete
+    return render(request, 'myapp/home.html', context)
+
 # @login_required
 def index(request):
     if not request.user.is_authenticated:
@@ -239,9 +254,6 @@ def user_profile(request, user_name):
     total_logs = logs.count()
     last_log_date = timezone.localtime(logs.first().timestamp).date() if total_logs else None
     
-    avg_latency = int(logs.aggregate(avg=Avg('latency'))['avg']) if total_logs else 0 # Avg Latency
-    colors = list(logs.exclude(neuro_color__isnull=True).values_list('neuro_color', flat=True)) 
-    top_color = Counter(colors).most_common(1)[0][0] if colors else None #color vibe
     clone_impact = MindLog.objects.filter(original_log__user=userinfo_obj).count()  #total clone count
     
     streak_count = streak_calculation(logs)
@@ -383,8 +395,6 @@ def user_profile(request, user_name):
         'log_year_count': log_year_count,
         'total_logs': total_logs,
         'last_log_date': last_log_date,
-        'avg_latency': avg_latency,
-        'top_color': top_color,
         'clone_impact': clone_impact,
         'mindlogs': mindlogs
     }

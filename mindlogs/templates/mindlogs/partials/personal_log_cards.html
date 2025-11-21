@@ -1,38 +1,15 @@
 {% load static %}
 {% load tz %}
-{% load neuro_tags %}
 
 {% for log in mindlogs %}
     {% if not log.original_log %}
     
     <div id="log-{{ log.sig }}" class="log-card relative bg-gray-900 border border-gray-800 rounded-xl px-6 py-5 pb-6 shadow-md group hover:shadow-lg transition duration-200">
 
-        <!-- Vertical NeuroColor Strip -->
-        <div class="  absolute top-0 left-0 h-full w-1 rounded-l-md bg-gradient-to-b {{ log.neuro_color|neuro_gradient }} shadow-[0_0_8px_rgba(255,255,255,0.1)]"></div>
-
-        <!-- Latency & Reaction Badge -->
-        <div class="absolute bottom-1 left-6">
-            <div class="bg-gray-800 border border-gray-700 text-green-300 text-[11px] sm:text-xs font-mono px-2 py-0.5 rounded-md shadow-md tracking-tight">
-                latency ▸ <span class="font-semibold">{{log.latency}}ms</span>
-            </div>
-
-            <div class='flex gap-x-2'>
-                <button type="button" class="log-like-container flex items-center space-x-1 text-xs bg-gray-800 hover:bg-gray-700 text-gray-400 px-3 py-1 rounded-md font-mono shadow-sm transition cursor-pointer mt-4 mb-2" data-log-sig="{{ log.sig }}">
-                    <i class="fa fa-heart text-base {% if user.info in log.likes.all %}text-[#6feb85]{% endif %}"></i>
-                    <span class='log-like-count'>{{ log.total_likes }}</span>
-                </button>
-
-                <div class="flex items-center space-x-1 text-xs bg-gray-800 hover:bg-gray-700 text-gray-400 px-3 py-1 rounded-md font-mono shadow-sm transition mt-4 mb-2">
-                    <i class="fa fa-eye text-base"></i>
-                    <span>{{ log.total_views }}</span>
-                </div>
-            </div>
-        </div>
-
         <!-- Top Meta -->
         <div class="flex justify-between items-center text-sm text-gray-400">
             <a href='{% url "user_profile" log.user.user.username %}' class="text-green-400 font-semibold">&gt;_ @{% if user.info == log.user %}You{% else %}{{log.user.user.username}}{% endif %}</a>
-            <div class="text-gray-500 text-xs tracking-wide">[SYS] {{ log.timestamp|localtime|date:"j M, H:i" }} ITC</div>
+            <div class="text-gray-500 text-xs tracking-wide"> {{ log.timestamp|localtime|date:"j M, H:i" }} ITC</div>
         </div>
 
         <!-- Log Content -->
@@ -190,11 +167,6 @@
 
         <!-- Latency & Interaction -->
         <div class="mt-4 flex justify-between items-center">
-            
-            <!-- Latency -->
-            <div class="bg-gray-800 border border-gray-700 text-green-300 text-[11px] sm:text-xs font-mono px-2 py-0.5 rounded-md shadow-md tracking-tight ">
-            latency ▸ <span class="font-semibold">{{log.latency}}ms</span>
-            </div>
 
             <!-- Clone Reaction -->
             {% if log.user != request.user.info and log.original_log.user != request.user.info%}
@@ -219,17 +191,6 @@
             {% endif %}
         </div>
         
-        <div class='flex gap-x-2'>
-            <button type="button" class="log-like-container flex items-center space-x-1 text-xs bg-gray-800 hover:bg-gray-700 text-gray-400 px-3 py-1 rounded-md font-mono shadow-sm transition cursor-pointer mt-4 mb-2" data-log-sig="{{ log.sig }}">
-                <i class="fa fa-heart text-base {% if user.info in log.likes.all %}text-[#6feb85]{% endif %}"></i>
-                <span class='log-like-count'>{{ log.total_likes }}</span>
-            </button>
-
-            <div class="flex items-center space-x-1 text-xs bg-gray-800 hover:bg-gray-700 text-gray-400 px-3 py-1 rounded-md font-mono shadow-sm transition mt-4 mb-2">
-                <i class="fa fa-eye text-base"></i>
-                <span>{{ log.total_views }}</span>
-            </div>
-        </div>
     </div>
     {% endif %}
 {% endfor %}

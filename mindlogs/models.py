@@ -1,7 +1,7 @@
 from django.db import models
 from myapp.models import userinfo
 from django.utils.crypto import get_random_string
-from django.db.models import F
+from django.db.models import F, Count
 
 BASE62_ALPHABET = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
@@ -17,13 +17,11 @@ def generate_unique_signature():
 class MindLog(models.Model):
     user = models.ForeignKey(userinfo, on_delete=models.CASCADE, related_name='mind_logs')
     content = models.TextField(max_length=280)
-    neuro_color = models.CharField(max_length=20, default='green', null=True, blank=True) 
-    latency = models.PositiveIntegerField(default=180)
     snap_shot = models.ImageField(upload_to='log_snap_shot', blank=True, null=True)
     code_snippet = models.TextField(max_length=1000, blank=True, null=True)
     timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
-    total_views = models.PositiveIntegerField(default=0) 
-    
+    link = models.URLField(blank=True, null=True)
+
     # Unique signature
     sig = models.CharField(max_length=20, unique=True, default=generate_unique_signature)
     
@@ -32,27 +30,101 @@ class MindLog(models.Model):
 
     # Reactions
     clone_count = models.PositiveIntegerField(default=0)
-    likes = models.ManyToManyField(userinfo, related_name="liked_logs", blank=True)
     
     def is_clone(self):
         return self.original_log is not None
     
-    def save(self, *args, **kwargs):
-        # If the log is a clone, we remove the color
-        if self.original_log and self.neuro_color:
-            self.neuro_color = None
-        elif not self.original_log and not self.neuro_color:
-            self.neuro_color = "green"  # ensure original logs get default
-
-        super().save(*args, **kwargs)
-        
-    def total_likes(self):
-        return self.likes.count()
+    def total_comments(self):
+        return self.comments.count()
     
-    def increment_view_count(self):
-        MindLog.objects.filter(pk=self.pk).update(total_views=F('total_views') + 1)
+    def total_reactions(self):
+        return self.reactions.count()
+    
+    def get_reaction_counts(self):
+        """Get count of each reaction type"""
+        return self.reactions.values('emoji').annotate(count=Count('emoji')).order_by('-count')
+    
+    def get_user_reaction(self, user):
+        """Get the reaction by a specific user for this log"""
+        try:
+            return self.reactions.get(user=user.info if hasattr(user, 'info') else user)
+        except:
+            return None
+    
+    def has_user_reacted(self, user):
+        """Check if user has reacted to this log"""
+        return self.reactions.filter(user=user.info if hasattr(user, 'info') else user).exists()
+    
 
     def __str__(self):
         return f"{self.user.user.username} ▸ {self.sig}"
+
+
+class Comment(models.Model):
+    """
+    Comment model for MindLog entries
+    """
+    mindlog = models.ForeignKey(MindLog, on_delete=models.CASCADE, related_name='comments')
+    user = models.ForeignKey(userinfo, on_delete=models.CASCADE, related_name='mindlog_comments')
+    content = models.TextField(max_length=500)
+    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
+    
+    # Reply functionality (nested comments)
+    parent_comment = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='replies')
+    
+    # Reactions for comments
+    likes = models.ManyToManyField(userinfo, related_name="liked_logs_comments", blank=True)
+    
+    class Meta:
+        ordering = ['timestamp']
+        indexes = [
+            models.Index(fields=['mindlog', 'timestamp']),
+            models.Index(fields=['user', 'timestamp']),
+        ]
+    
+    def total_likes(self):
+        return self.likes.count()
+    
+    def is_reply(self):
+        return self.parent_comment is not None
+    
+    def get_replies(self):
+        return self.replies.all().order_by('timestamp')
+    
+    def __str__(self):
+        if self.is_reply():
+            return f"{self.user.user.username} replied to {self.parent_comment.user.user.username} on {self.mindlog.sig}"
+        return f"{self.user.user.username} commented on {self.mindlog.sig}"
+
+
+class Reaction(models.Model):
+    """
+    Reaction model for MindLog entries with emoji reactions
+    """
+    REACTION_CHOICES = [
+        ('👍', 'Like'),
+        ('🔥', 'Fire'),
+        ('🚀', 'Ship It'),
+        ('❤️', 'Love'),
+        ('💡', 'Insight'),
+        ('🐛', 'Bug'),
+    ]
+    
+    mindlog = models.ForeignKey(MindLog, on_delete=models.CASCADE, related_name='reactions')
+    user = models.ForeignKey(userinfo, on_delete=models.CASCADE, related_name='mindlog_reactions')
+    emoji = models.CharField(max_length=10, choices=REACTION_CHOICES)
+    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
+    
+    class Meta:
+        # Ensure one reaction per user per mindlog
+        unique_together = ['mindlog', 'user']
+        ordering = ['-timestamp']
+        indexes = [
+            models.Index(fields=['mindlog', 'emoji']),
+            models.Index(fields=['user', 'timestamp']),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.user.username} reacted {self.emoji} to {self.mindlog.sig}"
     
 
