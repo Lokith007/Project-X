@@ -9,7 +9,6 @@
 
 {% block content %}
 
-    <!-- navbar -->
 
 
     <!-- main section -->
@@ -18,8 +17,8 @@
         {% include "includes/sidenav.html" %}
 
         <!-- list section -->
-        <div class="relative flex mt-6 lg:mt-6 md:w-full px-2 flex-[5] pb-16">
-            <a href = '{% url "user_profile" userinfo_obj.user.username %}' class="transition  absolute -top-12 bg-[#222833] right-3 text-white mt-1 flex items-center gap-x-2 px-3 py-1 rounded">
+        <div class="relative flex mt-6 lg:mt-6 md:w-full px-2  flex-[5] pb-16">
+            <a href = '{% url "user_profile" userinfo_obj.user.username %}' class="transition  absolute top-4 bg-[#222833] right-3 text-white mt-1 flex items-center gap-x-2 px-3 py-1 rounded">
                 <i class="fa-solid fa-arrow-left"></i> <span class="hidden md:block">Back</span></a>
                     
             <div class="flex flex-col items- gap-y-10 w-full">
@@ -118,6 +117,5 @@
         </div>
     </div>
 
-    {% include "includes/create-post.html" %}
 
 {% endblock  %}

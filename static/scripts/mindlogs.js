@@ -13,54 +13,6 @@ function getCSRFToken() {
   return cookieValue;
 }
 
-
-
-// For opening and closing navigation menu
-document.addEventListener('DOMContentLoaded', function () {
-  const navToggle = document.getElementById('navToggle');
-  const navMenu = document.getElementById('navMenu');
-
-  if (navToggle && navMenu) {
-    navToggle.addEventListener('click', () => {
-      navMenu.classList.toggle('hidden');
-    });
-
-    // Optional: close menu on outside click
-    document.addEventListener('click', function (e) {
-      if (!navMenu.contains(e.target) && !navToggle.contains(e.target)) {
-        navMenu.classList.add('hidden');
-      }
-    });
-  }
-});
-
-//Shortcuts
-document.addEventListener('DOMContentLoaded', () => {
-  const userData = document.getElementById('user-data');
-  const username = userData ? userData.getAttribute('data-username') : null;
-  const routes = {
-    'ALT+L': '/logs/',     // Explore logs
-    'ALT+B': username ? `/logs/logbook/${username}/` : null,      // Personal logbook
-    'ALT+Q': '/'                  // Exit to homepage
-  };
-
-  document.addEventListener('keydown', (e) => {
-    // Ignore input fields to avoid interrupting typing
-    const tag = e.target.tagName.toLowerCase();
-    const isTyping = tag === 'input' || tag === 'textarea' || e.target.isContentEditable;
-    if (isTyping) return;
-
-    const combo = `ALT+${e.key.toUpperCase()}`;
-    if (routes[combo]) {
-      e.preventDefault();  // Prevent browser default action
-      window.location.href = routes[combo];
-    }
-  });
-});
-
-
-
-
 //For Deleting logs
 $(document).ready(function () {
   $(document).on('click', '.delete-log-btn', function () {

@@ -1,7 +1,7 @@
 {% load static %}
 
 <!-- Desktop Sidebar (Fixed Left) -->
-<aside class="hidden lg:flex flex-col w-64 h-screen fixed left-0 top-0 bg-[#0e1217] border-r border-[#2d323b] z-50">
+<aside class="hidden lg:flex flex-col w-60 h-screen fixed left-0 top-0 bg-[#0e1217] border-r border-[#2d323b] z-50">
     
     <!-- Brand Header -->
     <div class="flex items-center px-6 py-4 border-b border-[#2d323b] bg-[#101720]">
@@ -43,12 +43,6 @@
             </div>
             <span class="text-[16px]">Notifications</span>
         </a>
-
-        <!-- Create (List Item Style) -->
-        <button onclick="openPost('user', 'user-post')" class="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-[#a8b3cf] hover:bg-[#161b22] hover:text-white transition-all duration-200 group text-left">
-            <i class="fa-solid fa-square-plus text-xl w-6 text-center"></i>
-            <span class="text-[16px]">Create</span>
-        </button>
 
         <!-- Settings -->
         <a href="{% url 'settings_page' %}" class="flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 group
@@ -136,11 +130,6 @@
                 <span class="text-[15px] font-medium">Profile</span>
             </a>
             
-            <button onclick="openPost('user', 'user-post'); toggleMobileMenu();" class="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#262b34] text-white transition-colors">
-                <i class="fa-solid fa-square-plus text-lg w-6 text-center text-[#a8b3cf]"></i>
-                <span class="text-[15px] font-medium">Create Post</span>
-            </button>
-
             <a href="{% url 'settings_page' %}" class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#262b34] text-white transition-colors">
                 <i class="fa-solid fa-gear text-lg w-6 text-center text-[#a8b3cf]"></i>
                 <span class="text-[15px] font-medium">Settings</span>

@@ -9,10 +9,10 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth import login,logout,authenticate
 from django.urls import reverse, reverse_lazy
 from django.views import View
-from .forms import RegistrationForm, EditProfileForm, EditEducationForm, EditExperienceForm, PostForm, EditSkillForm, Postsignup_infoForm
+from .forms import RegistrationForm, EditProfileForm, EditEducationForm, EditExperienceForm, EditSkillForm, Postsignup_infoForm
 from logs.forms import LogForm
 from django.contrib.auth.models import User
-from .models import userinfo, Domain, skill, user_status, education, post, post_comments, experience, Notification, follow
+from .models import userinfo, Domain, skill, user_status, education, experience, Notification, follow
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, PageNotAnInteger
 from django.db.models import Q
@@ -150,14 +150,11 @@ def index(request):
     type = request.GET.get('feed', "all")
     page = 1 
     feed_page = get_personalized_feed(request, type=type, page=page, per_page=7)
-    # Organization and event features removed; set upcoming events to 0
     tot_upcoming_events = 0
-    post_form = PostForm()
     logform = LogForm()
     stats_obj = get_24h_log_stats()
     context = {
         'active_home': True,
-        'post_form': post_form,
         'logform': logform,
         'feed_items': feed_page,
         'tot_upcoming_events': tot_upcoming_events,
@@ -187,7 +184,6 @@ def load_more_feed(request):
 
 @login_required
 def notification_page(request):
-    post_form = PostForm()
     base_notifications = Notification.objects.filter(user=request.user.info).order_by('-created_at')
     unread_count = base_notifications.filter(is_read=False).count()
     notifications = base_notifications[:70]
@@ -219,7 +215,6 @@ def notification_page(request):
     Notification.objects.filter(user=request.user.info, is_read=False).update(is_read=True)
     context = {
         "grouped_notifications": grouped_notifications,
-        "post_form": post_form,
         'notification_count': unread_count
     }
     return render(request, 'myapp/notification.html', context)
@@ -233,7 +228,7 @@ def get_notification_count(request):
 @login_required
 def user_profile(request, user_name):
     userinfo_obj = get_object_or_404(userinfo, user__username = user_name)
-    post_qs= link_available = open_exp_flag = open_edu_flag = open_editprofile_flag =editprofile_form = edu_form = exp_form = skill_form  = False
+    link_available = open_exp_flag = open_edu_flag = open_editprofile_flag =editprofile_form = edu_form = exp_form = skill_form  = False
     social_links = { 
     'github': userinfo_obj.github if userinfo_obj.github else None,
     'linkedin': userinfo_obj.linkedin if userinfo_obj.linkedin else None,
@@ -244,7 +239,6 @@ def user_profile(request, user_name):
         link_available = True
     skill_list = userinfo_obj.skills.all()
     exp_obj = userinfo_obj.experiences.all().order_by('-start_date')
-    post_form = PostForm()
     
     #streak and other logs calculations
     logs = Log.objects.filter(user = userinfo_obj).order_by("-timestamp")
@@ -289,9 +283,6 @@ def user_profile(request, user_name):
     
     section = request.GET.get('section', 'overview') 
     print(section)
-        
-    if section == 'posts':
-        post_qs = post.objects.filter(user = userinfo_obj).order_by('-created_at')
     
     is_following = request.user.info.is_following(userinfo_obj)
     if request.user.info == userinfo_obj: #Edit options
@@ -360,11 +351,9 @@ def user_profile(request, user_name):
         'exp_obj': exp_obj,
         'section': section,
         'is_following': is_following,
-        'post_qs': post_qs,
         'ep_form': editprofile_form,
         'edu_form': edu_form,
         'exp_form': exp_form,
-        'post_form': post_form,
         'skill_form': skill_form,
         'skill_list': skill_list,
         'profile_type': 'user',
@@ -411,7 +400,6 @@ def follow_user(request, otheruserinfo_id):
 @login_required
 def follow_list(request, username):
         userinfo_obj = userinfo.objects.get(user__username = username) #user-profile list
-        post_form = PostForm()
         l = request.GET.get('list')
         grp = False
         if l == None:
@@ -433,16 +421,11 @@ def follow_list(request, username):
             'user_list': page_obj,
             'l': l,
             'grp': grp,
-            'post_form': post_form,
         }
         
         return render(request, 'myapp/followList.html', context)
-    
-
 
 #explore page:
-
-
 @login_required
 def explore_dev(request):
 
@@ -483,13 +466,11 @@ def explore_dev(request):
     except PageNotAnInteger:
         page_obj = p.page(1)
     r = filter_dev.count()
-    post_form = PostForm()
     context = {
         'filter_user': page_obj,
         'top_skill': top_skill,
         'status_list': status,   
         'total_result': r,  
-        'post_form': post_form,  
         'query': query,
         'applied_filter': applied_filter,
         'active_explore_dev': True
@@ -505,104 +486,6 @@ def settings_page(request):
         'userinfo_obj': userinfo_obj
     }
     return render(request, 'myapp/account_setting.html', context)
-
-@login_required
-def toggle_like(request, post_id):
-    post_obj = get_object_or_404(post, id = post_id)
-    userinfo_obj = request.user.info
-    post_owner = post_obj.user
-    print(post_owner)
-    if userinfo_obj in post_obj.likes.all():
-        post_obj.likes.remove(userinfo_obj)
-        liked = False
-        if userinfo_obj != post_owner and post_owner:
-            Notify_obj = Notification.objects.filter(user=post_owner, sender=userinfo_obj, notification_type="like", post=post_obj)
-            print(Notify_obj)
-            if Notify_obj:
-                Notify_obj.delete()
-    else:
-        post_obj.likes.add(userinfo_obj)
-        liked = True
-        if userinfo_obj != post_owner and post_owner:
-            notify = Notification.objects.create(user=post_owner, sender=userinfo_obj, notification_type="like", post=post_obj)
-            send_notification_email(post_owner, f'🧑‍💻 {userinfo_obj.user.username} Liked one of your Post 💚')
-    return JsonResponse({'liked': liked, 'total_likes': post_obj.total_likes()}) 
-
-@login_required
-#for saving post
-def save_post(request):
-    form = PostForm(request.POST, request.FILES)
-    action = request.POST.get('action')
-    if action == 'user-post':
-        if form.is_valid():
-            new_post = form.save(commit=False)
-            new_post.user = request.user.info  # Set current user's profile
-            new_post.aspect = request.POST.get("aspect_ratio", "16:9")
-            new_post.save()
-            redirect_url = reverse('user_profile', args=[request.user.username])
-            return redirect(f'{redirect_url}?section=posts')
-        else:
-            return HttpResponseRedirect('/')
-    else:
-        # Organization posts are removed in pivot; redirect to index
-        return redirect('index')
-        
-@login_required
-def delete_post(request, post_id):
-    post_obj = get_object_or_404(post, id = post_id)
-    User = request.user
-    if post_obj.user == User.info:
-        post_obj.delete()
-        return redirect(request.META.get('HTTP_REFERER', '/')) 
-    return HttpResponse("Sorry! You Can't have permission To Delete!...")
-    
-@login_required
-#for saving post comments
-def save_comment(request):
-    comment_text = request.POST.get('comment')   
-    post_id = request.POST.get('post_id')
-    Post_obj = get_object_or_404(post, id=post_id)
-    post_owner = Post_obj.user
-    comment = post_comments.objects.create(
-        Post=Post_obj,
-        user=request.user.info,
-        content=comment_text
-    )
-    profile_image_url = comment.user.profile_image.url
-    if request.user.info != post_owner:
-        Notification.objects.create(user=post_owner, sender=request.user.info, notification_type="comment", post_comment=comment)
-        send_notification_email(post_owner, f'🧑‍💻 {request.user.username} Commented on one of your post\n\n💬 {comment_text[:50]}...')
-    data = {
-        'username': comment.user.user.username,
-        'comment': comment.content,
-        'comment_id': comment.id,
-        'created_at': comment.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-        'profile_image_url': profile_image_url,
-        'comments_count': Post_obj.tot_comments(),
-    }
-    return JsonResponse(data)
-
-@login_required
-def delete_post_comment(request, comment_id):
-    if request.method == 'DELETE':
-        try:
-            comment = post_comments.objects.get(id=comment_id)
-            post_id = comment.Post.id
-            if comment.user == request.user.info:
-                comment.delete()
-                comments_count = post_comments.objects.filter(Post__id=post_id).count()
-                return JsonResponse({
-                    'message': 'Comment deleted',
-                    'post_id': post_id,
-                    'comments_count': comments_count
-                })
-            else:
-                return
-        except post_comments.DoesNotExist:
-            return JsonResponse({'error': 'Comment not found'}, status=404)
-    else:
-        return HttpResponseNotAllowed(['DELETE'])
-
 
 
 @login_required

@@ -1,6 +1,6 @@
 from django.core.paginator import Paginator, EmptyPage
 from itertools import chain
-from .models import follow, post, skill
+from .models import follow, skill
 from django.db.models import Q
 from django.utils.timezone import now
 from datetime import timedelta

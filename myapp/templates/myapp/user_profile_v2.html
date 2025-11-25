@@ -150,13 +150,6 @@
                 </a>
 
                 <!-- Inactive Tab Button -->
-                <a href="?section=posts" 
-                    class="flex items-center gap-2 px-4 py-2.5 {% if section == 'posts' %}text-white bg-gradient-to-br from-green-600 to-green-900{% else %} text-gray-400 bg-[#1a1f29] border border-[#2d323b] hover:text-white hover:border-indigo-400{% endif %} rounded-xl  transition-all duration-200">
-                    <i class="fa-solid fa-file-lines text-sm"></i>
-                    <span class="text-sm font-medium">Posts</span>
-                </a>
-
-                <!-- Inactive Tab Button -->
                 <a href="?section=info" 
                     class="flex items-center gap-2 px-4 py-2.5 rounded-xl {% if section == 'info' %}text-white bg-gradient-to-br from-green-600 to-green-900{% else %} text-gray-400 bg-[#1a1f29] border border-[#2d323b] hover:text-white hover:border-indigo-400{% endif %} transition-all duration-200">
                     <i class="fa-solid fa-circle-info text-sm"></i>
@@ -323,14 +316,6 @@
                     <!-- Grid Layout -->
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-4">
 
-                        <!-- Current Streak -->
-                        <div class="bg-[#13171d] border border-[#2d323b] rounded-lg p-4 hover:shadow-lg hover:border-orange-400 transition duration-200">
-                            <p class="text-gray-400 text-xs mb-1 flex items-center gap-1">
-                                <i class="fa-solid fa-fire text-[#a8b3cf] text-xs"></i> Current Streak
-                            </p>
-                            <p class="text-white text-xl font-medium">{{ streak_count }} <span class="text-sm text-gray-500">days</span></p>
-                        </div>
-
                         <!-- Total Logs -->
                         <div class="bg-[#13171d] border border-[#2d323b] rounded-lg p-4 hover:shadow-lg hover:border-blue-500 transition duration-200">
                             <p class="text-gray-400 text-xs mb-1 flex items-center gap-1">
@@ -346,24 +331,7 @@
                             </p>
                             <p class="text-white text-base font-medium">{{ last_log_date|date:"M j, Y"|default:"-" }}</p>
                         </div>
-                        <!-- Avg Mood Score -->
-                        <div class="bg-[#13171d] border border-[#2d323b] rounded-lg p-4 hover:shadow-lg hover:border-yellow-400 transition duration-200">
-                            <p class="text-gray-400 text-xs mb-1 flex items-center gap-1">
-                                <i class="fa-solid fa-heart-pulse text-[#a8b3cf] text-xs"></i> Avg Mood Score
-                            </p>
-                            <p class="text-white text-xl font-medium">{{ avg_latency }}<span class="text-sm text-gray-500">ms</span></p>
-                        </div>
-
-                        <!-- Top Mood -->
-                        <div class="bg-[#13171d] border border-[#2d323b] rounded-lg p-4 hover:shadow-lg hover:border-pink-400 transition duration-200">
-                            <p class="text-gray-400 text-xs mb-1 flex items-center gap-1">
-                                <i class="fa-solid fa-face-smile text-[#a8b3cf] text-xs"></i> Top Mood
-                            </p>
-                            <div class="flex items-center gap-2">
-                                <span class="w-2.5 h-2.5 rounded-full bg-{{ top_color }}-400"></span>
-                                <span class="text-{{ top_color }}-400 text-sm font-medium mt-1">{{ top_color }}</span>
-                            </div>
-                        </div>
+                       
 
                         <!-- Clone Count -->
                         <div class="bg-[#13171d] border border-[#2d323b] rounded-lg p-4 hover:shadow-lg hover:border-pink-600 transition duration-200">
@@ -419,7 +387,6 @@
             {% endif %}
 
             {% comment %} post section {% endcomment %}
-            {% include "myapp/post-section.html" %}
 
             {% comment %} info section {% endcomment %}
             {% include "myapp/user-info-section.html" %}
@@ -440,7 +407,6 @@
         </div>
     </div>
 
-    {% include "includes/create-post.html" %}
 
     {% if user == userinfo_obj.user %}
     {% include "includes/edit-profile.html" %}

@@ -31,7 +31,6 @@ urlpatterns = [
     path('accounts/password/change/', CustomPasswordChangeView.as_view(), name='account_change_password'),
     path('accounts/logout/', logout_view, name='account_logout'),
     path('accounts/', include('allauth.urls')),
-    path("tinymce/", include('tinymce.urls')),
     path("logs/", include("logs.urls")),
     path('', include('myapp.urls')),
 ] + static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)

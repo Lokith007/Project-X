@@ -57,7 +57,6 @@ INSTALLED_APPS = [
     'django_select2',
     'storages',
     'admin_honeypot',
-    'tinymce',
     'corsheaders',  # For CORS
     'rest_framework',  # For DRF
     'rest_framework_simplejwt',

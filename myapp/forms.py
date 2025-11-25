@@ -3,29 +3,13 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 import re
-from .models import userinfo, skill, education, experience, post
+from .models import userinfo, skill, education, experience
 from django.forms.widgets import ClearableFileInput
 # from django_select2.forms import Select2MultipleWidget
 from allauth.account.forms import SignupForm, LoginForm
 from django.contrib.auth import authenticate, get_user_model
-from tinymce.widgets import TinyMCE
 
 User = get_user_model()
-
-class CustomLoginForm(LoginForm): #Not user. becoz it enforces username and email both.
-    def clean(self):
-        login_input = self.cleaned_data.get('login')
-        password = self.cleaned_data.get('password')
-
-        # If it's an email, resolve it to a username
-        try:
-            user = User.objects.get(email__iexact=login_input)
-            self.cleaned_data['login'] = user.username
-        except User.DoesNotExist:
-            # Assume it's a username
-            pass
-
-        return super().clean()
 
 class CustomSignupForm(SignupForm):
     first_name = forms.CharField(max_length=30, label="First Name", required=True)
@@ -310,33 +294,3 @@ class EditSkillForm(forms.ModelForm):
     class Meta:
         model = userinfo
         fields = ('skills',)
-        
-class PostForm(forms.ModelForm):
-    content = forms.CharField(widget=TinyMCE(attrs={
-                'class': 'text-white w-full h-36 mx-auto bg-[#1a1f26] border border-[#2d323b]',
-                'placeholder': 'Content....',
-                'id': 'eventDescription',
-                'data-mce-theme': 'dark'
-            }, mce_attrs={
-                'skin': 'oxide-dark',
-                'content_css': 'dark',
-                'toolbar_mode': 'sliding',
-                'menubar': False,
-                'plugins': 'advlist autolink lists link image charmap print preview anchor searchreplace visualblocks code fullscreen insertdatetime media table paste code help wordcount',
-                'toolbar': 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
-                'content_style': 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px; background-color: #1a1f26; color: #ffffff; }'
-            }))
-    class Meta:
-        model = post
-        fields = ['file', 'content']
-        widgets = {
-            'file': forms.FileInput(attrs={
-                'class': 'hidden',
-                'id': 'uploadPost',
-                'name': 'post',
-            }),
-            # 'content': forms.Textarea(attrs={
-            #     'class': 'text-white w-full h-36 outline-none resize-none bg-[#1a1f2b] border border-[#2d323b]',
-            #     'placeholder': 'Content....'
-            # }),
-        }

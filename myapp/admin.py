@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import skill, userinfo, education, experience, follow, Domain, user_status, post, post_comments, Notification, Industry, CringeBadge
+from .models import skill, userinfo, education, experience, follow, Domain, user_status, Notification, Industry, CringeBadge
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
 from logs.models import Log
@@ -12,8 +12,6 @@ admin.site.register(follow)
 admin.site.register(Domain)
 
 admin.site.register(user_status)
-admin.site.register(post)
-admin.site.register(post_comments)
 admin.site.register(Notification)
 admin.site.register(Industry)
 admin.site.register(CringeBadge)

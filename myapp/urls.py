@@ -25,11 +25,11 @@ urlpatterns = [
     path("unfollow/<int:otheruserinfo_id>/", views.unfollow_user, name = 'unfollow_user'),
     path("follow/<int:otheruserinfo_id>/", views.follow_user, name = 'follow_user'),
 
-    path('toggle_like/<int:post_id>/', views.toggle_like, name = 'toggle_like'),
-   
-    path("delete-post/<int:post_id>/", views.delete_post, name="delete_post"),
 
-    path('delete-post-comment/<int:comment_id>/', views.delete_post_comment, name='delete_post_comment'),
+   
+
+
+
     
     path("settings/", views.settings_page, name="settings_page"),
     path('delete-data/', views.delete_data, name = 'delete_data'),
