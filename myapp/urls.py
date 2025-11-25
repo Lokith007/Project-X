@@ -18,19 +18,13 @@ urlpatterns = [
     
     path("explore-dev/", views.explore_dev, name="explore_dev"),
 
-    
     # User-profile
     path("user-profile/<str:user_name>/", views.user_profile, name="user_profile"),
     path("<str:username>/user-follow-list/", views.follow_list, name="follow_list"),
     path("unfollow/<int:otheruserinfo_id>/", views.unfollow_user, name = 'unfollow_user'),
     path("follow/<int:otheruserinfo_id>/", views.follow_user, name = 'follow_user'),
 
-
-   
-
-
-
-    
+    path('update-banner/', views.update_banner, name='update_banner'),
     path("settings/", views.settings_page, name="settings_page"),
     path('delete-data/', views.delete_data, name = 'delete_data'),
     

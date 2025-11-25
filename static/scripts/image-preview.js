@@ -1,5 +1,5 @@
 /**
- * Image Preview Modal
+ * Log Image Preview Modal
  * Handles fullscreen image preview functionality
  */
 

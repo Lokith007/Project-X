@@ -1,3 +1,4 @@
+from django.views.decorators.http import require_POST
 import base64, time
 from django.core.files.base import ContentFile
 from django.utils import timezone
@@ -504,3 +505,19 @@ def logout_view(request):
     logout(request)
     list(messages.get_messages(request))  # Force-clear any leftover messages
     return redirect('account_login')
+
+@login_required
+@require_POST
+def update_banner(request):
+    banner_name = request.POST.get('banner')
+    allowed_banners = [
+        'nature.png', 'technology.png', 'science.png', 'geometry.png',
+        'minimalism.png', 'space.png', 'gradients.png', 'abstract.png'
+    ]
+    
+    if banner_name in allowed_banners:
+        request.user.info.banner_image = f'banners/{banner_name}'
+        request.user.info.save()
+        return JsonResponse({'success': True, 'banner_url': request.user.info.banner_image})
+    
+    return JsonResponse({'success': False, 'error': 'Invalid banner selection'})

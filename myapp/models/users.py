@@ -20,6 +20,7 @@ class userinfo(models.Model):
     contact_email = models.EmailField(max_length=255, blank=True, null=True)
     about_user = models.TextField(max_length=1000, blank=True, null=True) 
     profile_image = models.ImageField(upload_to='user_profile_img', height_field=None, default='user_profile_img/profile.jpg')
+    banner_image = models.CharField(max_length=255, default='banners/default.jpg', blank=True, null=True)
     location = models.CharField(max_length=50, blank=True, null=True)
     website = models.URLField(blank=True, null=True)
     phone = PhoneNumberField(blank=True, null=True)
