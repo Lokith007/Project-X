@@ -1,5 +1,5 @@
 from django import template
-from myapp.models import follow, organization
+from myapp.models import follow
 import urllib.parse
 from django.utils import timezone
 from datetime import timedelta
@@ -10,9 +10,7 @@ register = template.Library()
 def is_following(user,otheruser):
     return follow.objects.filter(follower = user, following = otheruser).exists()
 
-@register.filter
-def is_following_org(userinfo, org):
-    return org.followers.filter(id=userinfo.id).exists()
+
 
 @register.filter
 def lstrip(value):

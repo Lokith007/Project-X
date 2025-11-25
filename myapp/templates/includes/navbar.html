@@ -1,9 +1,10 @@
+{% load static %}
 {% comment %} top navbar {% endcomment %}
 <div class="fixed z-20 top-0 flex w-full text-[#a8b3cf] bg-[#0e1217]  border-b border-[#2d323b] border-opacity-80">
     <nav class="flex items-center w-full px-10 py-4 justify-evenly">
         <div class="flex items-center w-full gap-x-5">
-            <a href='{% url "index" %}' class="py-1 text-lg font-mono font-bold text-white">
-                DevMate
+            <a href='{% url "index" %}' class="lg:hidden">
+                <img src="{% static 'assets/DevMate-official-logo.png' %}" alt="DevMate" class="h-8 w-auto object-contain">
             </a>
             {% comment %} <div class="hidden md:flex">
                 <input type="text"
@@ -38,23 +39,7 @@
           Upload Post
         </div>
 
-        <!-- Collaboration Project -->
-        <a href="{% url 'project_form_new' %}" class="flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer hover:bg-[#2a2a2a] transition">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-5-4M12 12a4 4 0 100-8 4 4 0 000 8zm0 0v1m0 2v1m-7 4v-2a4 4 0 015-4m-5 4h5"/>
-          </svg>
-          Collaboration Project
-        </a>
-
-        <!-- Create Organization -->
-        {% if manage_org_page %}
-        <a href="{% url 'create_organization' %}" class="flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer hover:bg-[#2a2a2a] transition">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path d="M3 6l9 6 9-6-9-4-9 4Zm0 6v6l9 4 9-4v-6" stroke-width="1.5"/>
-          </svg>
-          Create Organization
-        </a>
-        {% endif %}
+       
 
       </div>
     </div>
@@ -75,43 +60,6 @@
         Account Center
       </a>
 
-      <a href="{% url 'manage_organization' %}" class="flex items-center gap-3 px-3 py-2 text-white text-sm rounded-md hover:bg-[#2a2a2a] transition">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path d="M6 3h12a1 1 0 0 1 1 1v6h-2V6H7v14h4v2H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm13.7 14.3-1.6-1.6A4.5 4.5 0 1 0 16 17l1.6 1.6a1.1 1.1 0 0 0 1.6-1.6ZM15 15a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5Z" stroke-width="1.5"/>
-        </svg>
-        Manage Organization
-      </a>
-    </div>
-
-    <!-- 📊 Activity Section -->
-    <div class="space-y-1">
-      <p class="text-[11px] uppercase tracking-widest text-gray-500 font-semibold px-2">Activity</p>
-
-      <a href="{% url 'leaderboard_page' %}" class="flex items-center gap-3 px-3 py-2 text-white text-sm rounded-md hover:bg-[#2a2a2a] transition">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path d="M3 13h4v8H3v-8Zm7-6h4v14h-4V7Zm7-4h4v18h-4V3Z" stroke-width="1.5"/>
-        </svg>
-        Leaderboard
-      </a>
-
-      <a href="{% url 'calendar_page' %}" class="flex items-center gap-3 px-3 py-2 text-white text-sm rounded-md hover:bg-[#2a2a2a] transition lg:hidden">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path d="M8 2v2M16 2v2M3 8h18M5 10v10h14V10H5Z" stroke-width="1.5"/>
-        </svg>
-        Calendar
-      </a>
-    </div>
-
-    <!-- 📁 My Work Section -->
-    <div class="space-y-1 lg:hidden">
-      <p class="text-[11px] uppercase tracking-widest text-gray-500 font-semibold px-2 ">My Work</p>
-
-      <a href="{% url 'saved_page' %}" class="flex items-center gap-3 px-3 py-2 text-white text-sm rounded-md hover:bg-[#2a2a2a] transition">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path d="M6 2h12a2 2 0 0 1 2 2v16l-8-4-8 4V4a2 2 0 0 1 2-2Z" stroke-width="1.5"/>
-        </svg>
-        Saved
-      </a>
     </div>
 
     <!-- 🚪 Logout -->
@@ -131,41 +79,5 @@
 </div>
 
   {% comment %} phone navbar {% endcomment %}
-<div class="z-10 fixed bottom-0 w-full py-2 bg-[#0a0a0a]/80 backdrop-blur-md border-t border-gray-800 shadow-inner lg:hidden">
-  <div class="flex justify-around items-center text-gray-300 text-xs font-medium">
-
-    <!-- Global Logs (Explore Logs) -->
-    <a href="{% url 'explore_logs_page' %}" class="flex flex-col items-center gap-1 hover:text-white transition duration-200 ease-in-out">
-      <i class="fa-solid fa-brain text-lg"></i>
-      <span>Logs</span>
-    </a>
-
-    <!-- Command Terminal -->
-    <a href="{% url 'terminal_page' %}" class="flex flex-col items-center gap-1 hover:text-white transition duration-200 ease-in-out">
-      <i class="fa-solid fa-terminal text-lg"></i>
-      <span>Command</span>
-    </a>
-
-    <!-- Project/Explore -->
-    <a href="{% url 'explore-project' %}" class="flex flex-col items-center gap-1 hover:text-white transition duration-200 ease-in-out">
-      <i class="fa-solid fa-compass text-lg"></i>
-      <span>Discover</span>
-    </a>
-
-    <!-- Personal Logbook -->
-    <a href="{% url 'personal_logbook' user.username %}" class="flex flex-col items-center gap-1 hover:text-white transition duration-200 ease-in-out">
-      <i class="fa-solid fa-book-open text-lg"></i>
-      <span>Logbook</span>
-    </a>
-
-
-    <!-- Profile -->
-    <a href="{% url 'user_profile' user.username %}" class="flex flex-col items-center gap-1 hover:text-white transition duration-200 ease-in-out">
-      <i class="fa-solid fa-user-astronaut text-lg"></i>
-      <span>Profile</span>
-    </a>
-
-  </div>
-</div>
 
   

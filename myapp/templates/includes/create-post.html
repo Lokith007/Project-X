@@ -1,7 +1,7 @@
 {% load static %}
 <!-- create post -->
  <div class="hidden fixed items-center justify-center top-20 bottom-12 left-0 right-0" id="createPost">
-    <form method='post' action = '{% url "save_post" %}'  enctype="multipart/form-data"
+    <form method='post' action = ''  enctype="multipart/form-data"
         class="border border-[#2d323b] rounded-md shadow-md relative flex flex-col gap-y-3 h-full overflow-y-scroll bg-[#0e1217] w-full md:w-3/4 lg:w-1/2">
         {% csrf_token %}
         <div class="relative flex flex-col gap-y-4 lg:p-4 p-6 overflow-y-scroll items-center py-10 bg-[#0e1217] w-full">

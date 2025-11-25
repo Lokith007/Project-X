@@ -61,19 +61,13 @@
                 {% endif %}
             </div>
 
-            <div class="flex flex-col gap-y-1">
+            <div class="flex flex-col gap-y-1 w-full">
                 <p>{{ep_form.bio.label}}</p>
                 {{ep_form.bio}}
             </div>
-            <div class="gap-y-3 flex gap-x-3 ">
-                <div class="flex flex-col gap-y-1 w-full">
-                    <p>{{ep_form.dob.label}}</p>
-                    {{ep_form.dob}}
-                </div>
-                <div class="flex flex-col gap-y-1 w-1/2 lg:w-full">
-                    <p>{{ep_form.availability.label}}</p>
-                    {{ep_form.availability}}
-                </div>
+            <div class="flex flex-col gap-y-1 w-full">
+                <p>{{ep_form.dob.label}}</p>
+                {{ep_form.dob}}
             </div>
             <div>
                 <div class="flex flex-col gap-y-1 w-full">
@@ -177,63 +171,6 @@
     </form>
 </div>
 
-{% comment %} edit current position {% endcomment %}
-<form method = 'POST' class=" hidden fixed items-center justify-center top-20 left-0 right-0 w-full" id="editCurrentPosition">
-    {% csrf_token %}
-    <div
-        class="relative flex flex-col gap-y-4 h-full overflow-y-scroll item-c py-10 bg-white w-full lg:w-2/5 px-5 border">
-        <div class="cursor-pointer absolute top-5 right-5" onclick="closeCurrentPosition()"><i
-                class="text-3xl fa-solid fa-circle-xmark"></i></div>
-        <p class="mt-5 text-2xl font-bold bg-black text-white px-3 py-1 text-center rounded w-fit self-center">Edit Current Position</p>
-        <input type ='hidden' name = 'form_type' value='current_position'>
-        <div class="flex flex-col gap-y-1 w-full">
-            <p>{{cp_form.name.label}}</p>
-            {{cp_form.name}}
-            {% if cp_form.name.errors %}
-                <div class="text-red-500 text-sm">
-                    {% for error in cp_form.name.errors %}
-                        <p>{{ error }}</p>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        </div>
-        <div class="flex flex-col gap-y-1 w-full">
-            <p>{{cp_form.role.label}}</p>
-            {{cp_form.role}}
-            {% if cp_form.role.errors %}
-                <div class="text-red-500 text-sm">
-                    {% for error in cp_form.role.errors %}
-                        <p>{{ error }}</p>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        </div>
-        <div class="flex flex-col gap-y-1 w-full">
-            <p>{{cp_form.description.label}}</p>
-            {{cp_form.description}}
-        </div>
-        <div class="flex gap-x-3 w-full" id="dateSec">
-            <div class="flex flex-col gap-y-1 w-full">
-                <p>{{cp_form.start_date.label}}</p>
-                {{cp_form.start_date}}
-            </div>
-            <div class="flex flex-col gap-y-1 w-full">
-                <p>{{cp_form.end_date.label}}</p>
-               {{cp_form.end_date}}
-               <div class="flex gap-x-2">
-                {{cp_form.till_now}}
-                <label for="presentDate">{{cp_form.till_now.label}}</label>
-            </div> 
-            </div>
-        </div>
-        <div class="self-center flex flex-row gap-x-5">
-            <button type="submit" name="action" value="save" class="bg-[#6feb85] text-black px-3 py-1 rounded-lg cursor-pointer">Save</button>
-            {% if cp_form.name.value and cp_form.role.value %}
-            <button type="submit" name="action" value="delete" class="bg-red-600 text-white px-3 py-1 rounded-lg cursor-pointer">Delete</button>
-            {% endif %}
-        </div>
-    </div>
-</form>
 
 <!-- edit experience -->
 <form method = 'POST' class=" hidden fixed items-center justify-center top-20 left-0 right-0 w-full" id="editExp">
@@ -347,81 +284,4 @@
 </form>
 
 
-{% comment %} Edit or Add User work {% endcomment %}
-<div class="hidden fixed items-center justify-center top-20 bottom-12 left-0 right-0" id="editProject">
-<form method = 'POST' enctype="multipart/form-data" class="relative flex flex-col gap-y-3 overflow-y-scroll py-10 bg-white w-full lg:w-2/5 px-5 border">
-    {% csrf_token %}
-        <div class="cursor-pointer absolute top-5 right-5" onclick="closeEditProject()"><i
-                class="text-3xl fa-solid fa-circle-xmark"></i></div>
-        <p class="mt-5 text-2xl font-bold bg-black text-white px-3 py-1 text-center rounded w-fit self-center">Add Work</p>
-        <input type ='hidden' name = 'form_type' value='project'>
-        <div class="flex flex-col gap-y-1 w-full">
-            <p>{{project_form.name.label}}</p>
-            {{project_form.name}}
-            {% if project_form.name.errors %}
-                <div class="text-red-500 text-sm">
-                    {% for error in project_form.name.errors %}
-                        <p>{{ error }}</p>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        </div>
-        <div class="flex flex-col gap-y-1 w-full">
-            <p>{{project_form.description.label}}</p>
-            {{project_form.description}}
-            {% if project_form.description.errors %}
-                <div class="text-red-500 text-sm">
-                    {% for error in project_form.description.errors %}
-                        <p>{{ error }}</p>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        </div>
-        <div class="flex flex-col gap-y-1 w-full">
-            <p>{{project_form.media.label}}</p>
-            {{project_form.media}}
-            {% if project_form.media.errors %}
-                <div class="text-red-500 text-sm">
-                    {% for error in project_form.media.errors %}
-                        <p>{{ error }}</p>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        </div>
-        <div class="flex gap-x-3 w-full">
-            <div class="flex flex-col gap-y-1 w-1/2">
-                <p>{{project_form.url.label}}</p>
-                {{project_form.url}}
-                {% if project_form.url.errors %}
-                <div class="text-red-500 text-sm">
-                    {% for error in project_form.url.errors %}
-                        <p>{{ error }}</p>
-                    {% endfor %}
-                </div>
-                {% endif %}
-            </div>
-            <div class="flex flex-col gap-y-1 w-1/2">
-                <p>{{project_form.repo_link.label}}</p>
-               {{project_form.repo_link}}
-               {% if project_form.repo_link.errors %}
-                <div class="text-red-500 text-sm">
-                    {% for error in project_form.repo_link.errors %}
-                        <p>{{ error }}</p>
-                    {% endfor %}
-                </div>
-                {% endif %}
-            </div>
-        </div>
-        <div class="flex gap-x-3 w-full" id="dateSec">
-            <div class="flex flex-col gap-y-1 w-full">
-                <p>{{project_form.start_date.label}}</p>
-                {{project_form.start_date}}
-            </div>
-            <div class="flex flex-col gap-y-1 w-full">
-                <p>{{project_form.end_date.label}}</p>
-               {{project_form.end_date}}
-            </div>
-        </div>
-        <div class="self-center"><button type="submit" class="bg-[#6feb85] text-black px-3 py-1">Save</button></div>
-</form>
-</div>
+

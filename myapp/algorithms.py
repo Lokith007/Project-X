@@ -1,7 +1,6 @@
 from django.core.paginator import Paginator, EmptyPage
 from itertools import chain
-from .models import follow, post, post, event, organization, skill
-from .models import projects as Project
+from .models import follow, post, skill
 from django.db.models import Q
 from django.utils.timezone import now
 from datetime import timedelta
@@ -51,22 +50,17 @@ def get_personalized_feed(request, type='all', page=1, per_page=7):
         return annotated
 
     posts = annotate_items(post.objects.all().order_by('-id'), 'post', following_users, following_orgs)
-    events = annotate_items(event.objects.all().order_by('-created_at'), 'event', following_users, following_orgs)
-    projects = annotate_items(Project.objects.all().order_by('-created_at'), 'project', following_users, following_orgs)
 
     if type == 'all':
-        combined = sorted(list(chain(posts, events, projects)), key=lambda item: item._score, reverse=True)
+        combined = sorted(list(posts), key=lambda item: item._score, reverse=True)
     elif type == 'following':
-        combined = [item for item in chain(posts, events, projects)
+        combined = [item for item in posts
                     if item._score > -3600 * 24 * 7]
         combined = sorted([item for item in combined
-            if (hasattr(item, 'user') and item.user in following_users) or
-               (hasattr(item, 'creator') and item.creator in following_users) or
-               (hasattr(item, 'Organization') and item.Organization in following_orgs) or
-               (hasattr(item, 'organization') and item.organization in following_orgs)],
+            if (hasattr(item, 'user') and item.user in following_users)],
             key=lambda item: item._score, reverse=True)
     elif type == 'trending':
-        combined = sorted(list(chain(posts, events, projects)), key=lambda item: item.created_at, reverse=True)
+        combined = sorted(list(posts), key=lambda item: item.created_at, reverse=True)
     else:
         combined = []
 

@@ -62,9 +62,7 @@
                         <i class="text-xl fa-solid fa-comment"></i> <span id='postCommentCount{{post.id}}'>{{post.tot_comments}}</span>
                     </div>
                 </div>
-                <div class="bookmarkBtn cursor-pointer bookmark-container" data-post-id = "{{ post.id }}">
-                    <i class="text-xl fa-solid fa-bookmark {% if post in user.info.saved_items.posts.all %}text-[#6feb85]{% endif %}"></i>
-                </div>
+
             </div>
 
             <!-- Comments Section -->

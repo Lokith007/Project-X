@@ -21,15 +21,15 @@
 {% block content %} 
 
     <!-- navbar -->
-    {% include "includes/navbar.html" %}
+
 
     <!-- main section -->
-    <div id = 'entireSection' class="lg:w-full lg:flex-row lg:flex lg:gap-x-1 md:flex md:flex-col md:justify-start md:items-start justify-between">
+    <div id = 'entireSection' class="flex flex-col lg:flex-row lg:w-full lg:gap-x-1 md:justify-start md:items-start justify-between">
         <!-- sidenav -->
         {% include "includes/sidenav.html" %}
 
         
-        <aside class="order-1 lg:order-3 border-l border-[#2d323b] border-opacity-80 w-full lg:w-[36%] p-6 space-y-6 mt-16">
+        <aside class="order-1 lg:order-3 border-l border-[#2d323b] border-opacity-80 w-full lg:w-[36%] p-6 space-y-6 mt-6">
             <!-- Profile Card -->
             <div class="relative bg-[#1a1f2b] mt-2">
                 <!-- Banner -->
@@ -132,53 +132,7 @@
 
             </div>
 
-            <section class="w-full bg-[#0f131a] border border-[#2d323b] rounded-2xl p-4 shadow-xl">
-                <!-- Section Header -->
-                <div class="flex items-center gap-2 mb-4">
-                    <div class="w-1.5 h-5 bg-gradient-to-b from-green-400 to-emerald-500 rounded"></div>
-                    <p class="text-white text-lg uppercase tracking-wide font-thin">Active Squads</p>
-                </div>
 
-                <!-- Squad List Container -->
-                <div class="flex md:space-y-3 space-y-0 md:overflow-visible overflow-x-auto md:flex-col flex-row gap-4 md:gap-0">
-                    
-                    <!-- Squad Card (Repeat for each squad) -->
-                    <div class="flex-shrink-0 md:w-full min-w-[260px] bg-[#161b23] border border-[#2d323b] rounded-xl p-4 shadow hover:shadow-lg transition duration-300">
-                    <div class="flex items-center gap-3">
-                        <img src="https://api.dicebear.com/7.x/identicon/svg?seed=squad1" alt="Squad Avatar" class="w-10 h-10 rounded-full border border-gray-700" />
-                        <div>
-                        <p class="text-white font-medium text-sm">Frontend Avengers
-                            &nbsp<i class="fa-solid fa-lock text-xs text-gray-400" title="Private Squad"></i>
-                        </p>
-                        <p class="text-gray-400 text-xs">@frontenddevs • 14-Developers</p>
-                        </div>
-                    </div>
-                    </div>
-
-                    <!-- Squad Card -->
-                    <div class="flex-shrink-0 md:w-full min-w-[260px] bg-[#161b23] border border-[#2d323b] rounded-xl p-4 shadow hover:shadow-lg transition duration-300">
-                    <div class="flex items-center gap-3">
-                        <img src="https://api.dicebear.com/7.x/identicon/svg?seed=squad2" alt="Squad Avatar" class="w-10 h-10 rounded-full border border-gray-700" />
-                        <div>
-                        <p class="text-white font-medium text-sm">Debug Ninjas</p>
-                        <p class="text-gray-400 text-xs">@debugninjas • 7-Developers</p>
-                        </div>
-                    </div>
-                    </div>
-
-                    <!-- Squad Card -->
-                    <div class="flex-shrink-0 md:w-full min-w-[260px] bg-[#161b23] border border-[#2d323b] rounded-xl p-4 shadow hover:shadow-lg transition duration-300">
-                    <div class="flex items-center gap-3">
-                        <img src="https://api.dicebear.com/7.x/identicon/svg?seed=squad3" alt="Squad Avatar" class="w-10 h-10 rounded-full border border-gray-700" />
-                        <div>
-                        <p class="text-white font-medium text-sm">API Storm</p>
-                        <p class="text-gray-400 text-xs">@apistorm • 22-Developers</p>
-                        </div>
-                    </div>
-                    </div>
-
-                </div>
-            </section>
 
         </aside>
 
@@ -186,7 +140,7 @@
         <!-- Center Main Content -->
         <main class="order-2 lg:order-2 w-full lg:w-[52%] mb-12 px-4 lg:px-6 py-6 space-y-6 overflow-y-auto">
             <!-- Tab Switcher -->
-            <div class="flex flex-wrap gap-4 w-full justify-start lg:mt-20 -mt-1 sm:justify-center">
+            <div class="flex flex-wrap gap-4 w-full justify-start lg:mt-6 -mt-1 sm:justify-center">
             
                 <!-- Active Tab Button -->
                 <a href="?section=overview" 
@@ -441,9 +395,9 @@
                     </div>
 
                     <!-- Logs Container -->
-                    {% if mindlogs %}
+                    {% if recent_logs %}
                         <div id="log-container" class="flex flex-col gap-4">
-                            {% include 'mindlogs/partials/personal_log_cards.html' with mindlogs=mindlogs %}
+                            {% include 'logs/partials/personal_log_cards.html' with logs=recent_logs %}
                         </div>
 
                         <!-- View More Button -->
@@ -535,19 +489,6 @@
     </script>
     {% endif %}
 
-    {% if flag.open_project_flag %}
-    <script>
-        document.addEventListener("DOMContentLoaded", function(){
-            openEditProject();
-        });
-    </script>
-    {% endif %}
 
-    <script>
-        // Project type dropdown
-        function toggleProjectDropdown() {
-        document.getElementById("dropdown-project-menu").classList.toggle("hidden");
-    }
-    </script>
 
 {% endblock %}

@@ -63,11 +63,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     
     'myapp',
-    'features',
-    'collaboration_project',
-    'events',
-    'api',    
-    'mindlogs',
+    'logs',
 ]
 
 REST_FRAMEWORK = {

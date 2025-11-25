@@ -9,19 +9,19 @@
 {% block content %}
 
     <!-- navbar -->
-    {% include "includes/navbar.html" %}
+
 
     <!-- main section -->
-    <div class="w-full lg:flex-row lg:gap-x-5 flex" id='entireSection'>
+    <div class="w-full flex flex-col lg:flex-row lg:gap-x-5" id='entireSection'>
         <!-- sidenav -->
         {% include "includes/sidenav.html" %}
 
-        <!-- post events section -->
+        <!-- post section -->
         <div class="w-full md:w-3/5 flex justify-center mx-auto">
-            <div class="mt-24 md:mt-24 flex flex-col gap-y-6 w-full max-w-[36rem] mb-20 px-4 md:px-0">
+            <div class="mt-6 md:mt-6 flex flex-col gap-y-6 w-full max-w-[36rem] mb-20 px-4 md:px-0">
 
-                <!-- Terminal Log UI -->
-                <form method = "POST" enctype="multipart/form-data" action="{% url 'save_mindlog' %}" id="log-section" class="space-y-6">
+                <!-- Log UI -->
+                <form method = "POST" enctype="multipart/form-data" action="{% url 'save_log' %}" id="log-section" class="space-y-6">
                     {% csrf_token %}
                     <p class="text-center text-gray-500 text-sm">Logging your brain is a habit. Start today. 🚀</p>
 
@@ -130,7 +130,7 @@
                     </a>
                 </div>
                 {% if feed_items %}
-                    <!-- post, projects & events section -->
+                    <!-- post section -->
                     <div class="flex flex-col gap-y-6" id="feed-container">
                         {% include "myapp/feed_items.html" %}
                     </div>
@@ -147,7 +147,7 @@
         </div>
 
         <div class='flex flex-col gap-y-2'>
-            <div class="mt-28 self-start max-[800px]:hidden block w-64 xl:w-80 lg:w-60  min-w-40 bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow ml-auto mr-4">
+            <div class="mt-6 self-start max-[800px]:hidden block w-64 xl:w-80 lg:w-60  min-w-40 bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow ml-auto mr-4">
                 <div class="flex flex-col items-center">
                     <img src="{{user.info.profile_image.url}}?v={{user.info.updated_at.timestamp}}" class="w-24 h-24 bg-gray-200 rounded-lg object-cover" alt="Profile Picture">
                     <p class="mt-4 text-xl font-semibold text-black">{{user.username}}</p>
@@ -159,26 +159,7 @@
                 </div>
             </div>
 
-            <div class="self-start max-[800px]:hidden block w-64 xl:w-80 lg:w-60  min-w-40 bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow ml-auto mr-4">
-                <div class="flex flex-col gap-y-2 items-start [@media(min-width:1280px)]:items-start [@media(min-width:1280px)]:ml-12">
-                    <div class='flex flex-row items-center gap-x-2'>
-                        <img src='{% static "assets/eye.svg" %}' class='h-7 w-7'>
-                        <p class="text-sm  text-black">Profile Views: {{user.info.profile_views}}</p>
-                    </div>
-                    <div class='flex flex-row items-center gap-x-2'>
-                        <img src='{% static "assets/laptop.svg" %}' class='h-7 w-7'>
-                        <a href='{% url "calendar_page" %}?section=joined-projects' class="text-sm hover:underline">Joined Projects: {{user.info.tot_joined_projects}}</a>
-                    </div>
-                    <div class='flex flex-row items-center gap-x-2'>
-                        <img src='{% static "assets/event-cal.svg" %}' class='h-7 w-7'>
-                        <a href='{% url "calendar_page" %}' class="text-sm hover:underline">Upcoming Events: {{tot_upcoming_events}}</a>
-                    </div>
-                    
-                </div>
-                <div class="mt-6 border-t border-gray-300 pt-4 text-center">
-                    <a href="{% url 'calendar_page' %}" class="inline-block px-4 py-2 text-sm font-medium text-white bg-[#00a63e] rounded-lg hover:bg-green-700 transition-all duration-200">View</a>
-                </div>
-            </div>
+
 
             <div class="self-start max-[800px]:hidden block w-64 xl:w-80 lg:w-60 min-w-40 bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow ml-auto mr-4">
                 <p class='mx-auto text-center mb-2 text-sm font-semibold text-gray-700 tracking-wide uppercase'>In last 24h</p><div class="mt-2 border-t border-gray-300 pt-4 text-center"></div>
@@ -186,26 +167,26 @@
 
                     <!-- Logs Fired -->
                     <div class='flex flex-row items-center gap-x-2'>
-                    <i class="fa-solid fa-terminal text-lg"></i>
-                    <p class="text-sm text-black">Logs Fired: {{ mindlog_obj.logs_fired }}</p>
+                    <i class="fa-solid fa-book text-lg"></i>
+                    <p class="text-sm text-black">Logs Fired: {{ stats_obj.logs_fired }}</p>
                     </div>
 
                     <!-- Avg Latency -->
                     <div class='flex flex-row items-center gap-x-2'>
                     <i class="fa-solid fa-clock text-lg"></i>
-                    <p class="text-sm text-black">Avg Latency: {{ mindlog_obj.mean_latency }}ms</p>
+                    <p class="text-sm text-black">Avg Latency: {{ stats_obj.mean_latency }}ms</p>
                     </div>
 
                     <!-- Logs/Min -->
                     <div class='flex flex-row items-center gap-x-2'>
                     <i class="fa-solid fa-chart-line text-lg"></i>
-                    <p class="text-sm text-black">Logs/Min: {{ mindlog_obj.logs_per_min }}</p>
+                    <p class="text-sm text-black">Logs/Min: {{ stats_obj.logs_per_min }}</p>
                     </div>
 
                     <!-- Clones Today -->
                     <div class='flex flex-row items-center gap-x-2'>
                     <i class="fa-solid fa-clone text-lg"></i>
-                    <p class="text-sm text-black">Cloned Today: {{ mindlog_obj.clones_today }}</p>
+                    <p class="text-sm text-black">Cloned Today: {{ stats_obj.clones_today }}</p>
                     </div>
 
                 </div>

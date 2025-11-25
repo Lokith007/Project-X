@@ -34,14 +34,7 @@ class userinfo(models.Model):
     skills = models.ManyToManyField(skill, related_name='users', blank=True)
     domains = models.ManyToManyField(Domain, verbose_name="domains", blank=True)
     years_of_experience = models.PositiveIntegerField(blank=True, null=True)
-    availability = models.CharField(max_length=50, choices=[
-        ('available', 'Available for collaboration'),
-        ('part-time', 'Open to part-time collaboration'),
-        ('freelance', 'Open to freelance collaboration'),
-        ('unavailable', 'Unavailable'),
-    ], blank=True, null=True)
     cringe_badge = models.ForeignKey(CringeBadge, on_delete=models.SET_NULL, null=True, blank=True, related_name='users')
-    profile_views = models.IntegerField(default=0, blank=True)
     created_at = models.DateField(auto_now=False, auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
@@ -71,21 +64,6 @@ class userinfo(models.Model):
     
     def get_following(self):
         return userinfo.objects.filter(followers__follower = self).order_by('-followers__created_at')
-    
-    def tot_joined_projects(self):
-        return self.joined_projects.count()
-    
-    def get_availability_type_filters():
-        AVAILABILITY_TYPES = [
-        ('available', 'Available for collaboration'),
-        ('part-time', 'Open to part-time collaboration'),
-        ('freelance', 'Open to freelance collaboration'),
-        ('unavailable', 'Unavailable'),
-    ]
-        """
-        Returns Availability types in a list of dictionaries for frontend filtering.
-        """
-        return [{'value': value, 'label': label} for value, label in AVAILABILITY_TYPES]
 
 class education(models.Model):
     user = models.OneToOneField(userinfo, on_delete=models.CASCADE, related_name='education')
@@ -98,30 +76,6 @@ class education(models.Model):
     
     def __str__(self):
         return f"{self.id}-{self.user}"
-    
-class current_position(models.Model):  #Auto create.
-    user = models.OneToOneField(userinfo, on_delete=models.CASCADE, related_name='current_position')
-    name = models.CharField(max_length=255)
-    role = models.CharField(max_length=100)
-    description = models.TextField(blank=True, null=True)
-    start_date = models.DateField(blank=True, null=True)
-    end_date = models.DateField(blank=True, null=True)  
-    till_now = models.BooleanField(default=False)
-    
-    
-    def __str__(self):
-        return f"{self.id}-{self.user}"
-    
-class user_project(models.Model):
-    user = models.ForeignKey(userinfo, related_name='projects', on_delete=models.CASCADE)
-    name = models.CharField(max_length=100)
-    description = models.TextField(null=True)
-    url = models.URLField(blank=True, null=True)
-    repo_link = models.URLField(blank=True, null=True)
-    tech_stack = models.ManyToManyField(skill, related_name='user_projects', blank=True)
-    media = models.ImageField(upload_to="user-project-files", blank=True, null=True)
-    start_date = models.DateField(null=True, blank=True)
-    end_date = models.DateField(blank=True, null=True)
 
     def __str__(self):
         return self.name

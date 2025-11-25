@@ -365,47 +365,6 @@ $(document).ready(function () {
     });
 }); 
 
-//Follow Toggle for organization
-$(document).ready(function() {
-    $('.follow-toggle-org').click(function(e) {
-        e.preventDefault();
-        const button = $(this);
-        const orgId = button.data('org-id');
-        const type = button.data('type');
-        console.log(type);
-        const isFollow = button.text().trim() === 'Follow';
-        if (isFollow) {
-            actionUrl =  `/organization/${orgId}/follow/`
-        }else {
-            actionUrl = `/organization/${orgId}/unfollow/`   // URL for follow
-        }
-        
-        $.ajax({
-            url: actionUrl,
-            method: 'POST',
-            headers: {
-                "X-CSRFToken": getCSRFToken()
-            },
-            success: function(data) {
-                if (data.status === 'followed') {
-                    // Toggle button appearance
-                    button.text('Unfollow')
-                    button.removeClass("bg-[#6feb85]");
-                    button.addClass("bg-[#464646] text-white");
-                   
-                } else if (data.status === 'unfollowed') {
-                    button.text('Follow');
-                    button.removeClass('bg-[#464646] text-white');
-                    button.addClass("bg-[#6feb85] text-black");
-                }
-                $(`#followers-count-${orgId}`).text(`${data.followers_count} Followers`);
-            },
-            error: function(xhr) {
-                alert(xhr.responseJSON?.message || 'An error occurred');
-            }
-        });
-    });
-});
 
 // #Toggle like for post
 $(document).ready(function() {
@@ -563,59 +522,7 @@ $(document).ready(function() {
     });
 });
 
-// Project Save Toggle
-$(document).ready(function() {
-    $(document).on('click', '.bookmark-container-project', function() {
-        let container = $(this);
-        let projectId = container.data("project-id");
-        let bookmarkIcon = container.find("i");
-        let actionUrl = `/collab-project/toggle_project_save/${projectId}/`; 
 
-        $.ajax({
-            url: actionUrl,
-            type: "POST",
-            headers: { "X-CSRFToken": getCSRFToken() },
-            success: function(response) {
-                // Update the heart icon's style based on like status
-                if (response.saved) {
-                    bookmarkIcon.addClass("text-[#6feb85]");
-                } else {
-                    bookmarkIcon.removeClass("text-[#6feb85]");
-                }
-            },
-            error: function(xhr) {
-                console.error("Error toggling save:", xhr.responseText);
-            }
-        });
-    });
-});
-
-//event save toggle
-$(document).ready(function() {
-    $(document).on('click', '.bookmark-container-event', function() {
-        let container = $(this);
-        let eventId = container.data("event-id");
-        let bookmarkIcon = container.find("i");
-        let actionUrl = `/events/toggle_event_save/${eventId}/`; 
-
-        $.ajax({
-            url: actionUrl,
-            type: "POST",
-            headers: { "X-CSRFToken": getCSRFToken() },
-            success: function(response) {
-                // Update the heart icon's style based on like status
-                if (response.saved) {
-                    bookmarkIcon.addClass("text-[#6feb85]");
-                } else {
-                    bookmarkIcon.removeClass("text-[#6feb85]");
-                }
-            },
-            error: function(xhr) {
-                console.error("Error toggling save:", xhr.responseText);
-            }
-        });
-    });
-});
 
 function fetchNotificationCount() {
     $.get("/notifications/count/", function(data) {

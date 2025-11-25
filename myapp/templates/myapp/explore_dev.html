@@ -9,46 +9,15 @@
 {% block content %}    
     
     <!-- navbar -->
-    {% include "includes/navbar.html" %}
+
 
     <!-- main section -->
-    <div id='entireSection'class="flex w-full gap-x-5 lg:gap-x-2">
+    <div id='entireSection' class="flex flex-col lg:flex-row w-full gap-x-5 lg:gap-x-2">
         <!-- sidenav -->
         {% include "includes/sidenav.html" %}
 
         <!-- explore section -->
-        <div class="flex flex-[5] flex-col flex-wrap mt-20 md:mt-32 gap-y-0 md:gap-y-5 lg:px-4 px-2">
-
-            <div class="flex gap-x-1 flex-wrap gap-y-2 items-center justify-center absolute top-20">
-                <div class="flex flex-col gap-y-2 items-center">
-                    <div id="exploreTrigger" class="flex items-center bg-gradient-to-br from-green-600 to-green-900 text-white px-3 py-1 rounded-lg cursor-pointer shadow-lg border border-[#2d323b]">
-                        <div id="exploreTitle" class="font-medium"><span>&lt;</span>/ Dev <span>&gt;</span></div>
-                        <img src="{% static 'assets/down.svg' %}" alt="" class="w-7 h-7 ml-1">
-                    </div>
-                    <div class="hidden flex-col gap-y-2 bg-[#1a1f2b] px-4 py-3 absolute top-12 left-0 z-10 backdrop-blur-md rounded-xl shadow-lg border border-[#2d323b]" id="allExplore">
-                        <a href="{% url 'explore_dev' %}" 
-                        class="flex items-center gap-3 text-sm text-white hover:bg-[#262b34] px-4 py-2 rounded-md transition-all cursor-pointer">
-                            <i class="fa-solid fa-code text-green-400"></i>
-                            <span>Developers</span>
-                        </a>
-                        <a href="{% url 'explore-project' %}" 
-                        class="flex items-center gap-3 text-sm text-white hover:bg-[#262b34] px-4 py-2 rounded-md transition-all cursor-pointer">
-                            <i class="fa-solid fa-diagram-project text-green-400"></i>
-                            <span>Projects</span>
-                        </a>
-                        <a href="{% url 'explore_events' %}" 
-                        class="flex items-center gap-3 text-sm text-white hover:bg-[#262b34] px-4 py-2 rounded-md transition-all cursor-pointer">
-                            <i class="fa-solid fa-calendar text-green-400"></i>
-                            <span>Events</span>
-                        </a>
-                        <a href="{% url 'explore_organization' %}" 
-                        class="flex items-center gap-3 text-sm text-white hover:bg-[#262b34] px-4 py-2 rounded-md transition-all cursor-pointer">
-                            <i class="fa-solid fa-building text-green-400"></i>
-                            <span>Organizations</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
+        <div class="flex flex-[5] flex-col flex-wrap mt-6 md:mt-6 gap-y-0 md:gap-y-5 lg:px-4 px-2">
 
             <div class="flex flex-col gap-y-5 mt-1 w-full">
                 <!-- top section, search bar and filter option -->
@@ -116,8 +85,8 @@
                 <div class="flex justify-center mb-20 lg:mb-12">
                     <div class="flex flex-wrap items-center gap-2 md:gap-3 text-xs md:text-sm">
                         {% if filter_user.has_previous %}
-                            <a href="?page=1&availability={{request.GET.availability}}&skill={{request.GET.skill}}&status={{request.GET.status}}" class="px-2 py-1 md:px-3 md:py-2 border border-[#2d323b] text-gray-300 rounded-lg bg-[#1a1f2b] hover:bg-gradient-to-br hover:from-green-600 hover:to-green-900 hover:text-white transition duration-200 text-xs md:text-sm">&laquo; First</a>
-                            <a href="?page={{filter_user.previous_page_number}}&availability={{request.GET.availability}}&skill={{request.GET.skill}}&status={{request.GET.status}}" class="px-2 py-1 md:px-3 md:py-2 border border-[#2d323b] text-gray-300 rounded-lg bg-[#1a1f2b] hover:bg-gradient-to-br hover:from-green-600 hover:to-green-900 hover:text-white transition duration-200 text-xs md:text-sm">Previous</a>
+                            <a href="?page=1&skill={{request.GET.skill}}&status={{request.GET.status}}" class="px-2 py-1 md:px-3 md:py-2 border border-[#2d323b] text-gray-300 rounded-lg bg-[#1a1f2b] hover:bg-gradient-to-br hover:from-green-600 hover:to-green-900 hover:text-white transition duration-200 text-xs md:text-sm">&laquo; First</a>
+                            <a href="?page={{filter_user.previous_page_number}}&skill={{request.GET.skill}}&status={{request.GET.status}}" class="px-2 py-1 md:px-3 md:py-2 border border-[#2d323b] text-gray-300 rounded-lg bg-[#1a1f2b] hover:bg-gradient-to-br hover:from-green-600 hover:to-green-900 hover:text-white transition duration-200 text-xs md:text-sm">Previous</a>
                         {% endif %}
                 
                         <span class="text-white font-medium px-2 py-1 md:px-3 md:py-2 bg-[#262b34] rounded-lg border border-[#2d323b] text-xs md:text-sm">
@@ -125,8 +94,8 @@
                         </span>
                 
                         {% if filter_user.has_next %}
-                            <a href="?page={{filter_user.next_page_number}}&availability={{request.GET.availability}}&skill={{request.GET.skill}}&status={{request.GET.status}}" class="px-2 py-1 md:px-3 md:py-2 border border-[#2d323b] text-gray-300 rounded-lg bg-[#1a1f2b] hover:bg-gradient-to-br hover:from-green-600 hover:to-green-900 hover:text-white transition duration-200 text-xs md:text-sm">Next</a>
-                            <a href="?page={{filter_user.paginator.num_pages}}&availability={{request.GET.availability}}&skill={{request.GET.skill}}&status={{request.GET.status}}" class="px-2 py-1 md:px-3 md:py-2 border border-[#2d323b] text-gray-300 rounded-lg bg-[#1a1f2b] hover:bg-gradient-to-br hover:from-green-600 hover:to-green-900 hover:text-white transition duration-200 text-xs md:text-sm">Last &raquo;</a>
+                            <a href="?page={{filter_user.next_page_number}}&skill={{request.GET.skill}}&status={{request.GET.status}}" class="px-2 py-1 md:px-3 md:py-2 border border-[#2d323b] text-gray-300 rounded-lg bg-[#1a1f2b] hover:bg-gradient-to-br hover:from-green-600 hover:to-green-900 hover:text-white transition duration-200 text-xs md:text-sm">Next</a>
+                            <a href="?page={{filter_user.paginator.num_pages}}&skill={{request.GET.skill}}&status={{request.GET.status}}" class="px-2 py-1 md:px-3 md:py-2 border border-[#2d323b] text-gray-300 rounded-lg bg-[#1a1f2b] hover:bg-gradient-to-br hover:from-green-600 hover:to-green-900 hover:text-white transition duration-200 text-xs md:text-sm">Last &raquo;</a>
                         {% endif %}
                     </div>
                 </div>
@@ -180,7 +149,7 @@
                     </p>
                     <div class="flex flex-wrap gap-2">
                         {% for status in status_list %}
-                        <a href="?availability={{ request.GET.availability|default:'' }}&skill={{ request.GET.skill|default:'' }}&status={% if request.GET.status == status.id|stringformat:'s' %}{% else %}{{ status.id }}{% endif %}"
+                        <a href="?skill={{ request.GET.skill|default:'' }}&status={% if request.GET.status == status.id|stringformat:'s' %}{% else %}{{ status.id }}{% endif %}"
                         class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg border transition-all duration-200
                                 {% if request.GET.status == status.id|stringformat:'s' %} 
                                     bg-green-600/20 border-green-500 text-green-400
@@ -189,30 +158,6 @@
                                 {% endif %}">
                             {{status.name}}
                             {% if request.GET.status == status.id|stringformat:'s' %}
-                            <i class="ml-1.5 text-xs fa-solid fa-xmark opacity-70 hover:opacity-100 transition-opacity"></i>
-                            {% endif %}
-                        </a>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                <!-- Availability Filter -->
-                <div class="space-y-3">
-                    <p class="text-base font-medium text-white flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-green-400"></span>
-                        Availability
-                    </p>
-                    <div class="flex flex-wrap gap-2">
-                        {% for availability in availability_list %}
-                        <a href="?status={{ request.GET.status|default:'' }}&skill={{ request.GET.skill|default:'' }}&availability={% if request.GET.availability == availability.value %}{% else %}{{availability.value}}{% endif %}" 
-                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg border transition-all duration-200
-                                {% if request.GET.availability == availability.value %} 
-                                    bg-green-600/20 border-green-500 text-green-400
-                                {% else %} 
-                                    bg-[#262b34] border-[#2d323b] text-gray-300 hover:border-green-500/50 hover:text-green-400
-                                {% endif %}">
-                            {{ availability.label }}
-                            {% if request.GET.availability == availability.value %}
                             <i class="ml-1.5 text-xs fa-solid fa-xmark opacity-70 hover:opacity-100 transition-opacity"></i>
                             {% endif %}
                         </a>
@@ -229,7 +174,7 @@
                     </p>
                     <div class="flex flex-wrap gap-2">
                         {% for skill in top_skill %}
-                        <a href="?availability={{ request.GET.availability|default:'' }}&status={{request.GET.status|default:''}}&skill={% if request.GET.skill == skill.id|stringformat:'s' %}{% else %}{{ skill.id }}{% endif %}" 
+                        <a href="?status={{request.GET.status|default:''}}&skill={% if request.GET.skill == skill.id|stringformat:'s' %}{% else %}{{ skill.id }}{% endif %}" 
                         class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg border transition-all duration-200
                                 {% if request.GET.skill == skill.id|stringformat:'s' %} 
                                     bg-green-600/20 border-green-500 text-green-400
