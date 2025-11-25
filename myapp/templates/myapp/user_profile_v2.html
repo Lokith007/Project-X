@@ -354,9 +354,6 @@
                             </div>
                             <p class="text-white text-lg lg:text-xl font-thin tracking-wide uppercase">Latest Logs</p>
                         </div>
-                        <a href="{% url 'personal_logbook' userinfo_obj.user.username %}" class="text-xs lg:text-sm text-emerald-400 hover:text-emerald-300 hover:underline transition-all duration-200">
-                            View Logbook <i class="fa fa-chevron-right" aria-hidden="true"></i>
-                        </a>
                     </div>
 
                     <!-- Logs Container -->
@@ -366,16 +363,21 @@
                         </div>
 
                         <!-- View More Button -->
+                        {% if has_more_logs %}
                         <div class="mt-6 flex justify-center text-xs">
-                            <a href='{% url "personal_logbook" userinfo_obj.user.username %}' class="px-4 py-2.5 bg-[#262b34] text-white font-medium rounded-xl shadow-lg hover:scale-105 hover:shadow-xl transition-transform duration-300">
+                            <button id="load-more-profile-logs" 
+                                    data-username="{{ userinfo_obj.user.username }}" 
+                                    data-cursor="{{ initial_cursor }}"
+                                    class="px-4 py-2.5 bg-[#262b34] text-white font-medium rounded-xl shadow-lg hover:scale-105 hover:shadow-xl transition-transform duration-300">
                                <i class="fa fa-spinner" aria-hidden="true"></i> &nbsp;More Logs
-                            </a>
+                            </button>
                         </div>
+                        {% endif %}
                     {% else %}
                         <!-- Empty State -->
                         <div class="w-full py-10 -mt-6 flex flex-col items-center justify-center text-center text-gray-400">
                             <i class="fa-solid fa-notes-medical text-4xl mb-4 text-gray-600"></i>
-                            <p class="text-lg font-medium">This developer hasn’t posted any logs yet.</p>
+                            <p class="text-lg font-medium">This developer hasn't posted any logs yet.</p>
                             <p class="text-sm text-gray-500 mt-1">Showcase your grind, journey, and off-work moments — not just progress, but the real developer life.</p>
                         </div>
                     {% endif %}
@@ -419,10 +421,9 @@
         });
     </script>
     <script src="{% static 'scripts/profile.js' %}"></script>
-    <script src="{% static 'scripts/mindlogs.js' %}"></script>
-
-
     {% endif %}
+
+    <script src="{% static 'scripts/mindlogs.js' %}"></script>
 
     {% comment %} flags {% endcomment %}
     {% if flag.open_editprofile_flag %}

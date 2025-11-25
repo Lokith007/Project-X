@@ -220,6 +220,15 @@ def user_profile(request, user_name):
     #streak and other logs calculations
     logs = Log.objects.filter(user = userinfo_obj).order_by("-timestamp")
     
+    # Paginate recent logs (first 10 for initial load)
+    logs_paginator = Paginator(logs, 10)
+    recent_logs_page = logs_paginator.page(1)
+    recent_logs = list(recent_logs_page.object_list)
+    has_more_logs = recent_logs_page.has_next()
+    
+    # Get cursor for pagination (last log's timestamp)
+    initial_cursor = recent_logs[-1].timestamp.isoformat() if recent_logs else None
+    
     total_logs = logs.count()
     last_log_date = timezone.localtime(logs.first().timestamp).date() if total_logs else None
     
@@ -346,7 +355,9 @@ def user_profile(request, user_name):
         'total_logs': total_logs,
         'last_log_date': last_log_date,
         'clone_impact': clone_impact,
-        'recent_logs': recent_logs
+        'recent_logs': recent_logs,
+        'has_more_logs': has_more_logs,
+        'initial_cursor': initial_cursor,
     }
     return render(request, 'myapp/user_profile_v2.html', context)
 

@@ -13,12 +13,21 @@ function getCSRFToken() {
   return cookieValue;
 }
 
-//For Deleting logs
-$(document).ready(function () {
-  $(document).on('click', '.delete-log-btn', function () {
+//For Deleting logs - Works for both prefetched and dynamically loaded logs
+document.addEventListener("DOMContentLoaded", function () {
+  // Use event delegation on document for dynamic content
+  $(document).on('click', '.delete-log-btn', function (e) {
+    e.preventDefault();
     const button = $(this);
-    const sig = button.data('sig');
-    const logCard = $(`#log-${sig}`);
+    const sig = button.data('log-id'); // Read from data-log-id attribute
+
+    if (!sig) {
+      console.error('No log signature found');
+      alert('Error: Cannot identify the log to delete.');
+      return;
+    }
+
+    const logCard = button.closest('.bg-\\[\\#12161d\\]'); // Find parent log card
 
     if (!confirm("Are you sure you want to delete this log?")) return;
 
@@ -33,7 +42,8 @@ $(document).ready(function () {
           logCard.fadeOut(400, function () {
             $(this).remove();
           });
-          toast("Log deleted successfully!", "error");
+          // Show success message (optional)
+          console.log("Log deleted successfully!");
         } else {
           alert("Failed to delete the log.");
         }
@@ -51,106 +61,6 @@ $(document).ready(function () {
   });
 });
 
-// For toggle like.
-$(document).ready(function () {
-  $(document).on('click', '.log-like-container', function () {
-    let container = $(this);
-    let logSig = container.data("log-sig");
-    let heartIcon = container.find("i");
-    let likeCountSpan = container.find("span");
-    let actionUrl = `/logs/toggle_log_like/${logSig}/`;
-
-    $.ajax({
-      url: actionUrl,
-      type: "POST",
-      headers: { "X-CSRFToken": getCSRFToken() },
-      success: function (response) {
-        // Update the heart icon's style based on like status
-        if (response.liked) {
-          heartIcon.addClass("text-[#6feb85]");
-        } else {
-          heartIcon.removeClass("text-[#6feb85]");
-        }
-        // Update the like count in the span
-        likeCountSpan.text(response.total_likes);
-      },
-      error: function (xhr) {
-        console.error("Error toggling like:", xhr.responseText);
-      }
-    });
-  });
-});
-
-// for loading more logs
-document.addEventListener("DOMContentLoaded", function () {
-  const loadBtn = document.getElementById("logs-load-more-btn");
-  const container = document.getElementById("log-container");
-
-  if (!loadBtn || !container) return;
-
-  loadBtn.addEventListener("click", function () {
-    const page = parseInt(loadBtn.dataset.page);
-    loadBtn.disabled = true;
-    loadBtn.innerText = "Loading ...";
-
-    fetch(`/logs/load-more/?page=${page}`)
-      .then(response => response.json())
-      .then(data => {
-        if (data.logs_html) {
-          container.insertAdjacentHTML("beforeend", data.logs_html);
-        }
-
-        if (data.has_next) {
-          loadBtn.dataset.page = page + 1;
-          loadBtn.disabled = false;
-          loadBtn.innerText = "Load More ⟳";
-        } else {
-          loadBtn.remove();
-        }
-      })
-      .catch(error => {
-        console.error("Load error:", error);
-        loadBtn.disabled = false;
-        loadBtn.innerText = "Retry ⟳";
-      });
-  });
-});
-
-
-//for load more personal logs
-document.addEventListener("DOMContentLoaded", function () {
-  const loadBtn = document.getElementById("personal-logs-load-more-btn");
-  const container = document.getElementById("log-container");
-  if (!loadBtn || !container) return;
-
-  const username = loadBtn.dataset.username;
-  loadBtn.addEventListener("click", function () {
-    const page = parseInt(loadBtn.dataset.page);
-    loadBtn.disabled = true;
-    loadBtn.innerText = "Loading ...";
-
-    fetch(`/logs/personal-load-more/${username}/?page=${page}`)
-      .then(response => response.json())
-      .then(data => {
-        if (data.logs_html) {
-          container.insertAdjacentHTML("beforeend", data.logs_html);
-        }
-
-        if (data.has_next) {
-          loadBtn.dataset.page = page + 1;
-          loadBtn.disabled = false;
-          loadBtn.innerText = "Load More ⟳";
-        } else {
-          loadBtn.remove();
-        }
-      })
-      .catch(error => {
-        console.error("Load error:", error);
-        loadBtn.disabled = false;
-        loadBtn.innerText = "Retry ⟳";
-      });
-  });
-});
 
 //for log entry (code snippet and image)
 function handle_log_ImageUpload(event) {
@@ -181,5 +91,63 @@ function toggleLinkInput() {
 }
 
 
+/**
+ * Cursor-Based AJAX Load More Logs for User Profile Page
+ */
+document.addEventListener("DOMContentLoaded", function () {
+  // Use event delegation on document for dynamic content
+  $(document).on('click', '#load-more-profile-logs', function () {
+    const btn = $(this);
+    const username = btn.data('username');
+    const cursor = btn.data('cursor');
 
+    // Show loading state
+    const originalText = btn.html();
+    btn.html('<i class="fa fa-spinner fa-spin"></i> Loading...');
+    btn.prop('disabled', true);
 
+    $.ajax({
+      url: `/logs/load-more-profile-logs/${username}/`,
+      type: 'GET',
+      data: { cursor: cursor },
+      success: function (response) {
+        if (response.logs_html && response.logs_html.trim() !== '') {
+          // Append new logs to container
+          $('#log-container').append(response.logs_html);
+
+          // Update cursor for next load
+          if (response.cursor) {
+            btn.data('cursor', response.cursor);
+          }
+
+          // If no more logs, hide the button with smooth animation
+          if (!response.has_next) {
+            btn.parent().fadeOut(300, function () {
+              $(this).remove();
+            });
+          } else {
+            // Restore button
+            btn.html(originalText);
+            btn.prop('disabled', false);
+          }
+        } else {
+          // No more logs
+          btn.parent().fadeOut(300, function () {
+            $(this).remove();
+          });
+        }
+      },
+      error: function (xhr, status, error) {
+        console.error('Error loading more logs:', error);
+        console.error('Response:', xhr.responseText);
+        btn.html(originalText);
+        btn.prop('disabled', false);
+
+        // Show user-friendly error message
+        const errorMsg = $('<div class="text-red-400 text-xs mt-2 text-center">Failed to load logs. Please try again.</div>');
+        btn.parent().append(errorMsg);
+        setTimeout(() => errorMsg.fadeOut(300, function () { $(this).remove(); }), 3000);
+      }
+    });
+  });
+});

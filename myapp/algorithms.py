@@ -19,58 +19,28 @@ def get_explore_users(filter_dev, request, count=200, order_by='-created_at'):
 
 
 def get_personalized_feed(request, type='all', page=1, per_page=7):
-    user = request.user
-    info = user.info
-    following_users = set(info.get_following())
-    following_orgs = set(info.followed_organization.all())
-    current_time = now()
-
-    def compute_score(item, creator, is_followed):
-        created_at = getattr(item, 'created_at', None) or current_time
-        time_diff = (current_time - created_at).total_seconds()
-
-        decay_rate = 1 / (60 * 60 * 6)
-        boost_weight = 100_000
-        boost = boost_weight * (0.5 ** (time_diff * decay_rate)) if is_followed else 0
-        return -time_diff + boost
-
-    def annotate_items(queryset, type_name, user_check, org_check):
-        annotated = []
-        for item in queryset:
-            item.feed_type = type_name
-            item.created_at = getattr(item, 'created_at', item.id)
-            is_followed = (
-                (hasattr(item, 'user') and item.user in user_check) or
-                (hasattr(item, 'creator') and item.creator in user_check) or
-                (hasattr(item, 'Organization') and item.Organization in org_check) or
-                (hasattr(item, 'organization') and item.organization in org_check)
-            )
-            item._score = compute_score(item, None, is_followed)
-            annotated.append(item)
-        return annotated
-
-    posts = annotate_items(post.objects.all().order_by('-id'), 'post', following_users, following_orgs)
-
-    if type == 'all':
-        combined = sorted(list(posts), key=lambda item: item._score, reverse=True)
-    elif type == 'following':
-        combined = [item for item in posts
-                    if item._score > -3600 * 24 * 7]
-        combined = sorted([item for item in combined
-            if (hasattr(item, 'user') and item.user in following_users)],
-            key=lambda item: item._score, reverse=True)
-    elif type == 'trending':
-        combined = sorted(list(posts), key=lambda item: item.created_at, reverse=True)
-    else:
-        combined = []
-
+    """
+    MOCK ALGORITHM - Simple log feed for home page.
+    TODO: Replace with advanced recommendation algorithm later.
+    Currently just returns recent logs with basic filtering.
+    """
+    from logs.models import Log
+    
+    # Simple mock: just get recent logs
+    # Type parameter is ignored for now in mock version
+    logs = Log.objects.select_related('user__user').order_by('-timestamp')
+    
+    # Annotate each log with feed_type for template compatibility
+    for log in logs:
+        log.feed_type = 'log'
+    
     # Pagination
-    paginator = Paginator(combined, per_page)
-    # return paginator.get_page(page)
+    paginator = Paginator(logs, per_page)
     try:
         page_obj = paginator.page(page)
     except EmptyPage:
-        return paginator.get_page(1)[:0]  # Return empty page
+        return paginator.get_page(1)[:0]
+    
     return page_obj
 
 def top_skills_list():

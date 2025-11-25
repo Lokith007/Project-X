@@ -11,7 +11,7 @@
             <span>{{ log.timestamp|timesince }} ago</span>
         </div>
         {% if log.user == request.user.info %}
-        <button class="delete-log-btn text-gray-500 hover:text-red-400 transition-colors p-1" data-log-id="{{ log.id }}">
+        <button class="delete-log-btn text-gray-500 hover:text-red-400 transition-colors p-1" data-log-id="{{ log.sig }}">
             <i class="fa fa-trash text-xs"></i>
         </button>
         {% endif %}

@@ -55,127 +55,52 @@ def get_max_streak(logs_queryset):
     return max_streak
 
 
-@login_required
-def explore_logs_page(request):
-    stats_obj = get_24h_log_stats()
-    logs_qs = stats_obj['logs_qs']
+def load_more_profile_logs(request, username):
+    """
+    Cursor-based pagination for loading more logs on user profile.
+    Uses timestamp cursor for efficient pagination.
+    """
+    user = get_object_or_404(User, username=username)
+    info = user.info
     
-    paginator = Paginator(logs_qs, 20)  # 20 logs per page
-    page_obj = paginator.page(1)
+    # Get cursor (last log timestamp) from request
+    cursor = request.GET.get("cursor")
+    per_page = 10  # Load 10 logs at a time
     
-    context = {
-        "stats_obj": stats_obj,
-        "logs_qs": page_obj.object_list,
-        "has_next": page_obj.has_next(),
-    }
-    return render(request, "logs/logs.html", context)
-
-#load more option for explore logs
-@login_required
-def load_more_logs(request):
-    page = int(request.GET.get("page", 1))
-    logs_qs = Log.objects.filter(timestamp__gte=timezone.now() - timedelta(hours=24)).order_by("-timestamp")
-    paginator = Paginator(logs_qs, 20)
-
-    try:
-        logs_page = paginator.page(page)
-    except:
-        return JsonResponse({"logs_html": "", "has_next": False})
-
-    html = render_to_string("logs/partials/log_cards.html", {"logs_qs": logs_page.object_list, "user": request.user}, request=request )
+    # Build query
+    logs_query = Log.objects.filter(user=info).order_by("-timestamp")
+    
+    # Apply cursor filter if provided
+    if cursor:
+        try:
+            cursor_datetime = timezone.datetime.fromisoformat(cursor)
+            logs_query = logs_query.filter(timestamp__lt=cursor_datetime)
+        except (ValueError, TypeError):
+            pass  # Invalid cursor, just ignore it
+    
+    # Fetch one extra to check if there are more
+    logs = list(logs_query[:per_page + 1])
+    
+    has_next = len(logs) > per_page
+    if has_next:
+        logs = logs[:per_page]  # Remove the extra one
+    
+    # Get new cursor (timestamp of last log)
+    new_cursor = logs[-1].timestamp.isoformat() if logs else None
+    
+    # Render HTML
+    html = render_to_string(
+        "logs/partials/personal_log_cards.html",
+        {"logs": logs, "user": request.user},
+        request=request
+    )
+    
     return JsonResponse({
         "logs_html": html,
-        "has_next": logs_page.has_next()
+        "has_next": has_next,
+        "cursor": new_cursor
     })
 
-# for personal log book
-@login_required
-def personal_logbook(request, username):
-    year = int(request.GET.get('year', timezone.now().year))
-    try:
-        user = User.objects.get(username = username)
-    except User.DoesNotExist:
-        return render(request, 'logs/logs_user_not_found.html', {"username": username})
-        
-    info = user.info
-    logs = Log.objects.filter(user = info).order_by("-timestamp")
-    total_logs = logs.count()
-    last_log_date = timezone.localtime(logs.first().timestamp).date() if total_logs else None
-    
-    # Streak calculation
-    streak = streak_calculation(logs)
-    
-    # Clone Impact
-    clone_impact = Log.objects.filter(original_log__user=info).count()
-    
-    log_heat_map = logs.filter(
-        timestamp__year=year
-    ).values_list('timestamp', flat=True)
-
-    log_map = defaultdict(int)
-    for ts in log_heat_map:
-        date_str = timezone.localtime(ts).strftime('%Y-%m-%d')
-        log_map[date_str] += 1
-
-    # Prepare full 1-year grid
-    start_date = date(year, 1, 1)
-    end_date = date(year, 12, 31)
-    total_days = (end_date - start_date).days + 1
-
-    contribution_days = []
-    for i in range(total_days):
-        current_day = start_date + timedelta(days=i)
-        contribution_days.append({
-            'date': current_day.strftime('%Y-%m-%d'),
-            'count': log_map.get(current_day.strftime('%Y-%m-%d'), 0)
-        })
-        
-    contribution_months = build_contribution_months(contribution_days)
-
-    log_year_count =  sum(log_map.values())
-    years_available = logs.dates('timestamp', 'year')
-    max_streak = get_max_streak(logs)
-    
-    paginator = Paginator(logs, 20)  # 20 logs per page
-    page_obj = paginator.page(1)
-
-    context = {
-        "logs": page_obj.object_list,
-        'userinfo_obj': info,
-        "total_logs": total_logs,
-        "last_log_date": last_log_date.strftime("%b %d, %Y") if last_log_date else "—",
-        "streak": streak,
-        "clone_impact": clone_impact,
-        "has_next": page_obj.has_next(),
-        
-        'log_map': dict(log_map),
-        'year': year,
-        'years_available': years_available,
-        'contribution_months': contribution_months,
-        'log_year_count': log_year_count,
-        'max_streak': max_streak,
-    }
-    return render(request, "logs/personal_logbook.html", context)
-
-#load more option for explore logs
-@login_required
-def load_more_personal_logs(request, username):
-    user = get_object_or_404(User, username = username)
-    info = user.info
-    page = int(request.GET.get("page", 1))
-    logs = Log.objects.filter(user = info).order_by("-timestamp")
-    paginator = Paginator(logs, 20)
-
-    try:
-        logs_page = paginator.page(page)
-    except:
-        return JsonResponse({"logs_html": "", "has_next": False})
-
-    html = render_to_string("logs/partials/personal_log_cards.html", {"logs": logs_page.object_list, "user": request.user}, request=request)
-    return JsonResponse({
-        "logs_html": html,
-        "has_next": logs_page.has_next()
-    })
 
 @require_POST
 @login_required
@@ -201,7 +126,7 @@ def save_log(request):
                 request.session['reward_emojis'] = ['🥳', '🔥']
             else: 
                 messages.success(request, "Log committed successfully!")
-            return redirect("explore_logs_page")
+            return redirect("index")
     return redirect(request.META.get('HTTP_REFERER', '/'))
 
 #save clone log
@@ -235,7 +160,7 @@ def save_clone_log(request, sig):
         request.session['reward_emojis'] = ['🥳', '🔥']
     else: 
         messages.success(request, "Log cloned successfully!")
-    return redirect(f"{reverse('personal_logbook', args=[request.user.username])}")
+    return redirect(request.META.get('HTTP_REFERER', '/'))
 
 
 @login_required
