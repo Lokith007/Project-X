@@ -9,7 +9,7 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from .models import userinfo
 
-@receiver(post_save, sender=User)
+@receiver(pre_save, sender=userinfo)
 def delete_old_userinfo_profile_image(sender, instance, **kwargs):
     if not instance.pk:  # If this is a new instance, skip
         return

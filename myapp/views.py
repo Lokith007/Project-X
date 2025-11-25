@@ -140,29 +140,6 @@ def home_page(request):
     # User is authenticated and profile is complete
     return render(request, 'myapp/home.html', context)
 
-# @login_required
-def index(request):
-    if not request.user.is_authenticated:
-        return render(request, 'myapp/landing_page.html')
-    
-    if request.user.info.needs_profile_completion:
-        return redirect('signup_about', uuid=request.user.info.uuid)
-    type = request.GET.get('feed', "all")
-    page = 1 
-    feed_page = get_personalized_feed(request, type=type, page=page, per_page=7)
-    tot_upcoming_events = 0
-    logform = LogForm()
-    stats_obj = get_24h_log_stats()
-    context = {
-        'active_home': True,
-        'logform': logform,
-        'feed_items': feed_page,
-        'tot_upcoming_events': tot_upcoming_events,
-        'stats_obj': stats_obj,
-        'type': type,
-    }
-    return render(request, 'myapp/index.html', context) 
-
 @login_required
 def load_more_feed(request):
     if not request.user.is_authenticated:
