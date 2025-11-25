@@ -64,6 +64,22 @@
                     </a>
                 </div>
                 
+                <!-- Timezone -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[#2d323b] pb-4 transition-all duration-200 rounded-md px-2">
+                    <p class="text-gray-300 font-semibold text-lg">Timezone</p>
+                    <form method="POST" action="{% url 'settings_page' %}" class="flex items-center gap-3">
+                        {% csrf_token %}
+                        <select name="timezone" size="1" class="w-full sm:w-auto bg-[#262b34] border border-[#2d323b] text-gray-300 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" style="height: 40px; max-height: 40px;">
+                            {% for tz_value, tz_label in timezone_choices %}
+                            <option value="{{ tz_value }}" {% if tz_value == userinfo_obj.timezone %}selected{% endif %}>{{ tz_label }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg font-medium text-sm transition-colors duration-200">
+                            Update
+                        </button>
+                    </form>
+                </div>
+                
             </div>
     
             <!-- Action Buttons -->

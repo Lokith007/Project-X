@@ -89,7 +89,7 @@ class RegistrationForm(UserCreationForm):
 class Postsignup_infoForm(forms.ModelForm):
     class Meta:
         model = userinfo
-        fields = ['status', 'cringe_badge']
+        fields = ['status', 'cringe_badge', 'timezone']
         widgets = {
             'cringe_badge': forms.Select(attrs={
                 'class': 'w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent'
@@ -97,7 +97,19 @@ class Postsignup_infoForm(forms.ModelForm):
             'status': forms.Select(attrs={
                 'class': 'w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent'
             }),
+            'timezone': forms.Select(attrs={
+                'class': 'w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent',
+                'style': 'height: 48px; max-height: 48px;',
+                'size': '1'
+            }),
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Populate timezone choices
+        from myapp.timezone_utils import get_common_timezones
+        self.fields['timezone'].widget.choices = get_common_timezones()
+        self.fields['timezone'].required = True
 
 class EditProfileForm(forms.ModelForm):
     first_name = forms.CharField(max_length=50, required=True, widget=forms.TextInput(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-1', 'placeholder': 'First'}))
@@ -121,15 +133,25 @@ class EditProfileForm(forms.ModelForm):
             'github': forms.URLInput(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'Github URL'}),
             'stackoverflow': forms.URLInput(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'Stackoverflow URL'}),
             'profile_image': forms.ClearableFileInput(attrs={'id': 'imgInput','class': 'hidden'}),
-            'cringe_badge': forms.Select(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2'})
+            'cringe_badge': forms.Select(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2'}),
+            'timezone': forms.Select(attrs={
+                'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2',
+                'style': 'height: 40px; max-height: 40px;',
+                'size': '1'
+            }),
         }
         labels = {
             'bio': 'Short Bio',
             'contact_email': 'Contact Email (If any)',
+            'timezone': 'Timezone',
         }
         
     def __init__(self, *args, **kwargs):
         super(EditProfileForm, self).__init__(*args, **kwargs)
+        # Populate timezone choices
+        from myapp.timezone_utils import get_common_timezones
+        self.fields['timezone'].widget.choices = get_common_timezones()
+        
         if self.instance and self.instance.user:
             user = self.instance.user
             self.fields['first_name'].initial =  user.first_name

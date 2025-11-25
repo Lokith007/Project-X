@@ -41,6 +41,7 @@ class userinfo(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     needs_profile_completion = models.BooleanField(default=False)
     last_seen = models.DateTimeField(default=timezone.now)
+    timezone = models.CharField(max_length=63, default='UTC', help_text="User's timezone for displaying dates/times")
     
     def __str__(self):
         return self.user.username 

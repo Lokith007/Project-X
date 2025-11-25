@@ -29,7 +29,8 @@ from collections import Counter, defaultdict
 #Logs
 from logs.utils import get_24h_log_stats, streak_calculation
 from logs.models import Log
-from logs.views import get_max_streak, build_contribution_months
+from logs.views import build_contribution_months
+from logs.utils import streak_calculation, calculate_max_streak
 
 # Create your views here.
 class CustomPasswordChangeView(PasswordChangeView):
@@ -235,18 +236,32 @@ def user_profile(request, user_name):
     
     clone_impact = Log.objects.filter(original_log__user=userinfo_obj).count()  #total clone count
     
-    streak_count = streak_calculation(logs)
-    max_streak_count = get_max_streak(logs)
+    streak_count = streak_calculation(logs, userinfo_obj.user)
+    max_streak_count = calculate_max_streak(logs)
     
     year = int(request.GET.get('year', timezone.now().year))
+    
+    # Get user's timezone for accurate date conversion
+    from myapp.timezone_utils import get_user_timezone
+    import pytz
+    user_tz = get_user_timezone(userinfo_obj.user)
+    
+    # Optimized: Use database aggregation with timezone conversion
+    from django.db.models.functions import TruncDate
+    from django.db.models import Count
+    
+    # Aggregate logs by date at database level, converting to user's timezone
     log_heat_map = logs.filter(
         timestamp__year=year
-    ).values_list('timestamp', flat=True)
-
-    log_map = defaultdict(int)
-    for ts in log_heat_map:
-        date_str = timezone.localtime(ts).strftime('%Y-%m-%d')
-        log_map[date_str] += 1
+    ).annotate(
+        log_date=TruncDate('timestamp', tzinfo=user_tz)
+    ).values('log_date').annotate(
+        count=Count('id')
+    ).order_by('log_date')
+    
+    # Build efficient lookup dict
+    log_map = {item['log_date'].strftime('%Y-%m-%d'): item['count'] 
+               for item in log_heat_map}
 
     # Prepare full 1-year grid
     start_date = date(year, 1, 1)
@@ -257,7 +272,8 @@ def user_profile(request, user_name):
     for i in range(total_days):
         current_day = start_date + timedelta(days=i)
         contribution_days.append({
-            'date': current_day.strftime('%Y-%m-%d'),
+            'date': current_day,  # Pass date object, not string
+            'date_str': current_day.strftime('%Y-%m-%d'),  # Keep string for lookup
             'count': log_map.get(current_day.strftime('%Y-%m-%d'), 0)
         })
         
@@ -471,8 +487,29 @@ def explore_dev(request):
 @login_required
 def settings_page(request):
     userinfo_obj = request.user.info
+    
+    # Handle timezone update
+    if request.method == 'POST' and 'timezone' in request.POST:
+        new_timezone = request.POST.get('timezone')
+        # Validate timezone
+        import pytz
+        from django.contrib import messages
+        from django.shortcuts import redirect
+        if new_timezone in pytz.all_timezones:
+            userinfo_obj.timezone = new_timezone
+            userinfo_obj.save()
+            messages.success(request, 'Timezone updated successfully!')
+        else:
+            messages.error(request, 'Invalid timezone selected.')
+        return redirect('settings_page')
+    
+    # Get timezone choices for the dropdown
+    from myapp.timezone_utils import get_common_timezones
+    timezone_choices = get_common_timezones()
+    
     context = {
-        'userinfo_obj': userinfo_obj
+        'userinfo_obj': userinfo_obj,
+        'timezone_choices': timezone_choices,
     }
     return render(request, 'myapp/account_setting.html', context)
 

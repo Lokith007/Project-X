@@ -7,7 +7,7 @@ from .forms import LogForm
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from .models import Log
-from .utils import get_24h_log_stats, streak_calculation
+from .utils import get_24h_log_stats, streak_calculation, calculate_max_streak
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.core.paginator import Paginator
@@ -22,37 +22,25 @@ def chunk_list(data, size):
     return list(iter(lambda: list(islice(it, size)), []))
 
 def build_contribution_months(contribution_days):
-    months = [[] for _ in range(12)]  # 0 to 11 months
-
+    """
+    Organizes contribution days into weeks grouped by month.
+    Now expects contribution_days to have date objects, not strings.
+    """
+    months = [[] for _ in range(12)]
+    
     for day in contribution_days:
-        month_index = int(day['date'][5:7]) - 1  # Extract MM from YYYY-MM-DD
+        # Extract month from date object (1-12) and convert to 0-indexed
+        date_obj = day['date']
+        month_index = date_obj.month - 1
         months[month_index].append(day)
-
-    # Now chunk each month into weeks of 7 days
+    
+    # Build weekly structure - include ALL months (empty or not)
     contribution_months = []
     for idx, days in enumerate(months):
         weeks = chunk_list(days, 7)
         contribution_months.append((month_name[idx+1], weeks))
-
+    
     return contribution_months
-
-def get_max_streak(logs_queryset):
-    """Returns the maximum streak (longest consecutive-day logging streak)."""
-    # Get unique dates only, sorted
-    log_dates = sorted(set(log.timestamp.date() for log in logs_queryset))
-
-    max_streak = 0
-    current_streak = 1
-
-    for i in range(1, len(log_dates)):
-        if log_dates[i] == log_dates[i-1] + timedelta(days=1):
-            current_streak += 1
-        else:
-            max_streak = max(max_streak, current_streak)
-            current_streak = 1
-
-    max_streak = max(max_streak, current_streak) if log_dates else 0
-    return max_streak
 
 
 def load_more_profile_logs(request, username):
@@ -116,12 +104,13 @@ def save_log(request):
 
             log.save()
             
-            today = timezone.localtime(timezone.now()).date()
+            from myapp.timezone_utils import user_today
+            today = user_today(request.user)
             logs = Log.objects.filter(user = request.user.info)
             existing_logs_today = logs.filter(timestamp__date=today).exclude(sig=log.sig).exists() 
             
             if not existing_logs_today:
-                streak = streak_calculation(logs)
+                streak = streak_calculation(logs, request.user)
                 request.session['reward_message'] =  f"🔥 {streak} Day Streak!"
                 request.session['reward_emojis'] = ['🥳', '🔥']
             else: 
@@ -150,12 +139,13 @@ def save_clone_log(request, sig):
     root_log.clone_count = root_log.clones.count()
     root_log.save()
     
-    today = timezone.localtime(timezone.now()).date()
+    from myapp.timezone_utils import user_today
+    today = user_today(user.user)
     logs = Log.objects.filter(user = user)
     existing_logs_today = logs.filter(timestamp__date=today).exclude(sig=clone.sig) 
     
     if not existing_logs_today:
-        streak = streak_calculation(logs)
+        streak = streak_calculation(logs, user.user)
         request.session['reward_message'] =  f"🔥 {streak} Day Streak!"
         request.session['reward_emojis'] = ['🥳', '🔥']
     else: 

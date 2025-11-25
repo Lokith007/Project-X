@@ -7,7 +7,19 @@ from django.dispatch import receiver
 from django.core.files.storage import default_storage
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
-from .models import userinfo
+from .models import userinfo, education
+
+@receiver(post_save, sender=User)
+def create_related_user_models(sender, instance, created, **kwargs):
+    if created:
+        info, _ = userinfo.objects.get_or_create(user=instance)
+        education.objects.get_or_create(user=info)
+        
+@receiver(user_signed_up)
+def handle_new_social_signup(request, user, **kwargs):
+    if hasattr(user, 'info'):
+        user.info.needs_profile_completion = True
+        user.info.save()
 
 @receiver(pre_save, sender=userinfo)
 def delete_old_userinfo_profile_image(sender, instance, **kwargs):
