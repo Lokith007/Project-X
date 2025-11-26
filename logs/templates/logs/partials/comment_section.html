@@ -1,20 +1,20 @@
 <!-- Comment Section for Log Cards -->
 <!-- Comments Container (Hidden by default) -->
-<div id="comments-container-{{ log.sig }}" class="hidden mt-3">
+<div id="comments-container-{{ log.sig }}" class="hidden mt-4 -mx-4 -mb-4 p-5 bg-[#000000] border-t border-[#30363d] rounded-b-lg">
         
         <!-- Comment Form -->
-        <div class="mb-4">
+        <div class="mb-6">
             <form onsubmit="addComment(event, '{{ log.sig }}'); return false;" class="comment-form">
                 <textarea 
                     id="comment-input-{{ log.sig }}"
-                    class="w-full bg-[#0d1117] border border-[#30363d] rounded-lg p-3 text-sm text-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none"
+                    class="w-full bg-[#0d1117] border border-[#30363d] rounded-lg p-3 text-sm text-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none placeholder-gray-600"
                     placeholder="Write a comment..."
                     rows="3"
                     maxlength="500"
                     required></textarea>
                 <div class="flex justify-end gap-2 mt-2">
                     <button type="submit" 
-                            class="px-4 py-2 bg-green-800 hover:bg-green-700 text-white text-sm rounded-md transition-colors">
+                            class="px-4 py-2 bg-green-800 hover:bg-green-700 text-white text-sm rounded-md transition-colors font-medium shadow-sm">
                         <i class="fa fa-paper-plane mr-1"></i>
                         Comment
                     </button>
@@ -23,13 +23,18 @@
         </div>
 
         <!-- Comments List -->
-        <div id="comments-list-{{ log.sig }}" class="space-y-3">
+        <div id="comments-list-{{ log.sig }}" class="space-y-4">
             {% for comment in log.comments.all %}
                 {% if not comment.parent_comment %}
                     {% include 'logs/partials/comment_item.html' with comment=comment log=log log_sig=log.sig %}
                 {% endif %}
             {% empty %}
-                <p class="text-gray-500 text-sm text-center py-4">No comments yet!</p>
+                <div class="text-center py-8">
+                    <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#161b22] mb-3 -mt-2">
+                        <i class="fa fa-comments-o text-gray-500 text-xl"></i>
+                    </div>
+                    <p class="text-gray-500 text-sm">No comments yet. Start the conversation!</p>
+                </div>
             {% endfor %}
         </div>
     </div>

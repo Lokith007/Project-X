@@ -197,7 +197,19 @@ def add_comment(request, sig):
         if parent_id:
             try:
                 parent_comment = Comment.objects.get(id=parent_id)
-                comment.parent_comment = parent_comment
+                
+                # If replying to a reply (nested), flatten it
+                if parent_comment.parent_comment:
+                    # Link to the top-level parent
+                    comment.parent_comment = parent_comment.parent_comment
+                    # Add mention to content if not already present
+                    mention = f"@{parent_comment.user.user.username}"
+                    if not comment.content.strip().startswith(mention):
+                        comment.content = f"{mention} {comment.content}"
+                else:
+                    # Direct reply to top-level comment
+                    comment.parent_comment = parent_comment
+                    
             except Comment.DoesNotExist:
                 pass
                 

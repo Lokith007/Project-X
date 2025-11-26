@@ -337,13 +337,20 @@ function deleteComment(commentId, sig) {
 /**
  * Show reply form for a comment
  */
-function showReplyForm(commentId, sig) {
+function showReplyForm(commentId, sig, username = null) {
   // Hide all other reply forms
   $('.hidden[id^="reply-form-"]').addClass('hidden');
 
   // Show this reply form
   $(`#reply-form-${commentId}`).removeClass('hidden');
-  $(`#reply-input-${commentId}`).focus();
+  const input = $(`#reply-input-${commentId}`);
+
+  // Pre-fill username if provided (for nested replies)
+  if (username) {
+    input.val(`@${username} `);
+  }
+
+  input.focus();
 }
 
 /**

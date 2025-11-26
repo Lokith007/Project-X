@@ -1,42 +1,53 @@
 <!-- Individual Comment Item -->
-<div id="comment-{{ comment.id }}" class="{% if comment.parent_comment %}ml-8 border-l-2 border-[#21262d] pl-4{% endif %}">
-    <div class="bg-[#0d1117] border border-[#21262d] rounded-lg p-3">
+<div id="comment-{{ comment.id }}" class="{% if comment.parent_comment %}ml-12 mt-3 relative group/reply{% else %}mb-8 group/parent{% endif %}">
+    
+    <!-- Thread Line for Replies -->
+    {% if comment.parent_comment %}
+    <div class="absolute -left-6 top-0 bottom-0 w-0.5 bg-[#30363d] rounded-full group-hover/reply:bg-[#58a6ff] transition-colors duration-300"></div>
+    <div class="absolute -left-6 top-4 w-4 h-0.5 bg-[#30363d] rounded-full group-hover/reply:bg-[#58a6ff] transition-colors duration-300"></div>
+    {% endif %}
+
+    <div class="{% if comment.parent_comment %}bg-transparent pl-0{% else %}bg-[#161b22] border border-[#30363d] rounded-xl p-4 shadow-sm hover:border-[#58a6ff]/50 transition-colors{% endif %} relative">
         <!-- Comment Header -->
         <div class="flex items-start justify-between mb-2">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-3">
                 <img src="{{ comment.user.profile_image.url|default:'/static/assets/default-avatar.png' }}" 
                      alt="{{ comment.user.user.username }}"
-                     class="w-6 h-6 rounded-full">
-                <span class="text-sm font-medium text-gray-300">{{ comment.user.user.username }}</span>
-                <span class="text-xs text-gray-500">{{ comment.timestamp|timesince }} ago</span>
+                     class="{% if comment.parent_comment %}w-6 h-6 ring-1 ring-[#30363d]{% else %}w-9 h-9 ring-2 ring-[#30363d]{% endif %} rounded-full object-cover">
+                <div class="flex flex-col leading-tight">
+                    <span class="text-sm font-semibold text-gray-200 hover:text-blue-400 cursor-pointer transition-colors">{{ comment.user.user.username }}</span>
+                    <span class="text-[11px] text-gray-500">{{ comment.timestamp|timesince }} ago</span>
+                </div>
             </div>
             
             <!-- Delete Button (only for comment owner or log owner) -->
             {% if request.user.info == comment.user or request.user.info == log.user %}
             <button onclick="deleteComment({{ comment.id }}, '{{ log_sig }}')" 
-                    class="text-gray-500 hover:text-red-400 transition-colors">
+                    class="text-gray-500 hover:text-red-400 transition-colors opacity-0 group-hover/parent:opacity-100 group-hover/reply:opacity-100 p-1">
                 <i class="fa fa-trash text-xs"></i>
             </button>
             {% endif %}
         </div>
 
         <!-- Comment Content -->
-        <p class="text-sm text-gray-300 whitespace-pre-wrap">{{ comment.content }}</p>
+        <div class="{% if comment.parent_comment %}pl-9{% else %}mt-2{% endif %}">
+            <p class="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">{{ comment.content }}</p>
+        </div>
 
         <!-- Comment Actions -->
-        <div class="flex items-center gap-4 mt-2">
-            <button onclick="showReplyForm({{ comment.id }}, '{{ log_sig }}')" 
-                    class="text-xs text-gray-500 hover:text-green-400 transition-colors">
-                <i class="fa fa-reply mr-1"></i>Reply
+        <div class="flex items-center gap-4 mt-3 {% if comment.parent_comment %}pl-9{% endif %}">
+            <button onclick="showReplyForm({{ comment.id }}, '{{ log_sig }}'{% if comment.parent_comment %}, '{{ comment.user.user.username }}'{% endif %})" 
+                    class="text-xs font-medium text-gray-500 hover:text-[#58a6ff] transition-colors flex items-center gap-1.5 py-1 px-2 -ml-2 rounded-md hover:bg-[#58a6ff]/10">
+                <i class="fa fa-reply"></i>Reply
             </button>
         </div>
 
         <!-- Reply Form (Hidden by default) -->
-        <div id="reply-form-{{ comment.id }}" class="hidden mt-3">
+        <div id="reply-form-{{ comment.id }}" class="hidden mt-3 pt-3 border-t border-[#30363d]/30 {% if comment.parent_comment %}pl-9{% endif %}">
             <form onsubmit="addComment(event, '{{ log_sig }}', {{ comment.id }}); return false;">
                 <textarea 
                     id="reply-input-{{ comment.id }}"
-                    class="w-full bg-[#161b22] border border-[#30363d] rounded-lg p-2 text-sm text-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none"
+                    class="w-full bg-[#0d1117] border border-[#30363d] rounded-lg p-3 text-sm text-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none placeholder-gray-600"
                     placeholder="Write a reply..."
                     rows="2"
                     maxlength="500"
@@ -44,11 +55,11 @@
                 <div class="flex justify-end gap-2 mt-2">
                     <button type="button" 
                             onclick="cancelReply({{ comment.id }})"
-                            class="px-3 py-1 text-xs text-gray-400 hover:text-gray-300 transition-colors">
+                            class="px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-gray-300 transition-colors">
                         Cancel
-                 </button>
+                    </button>
                     <button type="submit" 
-                            class="px-3 py-1 bg-green-700 hover:bg-green-600 text-white cursor-pointer text-xs rounded-md transition-colors">
+                            class="px-3 py-1.5 bg-[#238636] hover:bg-[#2ea043] text-white text-xs font-medium rounded-md transition-colors shadow-sm border border-[rgba(240,246,252,0.1)]">
                         Reply
                     </button>
                 </div>
@@ -57,7 +68,7 @@
     </div>
 
     <!-- Replies -->
-    <div id="replies-{{ comment.id }}" class="mt-3 space-y-3">
+    <div id="replies-{{ comment.id }}" class="space-y-1">
         {% for reply in comment.replies.all %}
             {% include 'logs/partials/comment_item.html' with comment=reply log=log log_sig=log_sig %}
         {% endfor %}
