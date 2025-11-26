@@ -25,15 +25,6 @@ class Log(models.Model):
     # Unique signature
     sig = models.CharField(max_length=20, unique=True, default=generate_unique_signature)
     
-    # Cloning
-    original_log = models.ForeignKey("self", null=True, blank=True, on_delete=models.SET_NULL, related_name="clones")
-
-    # Reactions
-    clone_count = models.PositiveIntegerField(default=0)
-    
-    def is_clone(self):
-        return self.original_log is not None
-    
     def total_comments(self):
         return self.comments.count()
     
@@ -42,7 +33,8 @@ class Log(models.Model):
     
     def get_reaction_counts(self):
         """Get count of each reaction type"""
-        return self.reactions.values('emoji').annotate(count=Count('emoji')).order_by('-count')
+        counts = self.reactions.values('emoji').annotate(count=Count('emoji'))
+        return {item['emoji']: item['count'] for item in counts}
     
     def get_user_reaction(self, user):
         """Get the reaction by a specific user for this log"""
@@ -102,12 +94,10 @@ class Reaction(models.Model):
     Reaction model for MindLog entries with emoji reactions
     """
     REACTION_CHOICES = [
-        ('👍', 'Like'),
-        ('🔥', 'Fire'),
-        ('🚀', 'Ship It'),
-        ('❤️', 'Love'),
+        ('❤️', 'Like'),
+        ('🚀', 'Rocket'),
         ('💡', 'Insight'),
-        ('🐛', 'Bug'),
+        ('😢', 'Sad'),
     ]
     
     mindlog = models.ForeignKey(Log, on_delete=models.CASCADE, related_name='reactions')

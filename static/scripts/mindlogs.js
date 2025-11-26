@@ -151,3 +151,87 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 });
+
+/**
+ * Toggle reaction picker visibility
+ */
+function toggleReactionPicker(sig) {
+  const picker = $(`#picker-${sig}`);
+  const isHidden = picker.hasClass('hidden');
+
+  // Close all pickers and remove listeners
+  $('.reaction-picker').addClass('hidden');
+  $(document).off('click.reactionPicker');
+
+  if (isHidden) {
+    picker.removeClass('hidden');
+
+    // Delay attachment to avoid catching the current click
+    setTimeout(() => {
+      $(document).on('click.reactionPicker', function (e) {
+        // If clicked outside the picker
+        if (!$(e.target).closest(`#picker-${sig}`).length) {
+          picker.addClass('hidden');
+          $(document).off('click.reactionPicker');
+        }
+      });
+    }, 0);
+  }
+}
+
+/**
+ * Toggle reaction on a log
+ */
+function toggleReaction(sig, emoji) {
+  // Close picker if open and remove listener
+  $(`#picker-${sig}`).addClass('hidden');
+  $(document).off('click.reactionPicker');
+
+  $.ajax({
+    type: "POST",
+    url: `/logs/reaction/${sig}/`,
+    data: {
+      'emoji': emoji,
+      'csrfmiddlewaretoken': getCSRFToken()
+    },
+    success: function (response) {
+      // Update UI based on response
+      const container = $(`#reactions-${sig}`);
+
+      // We need to update specific emoji button in the active list
+      // Since we are now using separate buttons for each emoji in the list
+
+      // Iterate through all 4 supported emojis to update their state
+      ['❤️', '🚀', '💡', '😢'].forEach(e => {
+        const count = response.counts[e] || 0;
+        let btn = container.find(`.reaction-btn[data-emoji="${e}"]`);
+
+        if (count > 0) {
+          // If button doesn't exist (was hidden), we might need to show it
+          // But in our template we render all and hide them.
+          btn.removeClass('hidden');
+          btn.find('.count').text(count);
+
+          // Update style based on user reaction
+          if (response.user_reaction === e) {
+            btn.removeClass('bg-[#0d1117] text-gray-500 border border-[#21262d] hover:border-gray-600 hover:text-gray-300')
+              .addClass('bg-blue-500/10 text-blue-400 border-blue-500/30');
+          } else {
+            btn.removeClass('bg-blue-500/10 text-blue-400 border-blue-500/30')
+              .addClass('bg-[#0d1117] text-gray-500 border border-[#21262d] hover:border-gray-600 hover:text-gray-300');
+          }
+        } else {
+          // Hide button if count is 0
+          btn.addClass('hidden');
+        }
+      });
+    },
+    error: function (xhr) {
+      console.error('Error toggling reaction:', xhr.responseText);
+    }
+  });
+}
+
+// Make functions globally available
+window.toggleReaction = toggleReaction;
+window.toggleReactionPicker = toggleReactionPicker;

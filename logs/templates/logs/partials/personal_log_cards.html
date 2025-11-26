@@ -60,11 +60,92 @@
         {% endif %}
     </div>
 
-    <!-- Footer stats -->
-    <div class="flex items-center gap-4 mt-4 pt-3 border-t border-[#21262d]">
-        <div class="flex items-center gap-1.5 text-xs text-gray-500">
-            <i class="fa fa-code-branch text-xs"></i>
-            <span class="font-mono">{{ log.clone_count }}</span>
+    <!-- Reactions -->
+    <div class="flex items-center gap-2 mt-3 pt-2 border-t border-[#21262d]/50 relative">
+        
+        <!-- Add Reaction Button -->
+        <button onclick="toggleReactionPicker('{{ log.sig }}')" 
+                class="add-reaction-btn text-gray-500 hover:text-blue-400 hover:cursor-pointer transition-colors p-1 rounded-md hover:bg-[#1f242c]">
+            <i class="fa fa-smile-o text-base"></i>
+        </button>
+
+        <!-- Reaction Picker (Absolute) -->
+        <div id="picker-{{ log.sig }}" class="reaction-picker hidden absolute bottom-full left-0 mb-2 bg-[#161b22] border border-[#30363d] rounded-lg shadow-xl p-2  gap-1 z-50">
+            <button onclick="toggleReaction('{{ log.sig }}', '❤️')" class="hover:bg-[#1f242c] p-1.5 rounded transition-colors text-sm">❤️</button>
+            <button onclick="toggleReaction('{{ log.sig }}', '🚀')" class="hover:bg-[#1f242c] p-1.5 rounded transition-colors text-sm">🚀</button>
+            <button onclick="toggleReaction('{{ log.sig }}', '💡')" class="hover:bg-[#1f242c] p-1.5 rounded transition-colors text-sm">💡</button>
+            <button onclick="toggleReaction('{{ log.sig }}', '😢')" class="hover:bg-[#1f242c] p-1.5 rounded transition-colors text-sm">😢</button>
+        </div>
+
+        <!-- Active Reactions List -->
+        <div id="reactions-{{ log.sig }}" class="flex items-center gap-2">
+            {% with user_reaction=log|args:request.user|call:"get_user_reaction" %}
+                
+                <!-- Like -->
+                <button onclick="toggleReaction('{{ log.sig }}', '❤️')" 
+                        class="reaction-btn group relative flex items-center gap-1 px-2 py-1 rounded-md text-xs font-mono transition-all duration-200
+                               {% if user_reaction and user_reaction.emoji == '❤️' %}
+                                   bg-blue-500/10 text-blue-400 border border-blue-500/30
+                               {% else %}
+                                   bg-[#0d1117] text-gray-500 border border-[#21262d] hover:border-gray-600 hover:text-gray-300
+                               {% endif %}
+                               {% if not log.get_reaction_counts|get_item:'❤️' %}hidden{% endif %}"
+                        data-emoji="❤️">
+                    <span>❤️</span>
+                    <span class="count ml-0.5">
+                        {{ log.get_reaction_counts|get_item:'❤️'|default:0 }}
+                    </span>
+                </button>
+
+                <!-- Rocket -->
+                <button onclick="toggleReaction('{{ log.sig }}', '🚀')" 
+                        class="reaction-btn group relative flex items-center gap-1 px-2 py-1 rounded-md text-xs font-mono transition-all duration-200
+                               {% if user_reaction and user_reaction.emoji == '🚀' %}
+                                   bg-blue-500/10 text-blue-400 border border-blue-500/30
+                               {% else %}
+                                   bg-[#0d1117] text-gray-500 border border-[#21262d] hover:border-gray-600 hover:text-gray-300
+                               {% endif %}
+                               {% if not log.get_reaction_counts|get_item:'🚀' %}hidden{% endif %}"
+                        data-emoji="🚀">
+                    <span>🚀</span>
+                    <span class="count ml-0.5">
+                        {{ log.get_reaction_counts|get_item:'🚀'|default:0 }}
+                    </span>
+                </button>
+
+                <!-- Insight -->
+                <button onclick="toggleReaction('{{ log.sig }}', '💡')" 
+                        class="reaction-btn group relative flex items-center gap-1 px-2 py-1 rounded-md text-xs font-mono transition-all duration-200
+                               {% if user_reaction and user_reaction.emoji == '💡' %}
+                                   bg-blue-500/10 text-blue-400 border border-blue-500/30
+                               {% else %}
+                                   bg-[#0d1117] text-gray-500 border border-[#21262d] hover:border-gray-600 hover:text-gray-300
+                               {% endif %}
+                               {% if not log.get_reaction_counts|get_item:'💡' %}hidden{% endif %}"
+                        data-emoji="💡">
+                    <span>💡</span>
+                    <span class="count ml-0.5">
+                        {{ log.get_reaction_counts|get_item:'💡'|default:0 }}
+                    </span>
+                </button>
+
+                <!-- Sad -->
+                <button onclick="toggleReaction('{{ log.sig }}', '😢')" 
+                        class="reaction-btn group relative flex items-center gap-1 px-2 py-1 rounded-md text-xs font-mono transition-all duration-200
+                               {% if user_reaction and user_reaction.emoji == '😢' %}
+                                   bg-blue-500/10 text-blue-400 border border-blue-500/30
+                               {% else %}
+                                   bg-[#0d1117] text-gray-500 border border-[#21262d] hover:border-gray-600 hover:text-gray-300
+                               {% endif %}
+                               {% if not log.get_reaction_counts|get_item:'😢' %}hidden{% endif %}"
+                        data-emoji="😢">
+                    <span>😢</span>
+                    <span class="count ml-0.5">
+                        {{ log.get_reaction_counts|get_item:'😢'|default:0 }}
+                    </span>
+                </button>
+
+            {% endwith %}
         </div>
     </div>
 

@@ -6,7 +6,7 @@ from django.urls import reverse
 from .forms import LogForm
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
-from .models import Log
+from .models import Log, Reaction
 from .utils import get_24h_log_stats, streak_calculation, calculate_max_streak
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -118,41 +118,6 @@ def save_log(request):
             return redirect("index")
     return redirect(request.META.get('HTTP_REFERER', '/'))
 
-#save clone log
-@login_required
-def save_clone_log(request, sig):
-    user = request.user.info
-    original_log = get_object_or_404(Log, sig=sig)
-    
-    if original_log.user == user:
-        return redirect(request.META.get('HTTP_REFERER', '/'))
-
-    if original_log.original_log and original_log.original_log.user == user:
-        return redirect(request.META.get('HTTP_REFERER', '/'))
-
-    root_log = original_log.original_log if original_log.original_log else original_log
-    clone = Log.objects.create(
-        user=user,
-        content=original_log.content,
-        original_log=root_log
-    )
-    root_log.clone_count = root_log.clones.count()
-    root_log.save()
-    
-    from myapp.timezone_utils import user_today
-    today = user_today(user.user)
-    logs = Log.objects.filter(user = user)
-    existing_logs_today = logs.filter(timestamp__date=today).exclude(sig=clone.sig) 
-    
-    if not existing_logs_today:
-        streak = streak_calculation(logs, user.user)
-        request.session['reward_message'] =  f"🔥 {streak} Day Streak!"
-        request.session['reward_emojis'] = ['🥳', '🔥']
-    else: 
-        messages.success(request, "Log cloned successfully!")
-    return redirect(request.META.get('HTTP_REFERER', '/'))
-
-
 @login_required
 @require_POST
 def delete_log(request, sig):
@@ -167,3 +132,51 @@ def delete_log(request, sig):
 
     log.delete()
     return JsonResponse({'success': True})
+
+@login_required
+@require_POST
+def toggle_reaction(request, sig):
+    """
+    Toggle reaction on a log.
+    If reaction exists:
+        - If same emoji: remove it
+        - If different emoji: update it
+    If reaction doesn't exist: create it
+    """
+    
+    log = get_object_or_404(Log, sig=sig)
+    user_info = request.user.info
+    emoji = request.POST.get('emoji')
+    
+    # Validate emoji
+    valid_emojis = [choice[0] for choice in Reaction.REACTION_CHOICES]
+    if emoji not in valid_emojis:
+        return JsonResponse({'error': 'Invalid reaction'}, status=400)
+    
+    try:
+        reaction = Reaction.objects.get(mindlog=log, user=user_info)
+        if reaction.emoji == emoji:
+            # Same reaction - remove it
+            reaction.delete()
+            status = 'removed'
+            user_reaction = None
+        else:
+            # Different reaction - update it
+            reaction.emoji = emoji
+            reaction.save()
+            status = 'updated'
+            user_reaction = emoji
+    except Reaction.DoesNotExist:
+        # No reaction - create new one
+        Reaction.objects.create(mindlog=log, user=user_info, emoji=emoji)
+        status = 'added'
+        user_reaction = emoji
+    
+    # Get updated counts
+    counts = log.get_reaction_counts()
+    
+    return JsonResponse({
+        'status': status,
+        'counts': counts,
+        'user_reaction': user_reaction
+    })

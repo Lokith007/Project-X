@@ -234,7 +234,6 @@ def user_profile(request, user_name):
     total_logs = logs.count()
     last_log_date = timezone.localtime(logs.first().timestamp).date() if total_logs else None
     
-    clone_impact = Log.objects.filter(original_log__user=userinfo_obj).count()  #total clone count
     
     streak_count = streak_calculation(logs, userinfo_obj.user)
     max_streak_count = calculate_max_streak(logs)
@@ -371,7 +370,6 @@ def user_profile(request, user_name):
         'log_year_count': log_year_count,
         'total_logs': total_logs,
         'last_log_date': last_log_date,
-        'clone_impact': clone_impact,
         'recent_logs': recent_logs,
         'has_more_logs': has_more_logs,
         'initial_cursor': initial_cursor,
