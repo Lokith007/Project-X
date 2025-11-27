@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import skill, userinfo, education, experience, follow, Domain, user_status, Notification, Industry, CodingStyle
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
-from logs.models import Log, Reaction
+from logs.models import Log, Reaction, Comment
 
 # Register your models here.
 admin.site.register(skill)
@@ -10,7 +10,7 @@ admin.site.register(education)
 admin.site.register(experience)
 admin.site.register(follow)
 admin.site.register(Domain)
-
+admin.site.register(Comment)
 admin.site.register(user_status)
 admin.site.register(Reaction)
 admin.site.register(Notification)

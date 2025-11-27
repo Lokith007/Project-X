@@ -28,8 +28,7 @@
         <!-- sidenav -->
         {% include "includes/sidenav.html" %}
 
-        
-        <aside class="order-1 lg:order-3 border-l border-[#2d323b] border-opacity-80 w-full lg:w-[36%] p-6 space-y-6 mt-6">
+        <aside class="order-1 lg:order-3 border-l border-[#2d323b] border-b rounded-md border-opacity-80 w-full lg:w-[36%] p-6 space-y-6">
             <!-- Profile Card -->
             <div class="relative bg-[#1a1f2b] mt-2 group">
                 <!-- Banner -->
@@ -165,8 +164,9 @@
                     {{userinfo_obj.status.name}}
                 </div>
 
+                <!-- Social Links -->
                 {% if link_available %}
-                    <p class="text-lg mt-1 font-bold text-gray-200 tracking-wide">Links</p>
+                    <p class="text-lg mt-1 font-bold text-gray-200 tracking-wide mb-2">Links</p>
                     
                     <div class="flex flex-wrap gap-3 -mt-2">
                         {% for link, url in social_links.items %}
@@ -185,9 +185,6 @@
                 {% endif %}
 
             </div>
-
-
-
         </aside>
 
 
@@ -573,15 +570,14 @@
 <div id="coding-style-modal" class="hidden fixed inset-0 bg-[#0d1117]/80 backdrop-blur-sm z-50 flex items-center justify-center p-0 md:p-4">
     <div class="bg-[#0d1117] border-0 md:border md:border-[#30363d] rounded-none md:rounded-2xl w-full h-full md:h-auto md:max-h-[85vh] max-w-5xl overflow-hidden flex flex-col shadow-2xl">
         <!-- Header -->
-        <div class="hidden md:flex items-center justify-between p-2 md:p-4 -mt-4 border-b border-[#30363d] bg-[#161b22]">
+        <div class="hidden md:flex items-center justify-between p-2 md:p-4 border-b border-[#30363d] bg-[#161b22]">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-lg bg-[#262b34] flex items-center justify-center border border-[#a8b3cf]">
+                <div class="w-8 h-8 rounded-lg bg-[#262b34] flex items-center justify-center border border-[#a8b3cf]">
                     <span class="text-xl"></span><i class="fa fa-code text-#a8b3cf" aria-hidden="true"></i></span>
                 </div>
-                <div>
-                    <h2 class="text-lg md:text-xl font-mono text-[#c9d1d9]">Choose Coding Style</h2>
-                    <p class="text-xs md:text-sm text-[#8b949e]">Select a badge that matches your Style</p>
-                </div>
+                
+                <p class="text-xl font-mono text-[#c9d1d9]">Choose Coding Style</p>
+                
             </div>
             <button onclick="closeCodingStyleModal()" class="text-[#8b949e] hover:text-[#58a6ff] transition-colors p-2 hover:bg-[#1f6feb]/10 rounded-lg">
                 <i class="fa fa-times text-xl"></i>
@@ -589,7 +585,7 @@
         </div>
         
         <!-- Content -->
-        <div class="flex-1 overflow-hidden flex flex-col md:flex-row bg-[#0d1117]">
+        <div class="flex-1 overflow-hidden font-mono flex flex-col md:flex-row bg-[#0d1117]">
             <!-- Styles Grid (Left) -->
             <div class="flex-1 p-4 md:p-6 overflow-y-auto custom-scrollbar min-h-0">
                 <div class="flex items-center justify-between mb-4">

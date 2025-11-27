@@ -284,8 +284,8 @@ function addComment(event, sig, parentId = null) {
           cancelReply(parentId);
         }
 
-        // Append comment to DOM
-        appendComment(response, sig, parentId);
+        // Prepend comment to DOM
+        prependComment(response, sig, parentId);
 
         // Update comment count
         updateCommentCount(sig, 1);
@@ -362,9 +362,23 @@ function cancelReply(commentId) {
 }
 
 /**
- * Append a new comment to the DOM
+ * Parse @mentions in text and convert to profile links
+ * Matches the Django template filter pattern
  */
-function appendComment(commentData, sig, parentId) {
+function parseMentions(text) {
+  if (!text) return text;
+
+  // Match @username patterns (alphanumeric, underscores, and dots)
+  // This matches the pattern used in the Django template filter
+  const pattern = /@([a-zA-Z0-9_.]+)/g;
+
+  return text.replace(pattern, '<a href="/user-profile/$1/" class="text-blue-400 hover:text-blue-300 transition-colors font-semibold">@$1</a>');
+}
+
+/**
+ * Prepend a new comment to the DOM
+ */
+function prependComment(commentData, sig, parentId) {
   // Determine styles based on whether it's a parent or reply
   const isReply = !!parentId;
 
@@ -417,7 +431,7 @@ function appendComment(commentData, sig, parentId) {
 
         <!-- Comment Content -->
         <div class="${contentPadding}">
-          <p class="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">${commentData.content}</p>
+          <p class="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">${parseMentions(commentData.content)}</p>
         </div>
 
         <!-- Comment Actions -->
@@ -457,14 +471,14 @@ function appendComment(commentData, sig, parentId) {
   `;
 
   if (parentId) {
-    // Append to replies section
-    $(`#replies-${parentId}`).append(commentHtml);
+    // Prepend to replies section
+    $(`#replies-${parentId}`).prepend(commentHtml);
   } else {
-    // Append to main comments list
+    // Prepend to main comments list
     const commentsList = $(`#comments-list-${sig}`);
     // Remove "no comments" message if it exists
     commentsList.find('div.text-center').remove();
-    commentsList.append(commentHtml);
+    commentsList.prepend(commentHtml);
   }
 }
 

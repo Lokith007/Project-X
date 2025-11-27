@@ -112,26 +112,26 @@ class Postsignup_infoForm(forms.ModelForm):
         self.fields['timezone'].required = True
 
 class EditProfileForm(forms.ModelForm):
-    first_name = forms.CharField(max_length=50, required=True, widget=forms.TextInput(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-1', 'placeholder': 'First'}))
-    last_name = forms.CharField(max_length=50, required=False, widget=forms.TextInput(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-1', 'placeholder': 'Last'}))
-    username = forms.CharField(max_length = 24, required=True, widget=forms.TextInput(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-1', 'placeholder': 'Username'}))
+    first_name = forms.CharField(max_length=50, required=True, widget=forms.TextInput(attrs={'class': 'outline-none border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-1', 'placeholder': 'First'}))
+    last_name = forms.CharField(max_length=50, required=False, widget=forms.TextInput(attrs={'class': 'outline-none border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-1', 'placeholder': 'Last'}))
+    username = forms.CharField(max_length = 24, required=True, widget=forms.TextInput(attrs={'class': 'outline-none border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-1', 'placeholder': 'Username'}))
     
     class Meta:
         model = userinfo
         exclude = ['user', 'years_of_experience', 'skills', 'domains', 'profile_views', 'updated_at', 'needs_profile_completion', 'last_seen', 'timezone', 'coding_style']
         
         widgets = {
-            'bio': forms.Textarea(attrs={'class': 'outline-none border border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'Bio...', 'rows': 7,'cols': 40,}),
-            'dob': forms.DateInput(attrs={'type': 'date', 'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'id':"dob"}),
-            'location': forms.TextInput(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'Location'}),
-            'contact_email': forms.EmailInput(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'Email'}),
-            'phone': forms.TextInput(attrs={'type': 'tel','class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'Phone'}),
-            'gender': forms.Select(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', }),
-            'status': forms.Select(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', }),
-            'website': forms.URLInput(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'www.samplesite.in'}),
-            'linkedin': forms.URLInput(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'Linkedin URL'}),
-            'github': forms.URLInput(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'Github URL'}),
-            'stackoverflow': forms.URLInput(attrs={'class': 'outline-none border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'Stackoverflow URL'}),
+            'bio': forms.Textarea(attrs={'class': 'outline-none border border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', 'placeholder': 'Bio...', 'rows': 7,'cols': 40,}),
+            'dob': forms.DateInput(attrs={'type': 'date', 'class': 'outline-none border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', 'id':"dob"}),
+            'location': forms.TextInput(attrs={'class': 'outline-none border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', 'placeholder': 'Location'}),
+            'contact_email': forms.EmailInput(attrs={'class': 'outline-none border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', 'placeholder': 'Email'}),
+            'phone': forms.TextInput(attrs={'type': 'tel','class': 'outline-none border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', 'placeholder': 'Phone'}),
+            'gender': forms.Select(attrs={'class': 'outline-none border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', }),
+            'status': forms.Select(attrs={'class': 'outline-none border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', }),
+            'website': forms.URLInput(attrs={'class': 'outline-none border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', 'placeholder': 'www.samplesite.in'}),
+            'linkedin': forms.URLInput(attrs={'class': 'outline-none border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', 'placeholder': 'Linkedin URL'}),
+            'github': forms.URLInput(attrs={'class': 'outline-none border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', 'placeholder': 'Github URL'}),
+            'stackoverflow': forms.URLInput(attrs={'class': 'outline-none border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', 'placeholder': 'Stackoverflow URL'}),
             'profile_image': forms.ClearableFileInput(attrs={'id': 'imgInput','class': 'hidden'}),
         }
         labels = {
@@ -197,20 +197,20 @@ class EditProfileForm(forms.ModelForm):
 class EditEducationForm(forms.ModelForm):
     start_date = forms.CharField(
         required=False,
-        widget=forms.TextInput(attrs={'type': 'month', 'class': 'outline-none border border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2'})
+        widget=forms.TextInput(attrs={'type': 'month', 'class': 'outline-none border border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2'})
     )
     end_date = forms.CharField(
         required=False,
-        widget=forms.TextInput(attrs={'type': 'month', 'class': 'outline-none border border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2'})
+        widget=forms.TextInput(attrs={'type': 'month', 'class': 'outline-none border border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2'})
     )
     class Meta:
         model = education
         exclude = ['user']
         
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'outline-none border border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'Eg: Harvard University'}),
-            'field_of_study': forms.TextInput(attrs={'class': 'outline-none border border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'Eg: Computer Science'}),
-            'degree': forms.TextInput(attrs={'class': 'outline-none border border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'Eg: B.Tech'}),
+            'name': forms.TextInput(attrs={'class': 'outline-none border border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', 'placeholder': 'Eg: Harvard University'}),
+            'field_of_study': forms.TextInput(attrs={'class': 'outline-none border border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', 'placeholder': 'Eg: Computer Science'}),
+            'degree': forms.TextInput(attrs={'class': 'outline-none border border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', 'placeholder': 'Eg: B.Tech'}),
             # 'start_date': forms.DateInput(attrs={'type': 'month', 'class': 'outline-none border border-black px-2 py-1'}),
             # 'end_date': forms.DateInput(attrs={'type': 'month', 'class': 'outline-none border border-black px-2 py-1', 'id':"endDate"}),
         }                                                               
@@ -248,11 +248,11 @@ class EditEducationForm(forms.ModelForm):
 class EditExperienceForm(forms.ModelForm):
     start_date = forms.CharField(
         required=False,
-        widget=forms.TextInput(attrs={'type': 'month', 'class': 'outline-none border border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2'})
+        widget=forms.TextInput(attrs={'type': 'month', 'class': 'outline-none border border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2'})
     )
     end_date = forms.CharField(
         required=False,
-        widget=forms.TextInput(attrs={'type': 'month', 'class': 'outline-none border border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2'})
+        widget=forms.TextInput(attrs={'type': 'month', 'class': 'outline-none border border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2'})
     )
     class Meta:
         model = experience
@@ -262,9 +262,9 @@ class EditExperienceForm(forms.ModelForm):
             'till_now': 'Currently Working',
         }
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'outline-none border border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'Company Name'}),
-            'role': forms.TextInput(attrs={'class': 'outline-none border border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'Role'}),
-            'description': forms.Textarea(attrs={'class': 'outline-none border border-gray-700 bg-[#1a1f26] text-[#ffffff] px-2 py-2', 'placeholder': 'Briefly Describe your Role.', 'rows': 7}),
+            'name': forms.TextInput(attrs={'class': 'outline-none border border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', 'placeholder': 'Company Name'}),
+            'role': forms.TextInput(attrs={'class': 'outline-none border border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', 'placeholder': 'Role'}),
+            'description': forms.Textarea(attrs={'class': 'outline-none border border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', 'placeholder': 'Briefly Describe your Role.', 'rows': 7}),
             'till_now': forms.CheckboxInput(attrs={'id': 'exp_presentDate'})
         }
         error_messages = {

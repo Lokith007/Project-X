@@ -1,3 +1,4 @@
+{% load comment_tags %}
 <!-- Individual Comment Item -->
 <div id="comment-{{ comment.id }}" class="{% if comment.parent_comment %}ml-12 mt-3 relative group/reply{% else %}mb-8 group/parent{% endif %}">
     
@@ -11,11 +12,11 @@
         <!-- Comment Header -->
         <div class="flex items-start justify-between mb-2">
             <div class="flex items-center gap-3">
-                <img src="{{ comment.user.profile_image.url|default:'/static/assets/default-avatar.png' }}" 
+                 <a href="{% url 'user_profile' comment.user.user.username %}"><img src="{{ comment.user.profile_image.url|default:'/static/assets/default-avatar.png' }}" 
                      alt="{{ comment.user.user.username }}"
-                     class="{% if comment.parent_comment %}w-6 h-6 ring-1 ring-[#30363d]{% else %}w-9 h-9 ring-2 ring-[#30363d]{% endif %} rounded-full object-cover">
+                     class="{% if comment.parent_comment %}w-6 h-6 ring-1 ring-[#30363d]{% else %}w-9 h-9 ring-2 ring-[#30363d]{% endif %} rounded-full object-cover"></a>
                 <div class="flex flex-col leading-tight">
-                    <span class="text-sm font-semibold text-gray-200 hover:text-green-400 cursor-pointer transition-colors">{{ comment.user.user.username }}</span>
+                    <a href="{% url 'user_profile' comment.user.user.username %}" class="text-sm font-semibold text-gray-200 hover:text-green-400 cursor-pointer transition-colors">{{ comment.user.user.username }}</a>
                     <span class="text-[11px] text-gray-500">{{ comment.timestamp|timesince }} ago</span>
                 </div>
             </div>
@@ -31,7 +32,7 @@
 
         <!-- Comment Content -->
         <div class="{% if comment.parent_comment %}pl-9{% else %}mt-2{% endif %}">
-            <p class="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">{{ comment.content }}</p>
+            <p class="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">{{ comment.content|parse_mentions }}</p>
         </div>
 
         <!-- Comment Actions -->

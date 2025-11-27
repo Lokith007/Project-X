@@ -68,7 +68,7 @@ class Comment(models.Model):
     likes = models.ManyToManyField(userinfo, related_name="liked_logs_comments", blank=True)
     
     class Meta:
-        ordering = ['timestamp']
+        ordering = ['-timestamp']
         indexes = [
             models.Index(fields=['mindlog', 'timestamp']),
             models.Index(fields=['user', 'timestamp']),
