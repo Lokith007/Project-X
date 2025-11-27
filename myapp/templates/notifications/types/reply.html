@@ -1,27 +1,15 @@
-{# Reply notification template #}
-<div>
-    <p class="text-sm text-gray-200 mb-2">
-        <a href="{% url 'user_profile' notification.actor.user.username %}" 
-           class="font-semibold text-green-400 hover:text-green-300 transition-colors"
-           onclick="event.stopPropagation();">
-            {{ notification.actor.user.username }}
-        </a>
-        <span class="text-gray-400">replied to your comment</span>
-    </p>
-    
-    {# Reply preview #}
-    {% if notification.action_object %}
-    <div class="bg-[#161b22] border border-gray-700 rounded-md p-2 mt-2">
-        <p class="text-xs text-gray-300 line-clamp-2">
-            💬 "{{ notification.action_object.content|truncatechars:80 }}"
-        </p>
-    </div>
-    {% endif %}
-    
-    {# Log context #}
-    {% if notification.target %}
-    <div class="mt-2 text-xs text-gray-500">
-        on <span class="text-green-400">></span> {{ notification.target.content|truncatechars:50 }}
-    </div>
-    {% endif %}
+{# Reply notification #}
+<p class="text-[#e6edf3]">
+    <a href="{% url 'user_profile' notification.actor.user.username %}" 
+       class="font-semibold text-[#e6edf3] hover:text-[#58a6ff] hover:underline"
+       onclick="event.stopPropagation();">
+        {{ notification.actor.user.username }}
+    </a>
+    <span class="text-[#7d8590]"> replied to your comment</span>
+</p>
+
+{% if notification.action_object %}
+<div class="mt-2 pl-3 border-l-2 border-[#30363d] text-xs text-[#7d8590] line-clamp-2">
+    {{ notification.action_object.content|truncatechars:120 }}
 </div>
+{% endif %}

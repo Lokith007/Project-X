@@ -1,20 +1,17 @@
-{# Follow notification template #}
-<div>
-    <p class="text-sm text-gray-200 mb-1">
-        <a href="{% url 'user_profile' notification.actor.user.username %}" 
-           class="font-semibold text-green-400 hover:text-green-300 transition-colors"
-           onclick="event.stopPropagation();">
-            {{ notification.actor.user.username }}
-        </a>
-        <span class="text-gray-400">started following you</span>
-    </p>
-    
-    {% if notification.actor.coding_style %}
-    <div class="flex items-center gap-2 mt-1">
-        <img src="{% static 'assets/coding-style-logo/' %}{{ notification.actor.coding_style.logo }}" 
-             alt="{{ notification.actor.coding_style.name }}" 
-             class="w-4 h-4">
-        <span class="text-xs text-gray-500">{{ notification.actor.coding_style.name }}</span>
-    </div>
-    {% endif %}
+{# Follow notification #}
+<p class="text-[#e6edf3]">
+    <a href="{% url 'user_profile' notification.actor.user.username %}" 
+       class="font-semibold text-[#e6edf3] hover:text-[#58a6ff] hover:underline"
+       onclick="event.stopPropagation();">
+        {{ notification.actor.user.username }}
+    </a>
+    <span class="text-[#7d8590]"> started following you</span>
+</p>
+
+{% if notification.actor.coding_style %}
+<div class="flex items-center gap-1.5 mt-1.5">
+    <img src="{% static 'assets/coding-style-logo/' %}{{ notification.actor.coding_style.logo }}" 
+         alt="" class="w-3.5 h-3.5 opacity-70">
+    <span class="text-xs text-[#7d8590]">{{ notification.actor.coding_style.name }}</span>
 </div>
+{% endif %}

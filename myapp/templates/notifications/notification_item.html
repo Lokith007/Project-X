@@ -1,21 +1,39 @@
 {% load static %}
 
-{# Generic notification item template - renders based on notification type #}
-<div class="notification-item flex items-start gap-4 p-4 rounded-lg border border-gray-700 hover:shadow-md transition-all duration-200 
-     {% if not notification.is_read %}bg-[#20252d] text-white unread{% endif %} 
-     cursor-pointer"
+{# GitHub-style minimal notification item #}
+<div class="notification-item group flex items-start gap-4 px-6 py-4 hover:bg-[#161b22] transition-colors cursor-pointer border-l-2
+     {% if not notification.is_read %}border-l-[#1f6feb] bg-[#0d1117]{% else %}border-l-transparent{% endif %}"
      data-notification-id="{{ notification.id }}"
      onclick="handleNotificationClick({{ notification.id }}, '{% if notification.notification_type == 'follow' %}{% url 'user_profile' notification.actor.user.username %}{% elif notification.notification_type == 'comment' or notification.notification_type == 'reply' %}{% url 'user_profile' notification.target.user.user.username %}#{{ notification.target.sig }}{% elif notification.notification_type == 'reaction' %}{% url 'user_profile' notification.target.user.user.username %}#{{ notification.target.sig }}{% elif notification.notification_type == 'mention' or notification.notification_type == 'comment_mention' %}{% url 'user_profile' notification.target.user.user.username %}#{{ notification.target.sig }}{% endif %}')">
     
+    {# Type Icon #}
+    <div class="flex-shrink-0 mt-1">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center
+            {% if notification.notification_type == 'follow' %}bg-[#1f6feb]/10 text-[#58a6ff]
+            {% elif notification.notification_type == 'comment' %}bg-[#8957e5]/10 text-[#a371f7]
+            {% elif notification.notification_type == 'reply' %}bg-[#da3633]/10 text-[#f85149]
+            {% elif notification.notification_type == 'reaction' %}bg-[#da3633]/10 text-[#f85149]
+            {% elif notification.notification_type == 'mention' or notification.notification_type == 'comment_mention' %}bg-[#d29922]/10 text-[#d29922]
+            {% endif %}">
+            <i class="text-sm
+                {% if notification.notification_type == 'follow' %}fa-solid fa-user-plus
+                {% elif notification.notification_type == 'comment' %}fa-regular fa-comment
+                {% elif notification.notification_type == 'reply' %}fa-solid fa-reply
+                {% elif notification.notification_type == 'reaction' %}fa-solid fa-heart
+                {% elif notification.notification_type == 'mention' or notification.notification_type == 'comment_mention' %}fa-solid fa-at
+                {% endif %}"></i>
+        </div>
+    </div>
+    
     {# Actor Avatar #}
-    <a href="{% url 'user_profile' notification.actor.user.username %}" onclick="event.stopPropagation();">
+    <a href="{% url 'user_profile' notification.actor.user.username %}" onclick="event.stopPropagation();" class="flex-shrink-0">
         <img src="{{ notification.actor.profile_image.url }}?v={{ notification.actor.updated_at.timestamp }}" 
-             class="w-10 h-10 md:w-12 md:h-12 rounded-lg object-cover ring-2 ring-gray-700 hover:ring-green-500 transition-all" 
+             class="w-10 h-10 rounded-full object-cover border border-[#30363d]" 
              alt="{{ notification.actor.user.username }}">
     </a>
     
-    {# Notification Content - Type Specific #}
-    <div class="flex-1 min-w-0">
+    {# Notification Content #}
+    <div class="flex-1 min-w-0 text-sm">
         {% if notification.notification_type == 'follow' %}
             {% include 'notifications/types/follow.html' %}
         {% elif notification.notification_type == 'comment' %}
@@ -31,16 +49,15 @@
         {% endif %}
         
         {# Timestamp #}
-        <p class="text-xs mt-2 text-gray-500">
-            <i class="fa fa-clock-o mr-1"></i>
+        <div class="mt-1 text-xs text-[#7d8590]">
             {{ notification.timestamp|timesince }} ago
-        </p>
+        </div>
     </div>
     
-    {# Unread Indicator #}
+    {# Unread indicator dot #}
     {% if not notification.is_read %}
     <div class="flex-shrink-0">
-        <span class="w-2 h-2 bg-green-500 rounded-full block"></span>
+        <div class="w-2 h-2 bg-[#1f6feb] rounded-full"></div>
     </div>
     {% endif %}
 </div>
