@@ -178,3 +178,80 @@ def create_mention_notifications(content, actor, log, action_object=None, notifi
         except userinfo.DoesNotExist:
             # Username doesn't exist, skip
             continue
+
+
+# ============= NOTIFICATION CLEANUP SIGNALS =============
+
+@receiver(post_delete, sender=Comment)
+def delete_comment_notifications(sender, instance, **kwargs):
+    """
+    Delete notifications when a comment or reply is deleted
+    """
+    from django.contrib.contenttypes.models import ContentType
+    
+    # Get the ContentType for Comment
+    comment_ct = ContentType.objects.get_for_model(Comment)
+    
+    # Delete notifications where this comment is the action_object
+    # This handles both comment and reply notifications
+    Notification.objects.filter(
+        action_content_type=comment_ct,
+        action_object_id=instance.id
+    ).delete()
+    
+    # Also delete mention notifications where this comment is the action_object
+    Notification.objects.filter(
+        action_content_type=comment_ct,
+        action_object_id=instance.id,
+        notification_type__in=['comment_mention']
+    ).delete()
+
+
+@receiver(post_delete, sender=Reaction)
+def delete_reaction_notifications(sender, instance, **kwargs):
+    """
+    Delete notifications when a reaction is removed
+    """
+    from django.contrib.contenttypes.models import ContentType
+    
+    # Get the ContentType for Reaction
+    reaction_ct = ContentType.objects.get_for_model(Reaction)
+    
+    # Delete the reaction notification
+    Notification.objects.filter(
+        action_content_type=reaction_ct,
+        action_object_id=instance.id,
+        notification_type='reaction'
+    ).delete()
+
+
+@receiver(post_delete, sender=follow)
+def delete_follow_notifications(sender, instance, **kwargs):
+    """
+    Delete notifications when someone unfollows a user
+    """
+    # Delete the follow notification
+    # We match by recipient, actor, and notification_type since follow doesn't use action_object
+    Notification.objects.filter(
+        recipient=instance.following,
+        actor=instance.follower,
+        notification_type='follow'
+    ).delete()
+
+
+@receiver(post_delete, sender=Log)
+def delete_log_notifications(sender, instance, **kwargs):
+    """
+    Delete all notifications related to a log when it's deleted
+    """
+    from django.contrib.contenttypes.models import ContentType
+    
+    # Get the ContentType for Log
+    log_ct = ContentType.objects.get_for_model(Log)
+    
+    # Delete all notifications where this log is the target
+    # This includes comments, reactions, and mentions on this log
+    Notification.objects.filter(
+        target_content_type=log_ct,
+        target_object_id=instance.id
+    ).delete()
