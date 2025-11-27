@@ -194,9 +194,11 @@ def add_comment(request, sig):
         
         # Handle reply
         parent_id = request.POST.get('parent_id')
+        actual_parent_user = None  # Track the actual user being replied to
         if parent_id:
             try:
                 parent_comment = Comment.objects.get(id=parent_id)
+                actual_parent_user = parent_comment.user  # Store before flattening
                 
                 # If replying to a reply (nested), flatten it
                 if parent_comment.parent_comment:
@@ -212,6 +214,10 @@ def add_comment(request, sig):
                     
             except Comment.DoesNotExist:
                 pass
+        
+        # Store actual parent user as temporary attribute for signal handler
+        if actual_parent_user:
+            comment._actual_parent_user = actual_parent_user
                 
         comment.save()
         

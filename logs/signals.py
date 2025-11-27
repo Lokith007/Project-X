@@ -29,24 +29,32 @@ def create_comment_notification(sender, instance, created, **kwargs):
     if not created:
         return
     
-    # Don't notify if user comments on their own log
-    if instance.mindlog.user == instance.user:
-        return
-    
     # Determine notification type and recipient
-    if instance.parent_comment:
+    if instance.parent_comment or hasattr(instance, '_actual_parent_user'):
         # This is a reply to a comment
-        recipient = instance.parent_comment.user
-        verb = 'replied to your comment on'
+        # Use _actual_parent_user if available (handles flattened replies)
+        if hasattr(instance, '_actual_parent_user'):
+            recipient = instance._actual_parent_user
+        else:
+            recipient = instance.parent_comment.user
+        verb = 'replied to your comment'
         notification_type = 'reply'
     else:
         # This is a comment on a log
         recipient = instance.mindlog.user
         verb = 'commented on your log'
         notification_type = 'comment'
+        
+        # Don't notify if user comments on their own log
+        if recipient == instance.user:
+            # Still check for mentions though
+            create_mention_notifications(instance.content, instance.user, instance.mindlog, instance, 'comment_mention')
+            return
     
     # Don't notify if replying to yourself
     if recipient == instance.user:
+        # Still check for mentions though
+        create_mention_notifications(instance.content, instance.user, instance.mindlog, instance, 'comment_mention')
         return
     
     # Create the notification
@@ -60,7 +68,9 @@ def create_comment_notification(sender, instance, created, **kwargs):
     )
     
     # Check for @mentions in the comment
-    create_mention_notifications(instance.content, instance.user, instance.mindlog, instance, 'comment_mention')
+    # Pass the reply recipient to avoid duplicate notifications
+    reply_recipient = recipient if notification_type == 'reply' else None
+    create_mention_notifications(instance.content, instance.user, instance.mindlog, instance, 'comment_mention', exclude_user=reply_recipient)
 
 
 @receiver(post_save, sender=Reaction)
@@ -113,7 +123,7 @@ def create_log_mention_notifications(sender, instance, created, **kwargs):
     create_mention_notifications(instance.content, instance.user, instance, None, 'mention')
 
 
-def create_mention_notifications(content, actor, log, action_object=None, notification_type='mention'):
+def create_mention_notifications(content, actor, log, action_object=None, notification_type='mention', exclude_user=None):
     """
     Parse content for @mentions and create notifications
     
@@ -123,6 +133,7 @@ def create_mention_notifications(content, actor, log, action_object=None, notifi
         log: The log being mentioned in
         action_object: Optional action object (e.g., Comment)
         notification_type: Type of mention notification
+        exclude_user: Optional user to exclude from mention notifications (e.g., if they already got a reply notification)
     """
     from myapp.models import userinfo
     
@@ -145,12 +156,16 @@ def create_mention_notifications(content, actor, log, action_object=None, notifi
             if mentioned_user == actor:
                 continue
             
+            # Don't notify if this user already received a reply notification
+            if exclude_user and mentioned_user == exclude_user:
+                continue
+            
             # Don't notify the log owner if they're mentioned in their own log
             if mentioned_user == log.user and not action_object:
                 continue
             
             # Create notification
-            verb = 'mentioned you in a comment on' if notification_type == 'comment_mention' else 'mentioned you in a log'
+            verb = 'mentioned you in a comment' if notification_type == 'comment_mention' else 'mentioned you in a log'
             
             Notification.objects.create(
                 recipient=mentioned_user,
