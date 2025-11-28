@@ -15,10 +15,65 @@
         
         <!-- Main Content -->
         <div class="flex-1 max-w-5xl mx-auto px-4 sm:px-6 py-6">
+            <!-- Search Section -->
+            <div class="w-full bg-[#0d1117] rounded-xl border border-[#30363d] shadow-sm overflow-hidden mb-6">
+                <!-- Header -->
+                <div class="px-6 py-4 border-b border-[#21262d] bg-gradient-to-r from-[#161b22] to-[#0d1117]">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
+                            <i class="fa-solid fa-magnifying-glass text-white text-lg"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold text-[#e6edf3]">
+                                Search Developers
+                            </h2>
+                            <p class="text-xs text-[#7d8590]">Find developers by name, username, or skills</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Search Input -->
+                <div class="p-6">
+                    <div class="relative">
+                        <input type="text" 
+                               id="developer-search-input" 
+                               placeholder="Search for developers..." 
+                               class="w-full bg-[#161b22] border border-[#30363d] text-[#e6edf3] text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-3 pl-10"
+                               autocomplete="off">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-3.5 text-[#7d8590]"></i>
+                        <div id="search-loading" class="absolute right-3 top-3 hidden">
+                            <i class="fa-solid fa-spinner fa-spin text-[#7d8590]"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Search Results -->
+                    <div id="search-results-container" class="mt-4 hidden">
+                        <div class="flex items-center justify-between mb-3">
+                            <p id="search-results-count" class="text-sm text-[#7d8590]"></p>
+                            <button id="clear-search" class="text-xs text-[#58a6ff] hover:text-[#79c0ff] transition-colors">
+                                Clear search
+                            </button>
+                        </div>
+                        <div id="search-results" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <!-- Results populated by JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <!-- Empty State -->
+                    <div id="search-empty-state" class="hidden mt-4 text-center py-8">
+                        <i class="fa-solid fa-magnifying-glass text-4xl text-[#30363d] mb-3"></i>
+                        <p id="empty-state-message" class="text-[#7d8590]"></p>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Recommended Developers Section -->
             {% include 'includes/recommended_developers.html' %}
         </div>
     </div>
 
+
+
+<script src="{% static 'scripts/developer-search.js' %}" defer></script>
 
 {% endblock  %}

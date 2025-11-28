@@ -15,6 +15,7 @@ urlpatterns = [
     path('load-more-feed/', views.load_more_feed, name='load_more_feed'),
     
     path("explore-dev/", views.explore_dev, name="explore_dev"),
+    path("api/search-developers/", views.search_developers_api, name="search_developers_api"),
 
     # User-profile
     path("user-profile/<str:user_name>/", views.user_profile, name="user_profile"),

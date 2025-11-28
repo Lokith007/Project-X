@@ -7,33 +7,33 @@
     <!-- Header -->
     <div class="px-6 py-4 border-b border-[#21262d] bg-gradient-to-r from-[#161b22] to-[#0d1117]">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+            <div class="w-10 h-10 rounded-full bg-[#262b34] flex items-center justify-center">
                 <i class="fa-solid fa-users text-white text-lg"></i>
             </div>
             <div>
-                <h2 class="text-lg font-bold text-[#e6edf3]">
+                <p class="text-lg font-bold text-[#e6edf3]">
                     People You May Know
-                </h2>
+                </p>
                 <p class="text-xs text-[#7d8590]">Personalized developer recommendations</p>
             </div>
         </div>
     </div>
     
     <!-- Recommendations Grid -->
-    <div class="p-6">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    <div class="p-2 sm:p-6">
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {% for developer, score, reason in recommendations %}
-            <div class="bg-[#161b22] border border-[#30363d] rounded-lg p-4 hover:border-[#58a6ff] transition-all duration-200 hover:shadow-lg hover:shadow-blue-500/10 flex flex-col">
+            <div class="bg-[#161b22] border border-[#30363d] rounded-lg p-4 transition-all duration-200 hover:shadow-lg flex flex-col">
                 <!-- Avatar & Info -->
                 <div class="flex flex-col items-center text-center mb-4">
                     <a href="{% url 'user_profile' developer.user.username %}" class="mb-3">
                         <img src="{{ developer.profile_image.url }}?v={{ developer.updated_at.timestamp }}" 
                              alt="{{ developer.user.username }}"
-                             class="w-16 h-16 rounded-full border-2 border-[#30363d] hover:border-[#58a6ff] transition-colors object-cover">
+                             class="w-16 h-16 rounded-full border-2 border-[#30363d] transition-colors object-cover">
                     </a>
                     
                     <a href="{% url 'user_profile' developer.user.username %}" 
-                       class="font-semibold text-[#e6edf3] hover:text-[#58a6ff] transition-colors text-sm mb-1">
+                       class="font-semibold text-[#e6edf3] transition-colors text-sm mb-1">
                         @{{ developer.user.username }}
                     </a>
                     
@@ -44,7 +44,28 @@
                     </p>
                     {% endif %}
                 </div>
+
+                <!-- Actions -->
+                {% if user.info|is_following:developer %}
+                    <a href="javascript:void(0);" class="follow-btn px-4 text-center py-2 bg-[#262b34] text-white font-mono text-sm rounded-md hover:scale-[1.03] transition" data-user-id="{{ developer.id }}">
+                        <span class="btn-text">&lt;Unfollow/&gt;</span>
+                    </a>
+                {% else %}
+                    <a href="javascript:void(0);" class="follow-btn px-4 text-center py-2 bg-[#6feb85] text-black font-mono text-sm rounded-md hover:scale-[1.03] transition mb-4" data-user-id="{{ developer.id }}">
+                        <span class="btn-text">&lt;Follow/&gt;</span>
+                    </a>
+                {% endif %}
                 
+                <!-- Coding Style Badge -->
+                {% if developer.coding_style %}
+                <div class="mb-4 rounded-full flex items-center justify-center gap-2 px-3 py-1.5 bg-[#0d1117]/30 border border-[#21262d]">
+                    <img src="{% static 'assets/coding-style-logo/' %}{{ developer.coding_style.logo }}" 
+                         alt="{{ developer.coding_style.name }}"
+                         class="w-6 h-6">
+                    <span class="text-xs text-[#e6edf3]">{{ developer.coding_style.name }}</span>
+                </div>
+                {% endif %}
+
                 <!-- Reason for recommendation -->
                 <div class="mb-4 px-3 py-2 bg-[#0d1117]/50 rounded-lg border border-[#21262d]">
                     <p class="text-xs text-[#7d8590] text-center">
@@ -53,26 +74,6 @@
                     </p>
                 </div>
                 
-                <!-- Coding Style Badge -->
-                {% if developer.coding_style %}
-                <div class="mb-4 flex items-center justify-center gap-2 px-3 py-1.5 bg-[#0d1117]/30 rounded-lg border border-[#21262d]">
-                    <img src="{% static 'assets/coding-style-logo/' %}{{ developer.coding_style.logo }}" 
-                         alt="{{ developer.coding_style.name }}"
-                         class="w-4 h-4">
-                    <span class="text-xs text-[#e6edf3]">{{ developer.coding_style.name }}</span>
-                </div>
-                {% endif %}
-                
-                <!-- Actions -->
-                {% if user.info|is_following:developer %}
-                    <a href="javascript:void(0);" class="follow-btn px-4 text-center py-2 bg-[#262b34] text-white font-mono text-sm rounded-md hover:scale-[1.03] transition" data-user-id="{{ developer.id }}">
-                        <span class="btn-text">&lt;Unfollow/&gt;</span>
-                    </a>
-                {% else %}
-                    <a href="javascript:void(0);" class="follow-btn px-4 text-center py-2 bg-[#6feb85] text-black font-mono text-sm rounded-md hover:scale-[1.03] transition" data-user-id="{{ developer.id }}">
-                        <span class="btn-text">&lt;Follow/&gt;</span>
-                    </a>
-                {% endif %}
             </div>
             {% endfor %}
         </div>

@@ -422,6 +422,85 @@ def explore_dev(request):
     return render(request, 'myapp/explore_dev.html', context)
 
 
+@login_required
+def search_developers_api(request):
+    """
+    API endpoint for developer search with fuzzy matching and network ranking
+    """
+    from .utils.search import search_developers
+    from django.http import JsonResponse
+    
+    query = request.GET.get('q', '').strip()
+    
+    # Edge case: Empty query
+    if not query:
+        return JsonResponse({
+            'results': [],
+            'count': 0,
+            'message': 'Please enter a search term'
+        })
+    
+    # Edge case: Query too short
+    if len(query) < 2:
+        return JsonResponse({
+            'results': [],
+            'count': 0,
+            'message': 'Enter at least 2 characters'
+        })
+    
+    try:
+        # Perform search
+        results = search_developers(query, request.user, limit=30)
+        
+        # Edge case: No results
+        if not results:
+            return JsonResponse({
+                'results': [],
+                'count': 0,
+                'message': 'No developers found. Try different keywords.'
+            })
+        
+        # Format response
+        data = []
+        for dev, score, mutual_count in results:
+            data.append({
+                'id': dev.id,
+                'username': dev.user.username,
+                'first_name': dev.user.first_name,
+                'last_name': dev.user.last_name,
+                'full_name': dev.user.get_full_name() or dev.user.username,
+                'avatar': dev.profile_image.url if dev.profile_image else None,
+                'bio': dev.bio[:150] if dev.bio else '',
+                'location': dev.location or f"{dev.city}, {dev.state}" if dev.city and dev.state else dev.city or dev.state or '',
+                'city': dev.city,
+                'coding_style': {
+                    'name': dev.coding_style.name,
+                    'logo': dev.coding_style.logo
+                } if dev.coding_style else None,
+                'mutual_count': mutual_count,
+                'score': round(score, 2),
+                'is_following': request.user.info.is_following(dev)
+            })
+        
+        return JsonResponse({
+            'results': data,
+            'count': len(data),
+            'message': None
+        })
+        
+    except Exception as e:
+        # Log error and return graceful response
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f'Search error: {str(e)}')
+        
+        return JsonResponse({
+            'results': [],
+            'count': 0,
+            'message': 'An error occurred. Please try again.'
+        }, status=500)
+
+
 
 @login_required
 def settings_page(request):
