@@ -15,56 +15,56 @@
         
         <!-- Main Content -->
         <div class="flex-1 w-full max-w-full lg:max-w-5xl mx-auto px-2 sm:px-6 py-6">
-            <!-- Search Section -->
-            <div class="w-full bg-[#0d1117] rounded-xl border border-[#30363d] shadow-sm overflow-hidden mb-6">
+            <!-- Search Section (Simplified) -->
+            <div class="w-full mb-12">
                 <!-- Header -->
-                <div class="px-6 py-4 border-b border-[#21262d] bg-gradient-to-r from-[#161b22] to-[#0d1117]">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full bg-[#262b34] flex items-center justify-center shadow-lg">
-                            <i class="fa-solid fa-magnifying-glass text-white text-lg"></i>
-                        </div>
-                        <div>
-                            <p class="text-lg font-bold text-[#e6edf3]">
-                                Search Developers
-                            </p>
-                            <p class="text-xs text-[#7d8590]">Find developers by name, username, or skills</p>
-                        </div>
-                    </div>
+                <div class="mb-6 px-2">
+                    <h1 class="text-2xl font-bold text-[#e6edf3] mb-1">
+                        Find Developers
+                    </h1>
+                    <p class="text-sm text-[#7d8590]">Search by name, username, or skills to connect</p>
                 </div>
                 
                 <!-- Search Input -->
-                <div class="p-6">
-                    <div class="relative">
-                        <input type="text" 
-                               id="developer-search-input" 
-                               placeholder="Search for developers..." 
-                               class="w-full bg-[#161b22] border border-[#30363d] text-[#e6edf3] text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-3 pl-10"
-                               autocomplete="off">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-3.5 text-[#7d8590]"></i>
-                        <div id="search-loading" class="absolute right-3 top-3 hidden">
-                            <i class="fa-solid fa-spinner fa-spin text-[#7d8590]"></i>
-                        </div>
-                    </div>
-                    
-                    <!-- Search Results -->
-                    <div id="search-results-container" class="mt-4 hidden">
-                        <div class="flex items-center justify-between mb-3">
-                            <p id="search-results-count" class="text-sm text-[#7d8590]"></p>
-                            <button id="clear-search" class="text-xs text-[#58a6ff] hover:text-[#79c0ff] transition-colors">
-                                Clear search
-                            </button>
-                        </div>
-                        <div id="search-results" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <!-- Results populated by JavaScript -->
-                        </div>
-                    </div>
-                    
-                    <!-- Empty State -->
-                    <div id="search-empty-state" class="hidden mt-4 text-center py-8">
-                        <i class="fa-solid fa-magnifying-glass text-4xl text-[#30363d] mb-3"></i>
-                        <p id="empty-state-message" class="text-[#7d8590]"></p>
+                <div class="relative max-w-2xl">
+                    <input type="text" 
+                           id="developer-search-input" 
+                           placeholder="Type to search..." 
+                           class="w-full bg-[#0d1117] border border-[#30363d] text-[#e6edf3] text-base rounded-xl focus:ring-1 focus:ring-[#238636] focus:border-[#238636] block p-4 pl-12 shadow-sm transition-all placeholder-[#7d8590]"
+                           autocomplete="off">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-5 text-[#7d8590] text-lg"></i>
+                    <div id="search-loading" class="absolute right-4 top-5 hidden">
+                        <i class="fa-solid fa-spinner fa-spin text-[#7d8590]"></i>
                     </div>
                 </div>
+                
+                <!-- Search Results -->
+                <div id="search-results-container" class="mt-6 hidden">
+                    <div class="flex items-center justify-between mb-4 px-1">
+                        <p id="search-results-count" class="text-sm text-[#7d8590]"></p>
+                        <button id="clear-search" class="text-xs text-green-600 hover:text-green-800 transition-colors font-medium">
+                            Clear results
+                        </button>
+                    </div>
+                    <div id="search-results" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Results populated by JavaScript -->
+                    </div>
+                </div>
+                
+                <!-- Empty State -->
+                <div id="search-empty-state" class="hidden mt-8 text-center py-12 border border-dashed border-[#30363d] rounded-xl bg-[#0d1117]/50">
+                    <div class="w-16 h-16 bg-[#161b22] rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fa-solid fa-magnifying-glass text-2xl text-[#7d8590]"></i>
+                    </div>
+                    <p id="empty-state-message" class="text-[#7d8590] font-medium"></p>
+                </div>
+            </div>
+
+            <!-- Visual Divider -->
+            <div class="relative flex py-2 items-center mb-10">
+                <div class="flex-grow border-t border-[#30363d]"></div>
+                <span class="flex-shrink-0 mx-4 text-[#7d8590] text-xs uppercase tracking-wider font-medium">or explore recommendations</span>
+                <div class="flex-grow border-t border-[#30363d]"></div>
             </div>
             
             <!-- Recommended Developers Section -->
