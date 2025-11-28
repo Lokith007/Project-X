@@ -13,13 +13,14 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def get_recommended_developers(user, limit=10, exclude_following=True, use_cache=True):
+def get_recommended_developers(user, limit=10, offset=0, exclude_following=True, use_cache=True):
     """
     Get personalized developer recommendations for a user
     
     Args:
         user: userinfo object or User object
         limit: Number of recommendations to return (default 10)
+        offset: Number of recommendations to skip (default 0)
         exclude_following: Exclude users already being followed (default True)
         use_cache: Use cached results if available (default True)
     
@@ -30,13 +31,15 @@ def get_recommended_developers(user, limit=10, exclude_following=True, use_cache
     if hasattr(user, 'info'):
         user = user.info
     
-    # Try cache first
+    # Try cache first - cache stores ALL recommendations
+    cache_key = f'dev_recommendations:{user.id}'
+    
     if use_cache:
-        cache_key = f'dev_recommendations:{user.id}'
         cached = cache.get(cache_key)
         if cached:
-            logger.info(f'Cache hit for user {user.id}')
-            return cached[:limit]
+            logger.info(f'Cache hit for user {user.id}, offset={offset}, limit={limit}')
+            # Return slice based on offset and limit
+            return cached[offset:offset + limit]
     
     # Get candidate pool
     candidates = _get_candidate_pool(user, exclude_following)
@@ -51,16 +54,20 @@ def get_recommended_developers(user, limit=10, exclude_following=True, use_cache
     # Sort by score (descending) and add diversity
     scored_candidates.sort(key=lambda x: x[1], reverse=True)
     
-    # Apply diversity filter
-    diverse_recommendations = _apply_diversity(scored_candidates, limit * 2)
+    # Apply diversity filter - get more results for pagination
+    # Generate up to 100 diverse recommendations to support pagination
+    max_recommendations = 100
+    diverse_recommendations = _apply_diversity(scored_candidates, max_recommendations)
     
-    # Cache results
+    # Cache ALL results
     if use_cache:
         cache.set(cache_key, diverse_recommendations, 3600)  # 1 hour TTL
     
-    logger.info(f'Generated {len(diverse_recommendations)} recommendations for user {user.id}')
+    logger.info(f'Generated {len(diverse_recommendations)} total recommendations for user {user.id}')
     
-    return diverse_recommendations[:limit]
+    # Return slice based on offset and limit
+    return diverse_recommendations[offset:offset + limit]
+
 
 
 def _get_candidate_pool(user, exclude_following=True):

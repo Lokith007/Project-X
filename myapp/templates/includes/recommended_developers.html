@@ -3,7 +3,7 @@
 
 {# People You May Know - Developer Recommendations #}
 {% if recommendations %}
-<div class="w-full bg-[#0d1117] rounded-xl border border-[#30363d] shadow-sm overflow-hidden mb-6">
+<div class="w-full bg-[#0d1117] rounded-xl border border-[#30363d] shadow-sm overflow-hidden lg:mb-6 mb-10">
     <!-- Header -->
     <div class="px-6 py-4 border-b border-[#21262d] bg-gradient-to-r from-[#161b22] to-[#0d1117]">
         <div class="flex items-center gap-3">
@@ -21,7 +21,7 @@
     
     <!-- Recommendations Grid -->
     <div class="p-2 sm:p-6">
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div id="recommendations-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {% for developer, score, reason in recommendations %}
             <div class="bg-[#161b22] border border-[#30363d] rounded-lg p-4 transition-all duration-200 hover:shadow-lg flex flex-col">
                 <!-- Avatar & Info -->
@@ -77,11 +77,140 @@
             </div>
             {% endfor %}
         </div>
+        
+        <!-- Load More Button -->
+        <div id="load-more-container" class="mt-6 text-center mb-6 lg:mb-4">
+            <button id="load-more-btn" 
+                    class="px-6 py-3 bg-[#21262d] hover:bg-[#30363d] text-[#e6edf3] rounded-lg transition-all duration-200 border border-[#30363d] hover:border-[#58a6ff]">
+                <span id="load-more-text">Load More</span>
+                <i id="load-more-spinner" class="fa-solid fa-angle-down ml-2 hidden"></i>
+            </button>
+        </div>
     </div>
 </div>
 
 <!-- JavaScript for Actions -->
 <script>
+let currentOffset = {{ recommendations|length }};
+let isLoading = false;
+
+// Load More Recommendations
+document.addEventListener('DOMContentLoaded', function() {
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    const loadMoreText = document.getElementById('load-more-text');
+    const loadMoreSpinner = document.getElementById('load-more-spinner');
+    const recommendationsGrid = document.getElementById('recommendations-grid');
+    const loadMoreContainer = document.getElementById('load-more-container');
+    
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', async function() {
+            if (isLoading) return;
+            
+            isLoading = true;
+            loadMoreText.textContent = 'Loading...';
+            loadMoreSpinner.classList.remove('hidden');
+            loadMoreBtn.disabled = true;
+            
+            try {
+                const response = await fetch(`/api/load-more-recommendations/?offset=${currentOffset}&limit=12`);
+                const data = await response.json();
+                
+                if (data.results && data.results.length > 0) {
+                    // Append new recommendations to grid
+                    data.results.forEach(dev => {
+                        const card = createRecommendationCard(dev);
+                        recommendationsGrid.appendChild(card);
+                    });
+                    
+                    // Update offset
+                    currentOffset = data.next_offset;
+                    
+                    // Hide button if no more results
+                    if (!data.has_more) {
+                        loadMoreContainer.classList.add('hidden');
+                    }
+                } else {
+                    // No more results
+                    loadMoreContainer.classList.add('hidden');
+                }
+            } catch (error) {
+                console.error('Load more error:', error);
+                loadMoreText.textContent = 'Error loading. Try again.';
+            } finally {
+                isLoading = false;
+                loadMoreText.textContent = 'Load More';
+                loadMoreSpinner.classList.add('hidden');
+                loadMoreBtn.disabled = false;
+            }
+        });
+    }
+});
+
+// Create recommendation card HTML
+function createRecommendationCard(dev) {
+    const card = document.createElement('div');
+    card.className = 'bg-[#161b22] border border-[#30363d] rounded-lg p-4 transition-all duration-200 hover:shadow-lg flex flex-col';
+    
+    const followBtn = dev.is_following ? `
+        <a href="javascript:void(0);" class="follow-btn px-4 text-center py-2 bg-[#262b34] text-white font-mono text-sm rounded-md hover:scale-[1.03] transition" data-user-id="${dev.id}">
+            <span class="btn-text">&lt;Unfollow/&gt;</span>
+        </a>
+    ` : `
+        <a href="javascript:void(0);" class="follow-btn px-4 text-center py-2 bg-[#6feb85] text-black font-mono text-sm rounded-md hover:scale-[1.03] transition mb-4" data-user-id="${dev.id}">
+            <span class="btn-text">&lt;Follow/&gt;</span>
+        </a>
+    `;
+    
+    const codingStyleBadge = dev.coding_style ? `
+        <div class="mb-4 rounded-full flex items-center justify-center gap-2 px-3 py-1.5 bg-[#0d1117]/30 border border-[#21262d]">
+            <img src="/static/assets/coding-style-logo/${dev.coding_style.logo}" 
+                 alt="${dev.coding_style.name}"
+                 class="w-6 h-6">
+            <span class="text-xs text-[#e6edf3]">${dev.coding_style.name}</span>
+        </div>
+    ` : '';
+    
+    const locationText = dev.city && dev.state ? `
+        <p class="text-xs text-[#7d8590]">
+            <i class="fa-solid fa-location-dot text-[10px]"></i>
+            ${dev.city}, ${dev.state}
+        </p>
+    ` : '';
+    
+    card.innerHTML = `
+        <!-- Avatar & Info -->
+        <div class="flex flex-col items-center text-center mb-4">
+            <a href="/user-profile/${dev.username}/" class="mb-3">
+                <img src="${dev.avatar || '/static/user_profile_img/profile.jpg'}" 
+                     alt="${dev.username}"
+                     class="w-16 h-16 rounded-full border-2 border-[#30363d] transition-colors object-cover">
+            </a>
+            
+            <a href="/user-profile/${dev.username}/" 
+               class="font-semibold text-[#e6edf3] transition-colors text-sm mb-1">
+                @${dev.username}
+            </a>
+            
+            ${locationText}
+        </div>
+
+        <!-- Actions -->
+        ${followBtn}
+        
+        <!-- Coding Style Badge -->
+        ${codingStyleBadge}
+
+        <!-- Reason for recommendation -->
+        <div class="mb-4 px-3 py-2 bg-[#0d1117]/50 rounded-lg border border-[#21262d]">
+            <p class="text-xs text-[#7d8590] text-center">
+                <i class="fa-solid fa-lightbulb text-yellow-500 text-[10px]"></i>
+                ${dev.reason}
+            </p>
+        </div>
+    `;
+    
+    return card;
+}
     
 function getCookie(name) {
     let cookieValue = null;

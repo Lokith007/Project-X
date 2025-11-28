@@ -423,6 +423,69 @@ def explore_dev(request):
 
 
 @login_required
+def load_more_recommendations(request):
+    """
+    API endpoint for loading more developer recommendations
+    """
+    from .utils.recommendations import get_recommended_developers
+    from django.http import JsonResponse
+    
+    offset = int(request.GET.get('offset', 0))
+    limit = int(request.GET.get('limit', 12))
+    
+    try:
+        # Get recommendations with offset
+        recommendations = get_recommended_developers(
+            user=request.user,
+            limit=limit,
+            offset=offset,
+            exclude_following=True,
+            use_cache=True
+        )
+        
+        # Check if there are more results
+        has_more = len(recommendations) == limit
+        
+        # Format response
+        data = []
+        for dev, score, reason in recommendations:
+            data.append({
+                'id': dev.id,
+                'username': dev.user.username,
+                'avatar': dev.profile_image.url if dev.profile_image else None,
+                'city': dev.city,
+                'state': dev.state,
+                'coding_style': {
+                    'name': dev.coding_style.name,
+                    'logo': dev.coding_style.logo
+                } if dev.coding_style else None,
+                'reason': reason,
+                'score': round(score, 2),
+                'is_following': request.user.info.is_following(dev)
+            })
+        
+        return JsonResponse({
+            'results': data,
+            'count': len(data),
+            'has_more': has_more,
+            'next_offset': offset + len(data)
+        })
+        
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f'Load more recommendations error: {str(e)}')
+        
+        return JsonResponse({
+            'results': [],
+            'count': 0,
+            'has_more': False,
+            'error': 'An error occurred'
+        }, status=500)
+
+
+
+@login_required
 def search_developers_api(request):
     """
     API endpoint for developer search with fuzzy matching and network ranking
