@@ -124,14 +124,17 @@ def _calculate_recommendation_score(current_user, candidate):
             reasons.append(f"Same coding style: {candidate.coding_style.name}")
     
     # 2. Location Proximity (15 points)
+    # Only score location if both users have location data
     if candidate.city and current_user.city:
         if candidate.city == current_user.city:
             score += 15
             reasons.append(f"From {candidate.city}")
-        elif candidate.state == current_user.state:
+    elif candidate.state and current_user.state:
+        if candidate.state == current_user.state:
             score += 10
             reasons.append(f"From {candidate.state}")
-        elif candidate.country == current_user.country:
+    elif candidate.country and current_user.country:
+        if candidate.country == current_user.country:
             score += 5
     
     # 3. Mutual Connections (20 points)
@@ -168,15 +171,23 @@ def _get_mutual_connections_count(user1, user2):
     """
     Count mutual connections between two users
     Uses prefetched data to avoid N+1 queries
-    """
-    # Get user1's following
-    user1_following = set(user1.following.values_list('following_id', flat=True))
     
-    # Get user2's following
-    user2_following = set(user2.following.values_list('following_id', flat=True))
+    Mutual connections = people that both user1 and user2 are following
+    """
+    # Cache user1's following set to avoid repeated queries
+    if not hasattr(user1, '_following_cache'):
+        user1._following_cache = set(user1.following.values_list('following_id', flat=True))
+    
+    # Use prefetched data if available, otherwise query
+    if hasattr(user2, '_prefetched_objects_cache') and 'following' in user2._prefetched_objects_cache:
+        # Use prefetched follow objects
+        user2_following = {f.following_id for f in user2.following.all()}
+    else:
+        # Fallback to query (should be cached by select_related)
+        user2_following = set(user2.following.values_list('following_id', flat=True))
     
     # Count intersection
-    return len(user1_following & user2_following)
+    return len(user1._following_cache & user2_following)
 
 
 def _is_active_user(user):

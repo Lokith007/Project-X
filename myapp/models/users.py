@@ -55,10 +55,16 @@ class userinfo(models.Model):
     def follow(self, other_user):
         if not self.is_following(other_user):
             follow.objects.create(follower = self, following=other_user)
+            # Invalidate recommendation cache
+            from myapp.utils.recommendations import invalidate_recommendation_cache
+            invalidate_recommendation_cache(self)
     
     def unfollow(self, other_user):
         if self.is_following(other_user):
             follow.objects.filter(follower = self, following = other_user).delete()
+            # Invalidate recommendation cache
+            from myapp.utils.recommendations import invalidate_recommendation_cache
+            invalidate_recommendation_cache(self)
     
     def is_following(self, other_user):
         return follow.objects.filter(follower = self, following = other_user).exists()
@@ -104,6 +110,6 @@ class follow(models.Model):
     def __str__(self):
         return f"{self.follower.user.username} {self.following.user.username}"
     
-    class meta:
+    class Meta:
         unique_together = ('follower', 'following') 
         

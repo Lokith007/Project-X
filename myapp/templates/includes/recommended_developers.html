@@ -1,4 +1,5 @@
 {% load static %}
+{% load custom_filter %}
 
 {# People You May Know - Developer Recommendations #}
 {% if recommendations %}
@@ -63,18 +64,15 @@
                 {% endif %}
                 
                 <!-- Actions -->
-                <div class="mt-auto flex gap-2">
-                    <button onclick="followUser('{{ developer.id }}', this)" 
-                            class="flex-1 py-2 px-3 bg-[#6feb85] text-black cursor-pointer rounded-lg transition-all duration-200 text-sm font-medium">
-                        <i class="fa-solid fa-user-plus text-xs mr-1"></i>
-                        Follow
-                    </button>
-                    <button onclick="dismissRecommendation('{{ developer.id }}', this)" 
-                            class="py-2 px-3 bg-[#21262d] hover:bg-[#30363d] text-[#7d8590] hover:text-[#e6edf3] rounded-lg transition-all duration-200 text-sm"
-                            title="Dismiss">
-                        <i class="fa-solid fa-times text-xs"></i>
-                    </button>
-                </div>
+                {% if user.info|is_following:developer %}
+                    <a href="javascript:void(0);" class="follow-btn px-4 text-center py-2 bg-[#262b34] text-white font-mono text-sm rounded-md hover:scale-[1.03] transition" data-user-id="{{ developer.id }}">
+                        <span class="btn-text">&lt;Unfollow/&gt;</span>
+                    </a>
+                {% else %}
+                    <a href="javascript:void(0);" class="follow-btn px-4 text-center py-2 bg-[#6feb85] text-black font-mono text-sm rounded-md hover:scale-[1.03] transition" data-user-id="{{ developer.id }}">
+                        <span class="btn-text">&lt;Follow/&gt;</span>
+                    </a>
+                {% endif %}
             </div>
             {% endfor %}
         </div>
@@ -83,54 +81,7 @@
 
 <!-- JavaScript for Actions -->
 <script>
-async function followUser(userId, button) {
-    const card = button.closest('.bg-\\[\\#161b22\\]');
-    button.disabled = true;
-    button.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs mr-1"></i> Following...';
     
-    try {
-        const response = await fetch(`/follow/${userId}/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken'),
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        if (response.ok) {
-            button.innerHTML = '<i class="fa-solid fa-check text-xs mr-1"></i> Following';
-            button.classList.remove('bg-[#1f6feb]', 'hover:bg-[#1a56db]');
-            button.classList.add('bg-green-600', 'cursor-default');
-            
-            // Fade out card after 1 second
-            setTimeout(() => {
-                card.style.opacity = '0';
-                card.style.transform = 'scale(0.95)';
-                setTimeout(() => card.remove(), 300);
-            }, 1000);
-        } else {
-            throw new Error('Follow failed');
-        }
-    } catch (error) {
-        console.error('Follow error:', error);
-        button.disabled = false;
-        button.innerHTML = '<i class="fa-solid fa-user-plus text-xs mr-1"></i> Follow';
-        alert('Failed to follow user. Please try again.');
-    }
-}
-
-function dismissRecommendation(userId, button) {
-    const card = button.closest('.bg-\\[\\#161b22\\]');
-    card.style.opacity = '0';
-    card.style.transform = 'scale(0.95)';
-    setTimeout(() => card.remove(), 300);
-    
-    // Optional: store dismissal in localStorage or backend
-    const dismissed = JSON.parse(localStorage.getItem('dismissed_recommendations') || '[]');
-    dismissed.push(userId);
-    localStorage.setItem('dismissed_recommendations', JSON.stringify(dismissed));
-}
-
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
