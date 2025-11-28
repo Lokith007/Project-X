@@ -1,0 +1,74 @@
+{% load static %}
+
+{# What's Hot Now - Trending Logs Section #}
+{% if trending_logs %}
+<div class="w-full bg-[#0d1117] rounded-xl border border-[#30363d] shadow-sm overflow-hidden mb-6">
+    <!-- Header -->
+    <div class="px-6 py-4 border-b border-[#21262d] bg-gradient-to-r from-[#161b22] to-[#0d1117]">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-lg shadow-orange-500/20">
+                <i class="fa-solid fa-fire text-white text-lg"></i>
+            </div>
+            <div>
+                <h2 class="text-lg font-bold text-[#e6edf3] flex items-center gap-2">
+                    WHAT'S HOT NOW
+                </h2>
+                <p class="text-xs text-[#7d8590]">Top trending logs in the last 24 hours</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Trending Logs Cards - Horizontal Scroll on Mobile -->
+    <div class="p-6">
+        <div class="flex gap-4 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-[#30363d] scrollbar-track-transparent hover:scrollbar-thumb-[#484f58] 
+                    snap-x snap-mandatory lg:grid lg:grid-cols-2 xl:grid-cols-3 lg:overflow-visible">
+            {% for log in trending_logs %}
+            <div class="min-w-[280px] sm:min-w-[320px] lg:min-w-0 flex-shrink-0 snap-start
+                        bg-[#161b22] border border-[#30363d] rounded-lg p-4 hover:border-[#58a6ff] transition-all duration-200 hover:shadow-lg hover:shadow-blue-500/10 group">
+                <!-- User Info -->
+                <div class="flex items-start gap-3 mb-3">
+                    <a href="{% url 'user_profile' log.user.user.username %}" class="flex-shrink-0">
+                        <img src="{{ log.user.profile_image.url }}?v={{ log.user.updated_at.timestamp }}" 
+                             alt="{{ log.user.user.username }}"
+                             class="w-10 h-10 rounded-full border-2 border-[#30363d] group-hover:border-[#58a6ff] transition-colors object-cover">
+                    </a>
+                    <div class="flex-1 min-w-0">
+                        <a href="{% url 'user_profile' log.user.user.username %}" 
+                           class="font-semibold text-[#e6edf3] hover:text-[#58a6ff] transition-colors text-sm">
+                            @{{ log.user.user.username }}
+                        </a>
+                        <p class="text-xs text-[#7d8590]">{{ log.timestamp|timesince }} ago</p>
+                    </div>
+                </div>
+                
+                <!-- Log Content Preview -->
+                <div class="mb-3">
+                    <p class="text-[#a8b3cf] text-sm line-clamp-3 leading-relaxed">
+                        {{ log.content|truncatechars:120 }}
+                    </p>
+                </div>
+                
+                <!-- Engagement Stats -->
+                <div class="flex items-center justify-between gap-3 mb-3 py-2 px-3 bg-[#0d1117]/50 rounded-lg border border-[#21262d]">
+                    <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 rounded-full bg-gradient-to-br from-yellow-500 to-orange-600 flex items-center justify-center animate-pulse">
+                            <i class="fa-solid fa-bolt text-white text-xs"></i>
+                        </div>
+                        <span class="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
+                            {{ log.total_engaged_users }}+ engaging right now
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- View Log Button -->
+                <a href="{% url 'user_profile' log.user.user.username %}#{{ log.sig }}" 
+                   class="block w-full py-2 px-4 bg-[#21262d] hover:bg-[#30363d] text-[#e6edf3] rounded-lg transition-all duration-200 text-center text-sm font-medium group-hover:bg-[#1f6feb] group-hover:text-white">
+                    <i class="fa-solid fa-arrow-right text-xs mr-2"></i>
+                    View Log
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}

@@ -46,25 +46,27 @@ async function fetchNotificationCount() {
 }
 
 /**
- * Update the notification badge in the UI
+ * Update the notification badge in the UI (both desktop and mobile)
  */
 function updateNotificationBadge(count) {
-    const badge = document.querySelector('.notification-badge');
+    const badges = document.querySelectorAll('.notification-badge');
 
-    if (!badge) return;
+    if (badges.length === 0) return;
 
-    if (count > 0) {
-        badge.textContent = count > 99 ? '99+' : count;
-        badge.classList.remove('hidden');
-        badge.classList.add('animate-pulse');
+    badges.forEach(badge => {
+        if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : count;
+            badge.classList.remove('hidden');
+            badge.classList.add('animate-pulse');
 
-        // Remove pulse animation after 2 seconds
-        setTimeout(() => {
-            badge.classList.remove('animate-pulse');
-        }, 2000);
-    } else {
-        badge.classList.add('hidden');
-    }
+            // Remove pulse animation after 2 seconds
+            setTimeout(() => {
+                badge.classList.remove('animate-pulse');
+            }, 2000);
+        } else {
+            badge.classList.add('hidden');
+        }
+    });
 }
 
 /**

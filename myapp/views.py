@@ -139,11 +139,16 @@ def home_page(request):
     from .algorithms import get_personalized_feed
     feed_items = get_personalized_feed(request, type=feed_type, page=1, per_page=20)
     
+    # Fetch trending logs (What's Hot Now)
+    from logs.utils.trending import get_trending_logs
+    trending_logs = get_trending_logs(limit=5, hours=24)
+    
     logform = LogForm()
     context = {
         'logform': logform,
         'feed_items': feed_items,
         'feed_type': feed_type,
+        'trending_logs': trending_logs,
     }
 
     # User is authenticated and profile is complete
