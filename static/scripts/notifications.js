@@ -57,12 +57,6 @@ function updateNotificationBadge(count) {
         if (count > 0) {
             badge.textContent = count > 99 ? '99+' : count;
             badge.classList.remove('hidden');
-            badge.classList.add('animate-pulse');
-
-            // Remove pulse animation after 2 seconds
-            setTimeout(() => {
-                badge.classList.remove('animate-pulse');
-            }, 2000);
         } else {
             badge.classList.add('hidden');
         }
