@@ -83,6 +83,7 @@ def _get_candidate_pool(user, exclude_following=True):
     Optimized with select_related and prefetch_related
     """
     # Base queryset - exclude self
+    # Annotate follower/following counts to avoid N+1 queries
     candidates = userinfo.objects.exclude(id=user.id).filter(
         user__is_active=True
     ).select_related(
@@ -91,6 +92,9 @@ def _get_candidate_pool(user, exclude_following=True):
     ).prefetch_related(
         Prefetch('followers', queryset=follow.objects.select_related('follower')),
         Prefetch('following', queryset=follow.objects.select_related('following'))
+    ).annotate(
+        follower_count=Count('followers', distinct=True),
+        following_count=Count('following', distinct=True)
     )
     
     # Exclude already following
@@ -124,37 +128,37 @@ def _calculate_recommendation_score(current_user, candidate):
     score = 0
     reasons = []
     
-    # 1. Coding Style Match (25 points)
-    if candidate.coding_style and current_user.coding_style:
-        if candidate.coding_style == current_user.coding_style:
-            score += 25
-            reasons.append(f"Same coding style: {candidate.coding_style.name}")
-    
-    # 2. Location Proximity (15 points)
-    # Only score location if both users have location data
-    if candidate.city and current_user.city:
-        if candidate.city == current_user.city:
-            score += 15
-            reasons.append(f"From {candidate.city}")
-    elif candidate.state and current_user.state:
-        if candidate.state == current_user.state:
-            score += 10
-            reasons.append(f"From {candidate.state}")
-    elif candidate.country and current_user.country:
-        if candidate.country == current_user.country:
-            score += 5
-    
-    # 3. Mutual Connections (20 points)
+    # 1. Mutual Connections (25 points) - Highest priority
     mutual_count = _get_mutual_connections_count(current_user, candidate)
     if mutual_count > 0:
-        mutual_score = min(mutual_count * 5, 20)
+        mutual_score = min(mutual_count * 5, 25)
         score += mutual_score
         reasons.append(f"{mutual_count} mutual connection{'s' if mutual_count > 1 else ''}")
     
-    # 4. Activity Similarity (15 points)
+    # 2. Location Proximity (20 points)
+    # Only score location if both users have location data
+    if candidate.city and current_user.city:
+        if candidate.city == current_user.city:
+            score += 20
+            reasons.append(f"From {candidate.city}")
+    elif candidate.state and current_user.state:
+        if candidate.state == current_user.state:
+            score += 15
+            reasons.append(f"From {candidate.state}")
+    elif candidate.country and current_user.country:
+        if candidate.country == current_user.country:
+            score += 10
+    
+    # 3. Activity Similarity (15 points)
     if _is_active_user(candidate):
         score += 15
         reasons.append("Active developer")
+    
+    # 4. Coding Style Match (10 points)
+    if candidate.coding_style and current_user.coding_style:
+        if candidate.coding_style == current_user.coding_style:
+            score += 10
+            reasons.append(f"Same coding style: {candidate.coding_style.name}")
     
     # 5. Profile Completeness (10 points)
     if _is_profile_complete(candidate):
@@ -164,9 +168,9 @@ def _calculate_recommendation_score(current_user, candidate):
     if _is_recently_active(candidate):
         score += 10
     
-    # 7. Follower/Following Ratio (5 points)
+    # 7. Balanced Network (10 points)
     if _has_balanced_network(candidate):
-        score += 5
+        score += 10
     
     # Generate reason text
     reason_text = reasons[0] if reasons else "Suggested for you"
@@ -230,8 +234,14 @@ def _is_recently_active(user):
 
 def _has_balanced_network(user):
     """Check if user has a balanced follower/following ratio"""
-    follower_count = user.followers.count()
-    following_count = user.following.count()
+    # Use annotated counts if available (from main query)
+    if hasattr(user, 'follower_count') and hasattr(user, 'following_count'):
+        follower_count = user.follower_count
+        following_count = user.following_count
+    else:
+        # Fallback to direct count (for backwards compatibility)
+        follower_count = user.followers.count()
+        following_count = user.following.count()
     
     if following_count == 0:
         return follower_count < 100  # Not a spam account
