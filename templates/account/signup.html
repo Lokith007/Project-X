@@ -93,6 +93,20 @@
                         {% endif %}
                     {% endfor %}
 
+                    <!-- Password Requirements Help Text -->
+                    <div class="p-3 rounded-lg bg-[#21262d] border border-[#30363d]">
+                        <div class="flex items-start gap-2">
+                            <i class="fa-solid fa-circle-info text-green-600 text-sm mt-0.5"></i>
+                            <div class="flex-1">
+                                <p class="text-xs text-[#c9d1d9] font-medium mb-1">Password Requirements:</p>
+                                <ul class="text-xs text-[#8b949e] space-y-0.5 list-disc list-inside">
+                                    <li>At least 8 characters</li>
+                                    <li>At least one special character (!@#$%^&*...)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
                     {% if form.non_field_errors %}
                         <div class="p-3 rounded-md bg-[#da3633]/10 border border-[#da3633]/40 text-[#f85149] text-sm text-center">
                             {{ form.non_field_errors }}
