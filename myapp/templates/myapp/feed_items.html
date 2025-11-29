@@ -3,7 +3,7 @@
 {% load comment_tags %}
 
 {% for log in feed_items %}
-<div class="bg-[#151b23] border border-[#21262d] rounded-xl overflow-hidden hover:border-[#30363d] transition-all duration-200 shadow-lg">
+<div id="log-{{ log.sig }}" class="bg-[#151b23] border border-[#21262d] rounded-xl overflow-hidden hover:border-[#30363d] transition-all duration-200 shadow-lg relative {% if highlighted_log_sig == log.sig %}highlighted-from-{{ source }}{% endif %}">
     
     <!-- User Header -->
     <div class="flex items-center gap-3 p-4 bg-[#151b23] border-b border-[#282e35]">

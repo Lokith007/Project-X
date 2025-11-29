@@ -19,7 +19,7 @@
     <div class="flex gap-4 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-[#30363d] scrollbar-track-transparent hover:scrollbar-thumb-[#484f58] 
                 snap-x snap-mandatory lg:flex-col lg:overflow-visible lg:pb-0 lg:gap-3">
         {% for log in trending_logs %}
-        <a href="{% url 'user_profile' log.user.user.username %}#{{ log.sig }}" 
+        <a href="{% url 'view_log_in_feed' log.sig %}?from=trending" 
            class="min-w-[300px] sm:min-w-[340px] lg:min-w-0 flex-shrink-0 snap-start
                   group flex items-start gap-4 p-4 rounded-xl bg-[#0f151d] hover:bg-[#1c2128]/80 
                   transition-all duration-300 cursor-pointer border border-[#30363d]/40 hover:border-[#444c56]/60 

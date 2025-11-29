@@ -169,5 +169,43 @@
 
         <script src="{% static 'scripts/mindlogs.js' %}"></script>
         
+        <!-- Log Highlighting Styles and Auto-Scroll -->
+        {% if highlighted_log_sig %}
+        <style>
+            /* Warmer, calmer highlight for both sources */
+            .highlighted-from-notification,
+            .highlighted-from-trending {
+                border: 2px solid darkgreen !important; /* Soft green border */
+                box-shadow: 0 0 15px rgba(0, 166, 62, 0.05); /* Soft green glow */
+                scroll-margin-top: 100px;
+            }
+
+            @keyframes warmPulse {
+                0%, 100% { 
+                    box-shadow: 0 0 0 0 rgba(0, 166, 62, 0); 
+                    border-color: rgba(0, 166, 62, 0.3);
+                }
+                50% { 
+                    box-shadow: 0 0 12px rgba(0, 166, 62, 0.1); 
+                    border-color: rgba(0, 166, 62, 0.5);
+                }
+            }
+        </style>
+
+        <script>
+            // Auto-scroll to highlighted log on page load
+            document.addEventListener('DOMContentLoaded', function() {
+                const highlightedLog = document.querySelector('.highlighted-from-notification, .highlighted-from-trending');
+                if (highlightedLog) {
+                    setTimeout(() => {
+                        highlightedLog.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'center' 
+                        });
+                    }, 300);
+                }
+            });
+        </script>
+        {% endif %}
 
 {% endblock  %}

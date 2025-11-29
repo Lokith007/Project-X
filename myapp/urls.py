@@ -13,6 +13,7 @@ urlpatterns = [
     path("skills/<uuid:uuid>", views.signup_skills, name="signup_skills"),
     path("", views.home_page, name="index"),
     path('load-more-feed/', views.load_more_feed, name='load_more_feed'),
+    path('feed/log/<str:log_sig>/', views.view_log_in_feed, name='view_log_in_feed'),
     
     path("explore-dev/", views.explore_dev, name="explore_dev"),
     path("api/load-more-recommendations/", views.load_more_recommendations, name="load_more_recommendations"),

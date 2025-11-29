@@ -172,6 +172,52 @@ def load_more_feed(request):
         'has_next': feed_page.has_next()
     })
 
+@login_required
+def view_log_in_feed(request, log_sig):
+    """
+    Display a specific log in the home feed with highlighting
+    Routes from notifications and trending logs to show the target log in feed context
+    """
+    from logs.models import Log
+    from logs.utils.trending import get_trending_logs
+    
+    # Get the target log
+    try:
+        target_log = Log.objects.select_related('user__user').get(sig=log_sig)
+    except Log.DoesNotExist:
+        # Fallback to regular home page if log doesn't exist
+        return redirect('index')
+    
+    # Get feed type and source from query params
+    feed_type = request.GET.get('feed', 'network')
+    source = request.GET.get('from', 'notification')  # 'notification' or 'trending'
+    
+    # Fetch personalized feed
+    from .algorithms import get_personalized_feed
+    feed_items = get_personalized_feed(request, type=feed_type, page=1, per_page=20)
+    
+    # Check if target log is in feed, if not prepend it
+    log_in_feed = any(item.id == target_log.id for item in feed_items)
+    if not log_in_feed:
+        # Prepend target log and limit to 20 total items
+        feed_items = [target_log] + list(feed_items)[:19]
+    
+    # Fetch trending logs
+    trending_logs = get_trending_logs(limit=5, hours=24)
+    
+    logform = LogForm()
+    context = {
+        'logform': logform,
+        'feed_items': feed_items,
+        'feed_type': feed_type,
+        'trending_logs': trending_logs,
+        'highlighted_log_sig': log_sig,  # Pass to template for highlighting
+        'source': source,  # 'notification' or 'trending'
+        'active_home': True,
+    }
+    
+    return render(request, 'myapp/home.html', context)
+
 #profile-page
 @login_required
 def user_profile(request, user_name):
