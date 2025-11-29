@@ -2,148 +2,211 @@
 {% load static %}
 {% load i18n %}
 
-{% block title %}DevMate{% endblock %} 
-{% block style %}<link rel="stylesheet" href="{% static 'styles/user_profile_page.css' %}"/>{% endblock %} 
+{% block title %}Settings{% endblock %} 
 
 {% block content %}
 
-    <div class="min-h-screen bg-[#010409] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative w-full">
-        <div id="content-container" class="max-w-3xl w-full bg-[#1a1f2b] border border-[#2d323b] shadow-2xl rounded-xl p-8 transition-all duration-300 hover:shadow-3xl">
-            <!-- Header -->
-            <div class='flex mb-6 gap-x-4 items-center'>
-                <p class="text-3xl font-bold text-white text-center md:text-left">Account Settings</p>
-                <a href="/"
-                class="ml-auto transition p-3 border-[#2d323b] hover:bg-[#262b34] border hover:border-green-600 hover:text-green-400 right-3 mt-1 bg-[#262b34] text-gray-300 flex items-center gap-x-2 px-3 rounded"><i
-                    class="fa-solid fa-arrow-left"></i><span class="hidden md:block text-sm">Back</span></a>
-            </div>
+<div class="min-h-screen bg-[#0d1117] text-[#c9d1d9] font-sans flex flex-col lg:flex-row">
     
-            <!-- Profile Picture Section -->
-            <div class="flex flex-col sm:flex-row items-center gap-6 mb-8">
-                <div class="relative">
-                    <img src="{{userinfo_obj.profile_image.url}}?v={{userinfo_obj.updated_at.timestamp}}" alt="Profile Picture" 
-                         class="w-24 h-24 rounded-lg object-cover shadow-md ring-1 ring-[#2d323b] transition-transform duration-300 hover:scale-105">
-                    <span class="absolute bottom-0 right-0 w-6 h-6 bg-green-500 rounded-full border-2 border-[#1a1f2b] flex items-center justify-center">
-                        <i class="fa fa-solid fa-camera text-white text-xs"></i> <!-- FontAwesome camera icon -->
-                    </span>
-                </div>
-                <a href='{% url "user_profile" user.username %}' class="px-6 py-2 bg-gradient-to-br from-green-600 to-green-900 hover:from-green-500 hover:to-green-800 text-white rounded-lg font-medium shadow-md transition-all duration-200 transform hover:scale-105">
-                    {{user.username}}
-                </a>
+    <!-- Global Sidenav -->
+    {% include "includes/sidenav.html" with active_settings=True %}
 
-            </div>
-    
-            <!-- Account Details Section -->
-            <div class="space-y-8">
-                <!-- Email -->
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[#2d323b] pb-4 transition-all duration-200 rounded-md px-2">
-                    <div class="flex items-center gap-3">
-                        <i class="fa fa-solid fa-envelope text-[#00a63e] w-6 h-6"></i>
-                        <p class="text-gray-300 font-semibold text-lg">Email</p>
-                    </div>
-                    <p class="text-gray-400 flex-1 text-center sm:text-right">{{user.email}}</p>
-                    <a href="{% url 'account_email' %}" class="text-green-400 font-medium hover:text-green-300 hover:underline transition-colors duration-200">Manage Email</a>
-                </div>
-    
-                <!-- Password -->
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[#2d323b] pb-4 transition-all duration-200 rounded-md px-2">
-                    <div class="flex items-center gap-3">
-                        <i class="fa fa-solid fa-lock text-[#00a63e] w-6 h-6"></i>
-                        <p class="text-gray-300 font-semibold text-lg">Password</p>
-                    </div>
-                    {% if user.has_usable_password %}
-                    <p class="text-gray-400 flex-1 text-center sm:text-right">••••••••</p>
-                    <a href="{% url 'account_change_password' %}" class="text-green-400 font-medium hover:text-green-300 hover:underline transition-colors duration-200">
-                        {% trans "Change Password" %}
-                    </a>
-                    {% else %}
-                    <a href="{% url 'account_set_password' %}" class="text-green-400 font-medium hover:text-green-300 hover:underline transition-colors duration-200">
-                        {% trans "Set Password" %}
-                    </a>
-                    {% endif %}
-                </div>
+    <!-- Main Content Area -->
+    <div class="flex-1 min-w-0 flex flex-col">
+        
+        <!-- Top Navigation Bar -->
+        <div class="sticky -ml-4 top-0 z-20 bg-[#161b22] backdrop-blur-md border-b border-[#30363d]">
+            <div class="max-w-[1000px] mx-auto px-4 md:px-6 h-15 flex items-center justify-between">
+                <div class="flex items-center gap-4 mx-auto">
 
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[#2d323b] pb-4 transition-all duration-200 rounded-md px-2">
-                    <div class="flex items-center gap-3">
-                        <i class="fa fa-brands fa-connectdevelop text-[#00a63e] w-6 h-6"></i>
-                        <p class="text-gray-300 font-semibold text-lg">Social Accounts</p>
-                    </div>
-                
-                    <a href="/accounts/3rdparty" class="text-green-400 font-medium hover:text-green-300 hover:underline transition-colors duration-200">
-                        Manage Connections
-                    </a>
-                </div>
-                
-                <!-- Timezone -->
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[#2d323b] pb-4 transition-all duration-200 rounded-md px-2">
-                    <div class="flex items-center gap-3">
-                        <i class="fa fa-solid fa-globe text-[#00a63e] w-6 h-6"></i>
-                        <p class="text-gray-300 font-semibold text-lg">Timezone</p>
-                    </div>
-                    <form method="POST" action="{% url 'settings_page' %}" class="flex items-center gap-3">
-                        {% csrf_token %}
-                        <select name="timezone" size="1" class="w-full sm:w-auto bg-[#262b34] border border-[#2d323b] text-gray-300 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" style="height: 40px; max-height: 40px;">
-                            {% for tz_value, tz_label in timezone_choices %}
-                            <option value="{{ tz_value }}" {% if tz_value == userinfo_obj.timezone %}selected{% endif %}>{{ tz_label }}</option>
-                            {% endfor %}
-                        </select>
-                        <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg font-medium text-sm transition-colors duration-200">
-                            Update
-                        </button>
-                    </form>
-                </div>
-                
-            </div>
-    
-            <!-- Action Buttons -->
-            <div class="mt-10 flex flex-row items-center gap-4 justify-between">
-                <form method="POST" action="{% url 'account_logout' %}" class="flex items-center">
-                    {% csrf_token %}
-                    <button type="submit" class="inline-flex items-center gap-2 px-4 py-3 bg-[#262b34] border border-[#2d323b] text-white rounded-lg font-semibold shadow-md hover:bg-[#2a2f3c] hover:border-gray-600 transition-all duration-200 transform hover:scale-105 text-sm" aria-label="Sign out">
-                        <i class="fa fa-solid fa-right-from-bracket"></i>
-                        <span>Sign Out</span>
-                    </button>
-                </form>
-                <button id="delete-btn" class="inline-flex items-center gap-2 px-4 py-3 bg-transparent border border-red-600 text-red-400 hover:bg-red-600 hover:text-white rounded-lg font-semibold shadow-md transition-all duration-200 transform hover:scale-105 text-sm" aria-haspopup="dialog" aria-controls="modal" aria-label="Delete account">
-                    <i class="fa fa-solid fa-trash"></i>
-                    <span>Delete Account</span>
-                </button>
-            </div>
-        </div>
-    
-        <!-- ✅ Confirmation Modal -->
-        <div id="modal" class="absolute inset-0 bg-black bg-opacity-50 items-center justify-center hidden">
-            <div class="bg-[#1a1f2b] border border-[#2d323b] rounded-lg p-6 shadow-2xl w-96">
-                <p class="text-lg font-semibold text-white">Confirm Deletion</p>
-                <p class="text-gray-300 mt-2">Are you sure you want to delete your account? This action is irreversible.</p>
-                <div class="flex justify-end gap-3 mt-4">
-                    <button id="cancel-btn" class="px-4 py-2 bg-[#262b34] border border-[#2d323b] text-gray-300 rounded-md hover:bg-[#2a2f3c] hover:text-white transition">Cancel</button>
-                    <form method="POST" action="{% url 'delete_acount' user.info.uuid %}">
-                        {% csrf_token %}
-                        <button type="submit" class="px-4 py-2 bg-gradient-to-br from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white rounded-md transition">Delete</button>
-                    </form>
+                    <p class="text-xl font-light text-[#c9d1d9] mx-auto">Account Center</p>
                 </div>
             </div>
         </div>
 
+        <!-- Main Container -->
+        <div class="w-full max-w-[800px] mx-auto px-4 md:px-6 py-8 pb-24 lg:pb-8"> <!-- Added pb-24 for mobile nav clearance -->
+            
+            <div class="space-y-6">
+                
+                <!-- Profile Card -->
+                <div class="bg-[#161b22] border border-[#30363d] rounded-2xl p-6 flex flex-col sm:flex-row items-center sm:items-start gap-6 shadow-sm">
+                    <div class="relative group">
+                        <img src="{{userinfo_obj.profile_image.url}}?v={{userinfo_obj.updated_at.timestamp}}" alt="Profile Picture" 
+                             class="w-20 h-20 rounded-full border-2 border-[#30363d] shadow-md group-hover:border-[#58a6ff] transition-colors">
+                        <a href="{% url 'user_profile' user.username %}" class="absolute bottom-0 right-0 w-7 h-7 bg-[#21262d] border border-[#30363d] rounded-full flex items-center justify-center text-[#c9d1d9] hover:bg-[#58a6ff] hover:text-white hover:border-transparent transition-all shadow-sm">
+                            <i class="fa-solid fa-pencil text-xs"></i>
+                        </a>
+                    </div>
+                    <div class="text-center sm:text-left flex-1">
+                        <h2 class="text-xl font-semibold text-[#c9d1d9]">{{user.username}}</h2>
+                        <p class="text-sm text-[#8b949e] mt-1">{{user.email}}</p>
+                        <div class="mt-4 flex flex-wrap justify-center sm:justify-start gap-2">
+                            {% if user.has_usable_password %}
+                            <span class="px-2.5 py-1 text-xs font-medium text-[#3fb950] bg-[#3fb950]/10 border border-[#3fb950]/20 rounded-full">
+                                Password Set
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Sections -->
+                <div class="bg-[#161b22] border border-[#30363d] rounded-2xl overflow-hidden shadow-sm">
+                    
+                    <!-- Email -->
+                    <div class="p-5 flex items-center justify-between border-b border-[#30363d] hover:bg-[#21262d]/50 transition-colors">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full bg-[#21262d] border border-[#30363d] flex items-center justify-center text-[#c9d1d9]">
+                                <i class="fa-regular fa-envelope"></i>
+                            </div>
+                            <div>
+                                <div class="text-[#c9d1d9] font-medium text-sm">Email Address</div>
+                                <div class="text-xs text-[#8b949e] mt-0.5">{{user.email}}</div>
+                            </div>
+                        </div>
+                        <a href="{% url 'account_email' %}" class="px-3 py-1.5 text-xs font-medium text-[#c9d1d9] bg-[#21262d] border border-[#30363d] rounded-lg hover:bg-[#30363d] hover:border-[#8b949e] transition-all">
+                            Manage
+                        </a>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="p-5 flex items-center justify-between border-b border-[#30363d] hover:bg-[#21262d]/50 transition-colors">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full bg-[#21262d] border border-[#30363d] flex items-center justify-center text-[#c9d1d9]">
+                                <i class="fa-solid fa-lock"></i>
+                            </div>
+                            <div>
+                                <div class="text-[#c9d1d9] font-medium text-sm">Password</div>
+                                <div class="text-xs text-[#8b949e] mt-0.5">
+                                    {% if user.has_usable_password %}Last changed recently{% else %}Not set{% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% if user.has_usable_password %}
+                        <a href="{% url 'account_change_password' %}" class="px-3 py-1.5 text-xs font-medium text-[#c9d1d9] bg-[#21262d] border border-[#30363d] rounded-lg hover:bg-[#30363d] hover:border-[#8b949e] transition-all">
+                            Change
+                        </a>
+                        {% else %}
+                        <a href="{% url 'account_set_password' %}" class="px-3 py-1.5 text-xs font-medium text-white bg-[#238636] border border-[#2ea043] rounded-lg hover:bg-[#2ea043] transition-all shadow-sm">
+                            Set Password
+                        </a>
+                        {% endif %}
+                    </div>
+
+                    <!-- Social Accounts -->
+                    <div class="p-5 flex items-center justify-between border-b border-[#30363d] hover:bg-[#21262d]/50 transition-colors">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full bg-[#21262d] border border-[#30363d] flex items-center justify-center text-[#c9d1d9]">
+                                <i class="fa-brands fa-connectdevelop"></i>
+                            </div>
+                            <div>
+                                <div class="text-[#c9d1d9] font-medium text-sm">Social Accounts</div>
+                                <div class="text-xs text-[#8b949e] mt-0.5">Connected apps and integrations</div>
+                            </div>
+                        </div>
+                        <a href="/accounts/3rdparty" class="px-3 py-1.5 text-xs font-medium text-[#c9d1d9] bg-[#21262d] border border-[#30363d] rounded-lg hover:bg-[#30363d] hover:border-[#8b949e] transition-all">
+                            Configure
+                        </a>
+                    </div>
+
+                    <!-- Timezone -->
+                    <div class="p-5 flex items-center justify-between hover:bg-[#21262d]/50 transition-colors">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full bg-[#21262d] border border-[#30363d] flex items-center justify-center text-[#c9d1d9]">
+                                <i class="fa-solid fa-globe"></i>
+                            </div>
+                            <div>
+                                <div class="text-[#c9d1d9] font-medium text-sm">Timezone</div>
+                                <div class="text-xs text-[#8b949e] mt-0.5">Local time display</div>
+                            </div>
+                        </div>
+                        <form method="POST" action="{% url 'settings_page' %}" class="flex items-center gap-2">
+                            {% csrf_token %}
+                            <select name="timezone" class="bg-[#0d1117] border border-[#30363d] text-[#c9d1d9] text-xs rounded-lg px-2.5 py-1.5 focus:border-[#58a6ff] focus:ring-1 focus:ring-[#58a6ff] focus:outline-none max-w-[140px] sm:max-w-none">
+                                {% for tz_value, tz_label in timezone_choices %}
+                                <option value="{{ tz_value }}" {% if tz_value == userinfo_obj.timezone %}selected{% endif %}>{{ tz_label }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="px-3 py-1.5 text-xs font-medium text-[#c9d1d9] bg-[#21262d] border border-[#30363d] rounded-lg hover:bg-[#30363d] hover:border-[#8b949e] transition-all">
+                                Save
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+
+                <!-- Danger Zone -->
+                <div class="pt-6">
+                    <h3 class="text-sm font-semibold text-[#f85149] mb-3 px-1">Danger Zone</h3>
+                    <div class="bg-[#161b22] border border-[#f85149]/40 rounded-2xl overflow-hidden">
+                        <div class="p-5 flex items-center justify-between">
+                            <div>
+                                <div class="text-[#c9d1d9] font-medium text-sm">Delete Account</div>
+                                <div class="text-xs text-[#8b949e] mt-0.5">Permanently remove your account and data</div>
+                            </div>
+                            <button id="delete-btn" class="px-3 py-1.5 text-xs font-medium text-[#f85149] bg-[#161b22] border border-[#f85149]/40 rounded-lg hover:bg-[#da3633] hover:text-white hover:border-transparent transition-all">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
     </div>
 
-<!-- ✅ JavaScript for Modal -->
+    <!-- Confirmation Modal -->
+    <div id="modal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity"></div>
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4 text-center">
+                <div class="relative transform overflow-hidden rounded-2xl bg-[#161b22] border border-[#30363d] text-left shadow-2xl transition-all w-full max-w-md">
+                    <div class="p-6">
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="w-12 h-12 rounded-full bg-[#da3633]/10 flex items-center justify-center flex-shrink-0">
+                                <i class="fa fa-exclamation-triangle text-[#da3633] text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-[#c9d1d9]" id="modal-title">Delete account</h3>
+                                <p class="text-sm text-[#8b949e]">This action is irreversible.</p>
+                            </div>
+                        </div>
+                        <p class="text-sm text-[#8b949e] mb-6">Are you sure you want to delete your account? All of your data, logs, and connections will be permanently removed.</p>
+                        
+                        <div class="flex items-center gap-3 justify-end">
+                            <button id="cancel-btn" type="button" class="px-4 py-2 text-sm font-medium text-[#c9d1d9] bg-[#21262d] border border-[#30363d] rounded-xl hover:bg-[#30363d] transition-colors">Cancel</button>
+                            <form method="POST" action="{% url 'delete_acount' user.info.uuid %}">
+                                {% csrf_token %}
+                                <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-[#da3633] rounded-xl hover:bg-[#b62324] transition-colors shadow-lg shadow-[#da3633]/20">Delete Account</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const deleteBtn = document.getElementById("delete-btn");
         const modal = document.getElementById("modal");
-        modal.classList.add('flex')
         const cancelBtn = document.getElementById("cancel-btn");
-        const contentContainer = document.getElementById("content-container");
     
         deleteBtn.addEventListener("click", () => {
-            modal.classList.remove("hidden"); // Show modal
-            contentContainer.classList.add("blur-sm"); // Blur background
+            modal.classList.remove("hidden");
         });
     
         cancelBtn.addEventListener("click", () => {
-            modal.classList.add("hidden"); // Hide modal
-            contentContainer.classList.remove("blur-sm"); // Remove blur
+            modal.classList.add("hidden");
+        });
+
+        modal.addEventListener("click", (e) => {
+            if (e.target.closest('.relative') === null) {
+                modal.classList.add("hidden");
+            }
         });
     });
 </script>
