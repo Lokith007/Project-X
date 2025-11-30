@@ -179,7 +179,7 @@
                 {% endif %}
 
                 <!-- Coding Style with Inline Edit -->
-                <div class="flex items-center gap-3 mt-3">
+                <div class="flex items-center gap-3 mt-2">
                     {% if userinfo_obj.coding_style.logo %}
                     <div id="coding-style-badge" class="text-sm px-3 py-2 w-fit rounded-lg bg-[#262b34] text-white shadow-sm border border-[#333] flex items-center gap-2">
                         <img src="{% static 'assets/coding-style-logo/' %}{{userinfo_obj.coding_style.logo}}" alt="{{userinfo_obj.coding_style.name}}" class="w-5 h-5">
@@ -200,7 +200,7 @@
                 </div>
 
                 <!-- Status -->
-                <div class="text-sm mt-1 text-gray-400 italic">
+                <div class="text-sm mt-2 mb-1 text-gray-400 italic">
                     {{userinfo_obj.status.name}}
                 </div>
 
