@@ -4,251 +4,76 @@
 
 {% block title %}DevMate{% endblock %} 
 {% block style %}<link rel="stylesheet" href="{% static 'styles/user_profile_page.css' %}"/>{% endblock %} 
-{% block body_class %}text-[15px] h-full bg-[#f4f2ee] overflow-x-hidden{% endblock %}
+{% block body_class %}text-[15px] h-full bg-[#010409] text-[#a8b3cf] overflow-x-hidden{% endblock %}
 
 {% block content %}    
-    
-    <!-- navbar -->
-    {% include "includes/navbar.html" %}
 
     <!-- main section -->
-    <div id='entireSection'class="flex w-full gap-x-5 lg:gap-x-2">
+    <div id='entireSection' class="flex flex-col lg:flex-row w-full gap-x-5 lg:gap-x-2">
         <!-- sidenav -->
         {% include "includes/sidenav.html" %}
-
-        <!-- explore section -->
-        <div class="flex flex-[5] flex-col flex-wrap mt-20 md:mt-32 gap-y-0 md:gap-y-5 lg:px-4 px-2">
-
-            <div class="flex gap-x-1 flex-wrap gap-y-2 items-center justify-center absolute top-20">
-                <div class="flex flex-col gap-y-2 items-center">
-                    <div id="exploreTrigger" class="flex items-center bg-black text-white px-2 py-1 rounded-lg cursor-pointer">
-                        <div id="exploreTitle" class="text-lg"><span class='text-lg'>&lt;</span> / Dev <span class='text-xl'>&gt;</span></div>
-                        <img src="{% static 'assets/down.svg' %}" alt="" class="w-7 h-7">
-                    </div>
-                    <div class="hidden flex-col gap-y-2 bg-[#1a1a1acc] px-4 py-3 absolute top-12 left-0 z-10 backdrop-blur-md rounded-xl shadow-lg" id="allExplore">
-                        <a href="{% url 'explore_dev' %}" 
-                        class="flex items-center gap-3 text-sm text-white hover:bg-[#2e2e2e] px-4 py-2 rounded-md transition-all cursor-pointer">
-                            <i class="fa-solid fa-code"></i>
-                            <span>Developers</span>
-                        </a>
-                        <a href="{% url 'explore-project' %}" 
-                        class="flex items-center gap-3 text-sm text-white hover:bg-[#2e2e2e] px-4 py-2 rounded-md transition-all cursor-pointer">
-                            <i class="fa-solid fa-diagram-project"></i>
-                            <span>Projects</span>
-                        </a>
-                        <a href="{% url 'explore_events' %}" 
-                        class="flex items-center gap-3 text-sm text-white hover:bg-[#2e2e2e] px-4 py-2 rounded-md transition-all cursor-pointer">
-                            <i class="fa-solid fa-calendar text-white"></i>
-                            <span>Events</span>
-                        </a>
-                        <a href="{% url 'explore_organization' %}" 
-                        class="flex items-center gap-3 text-sm text-white hover:bg-[#2e2e2e] px-4 py-2 rounded-md transition-all cursor-pointer">
-                            <i class="fa-solid fa-building"></i>
-                            <span>Organizations</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex flex-col gap-y-5 mt-1 w-full">
-                <!-- top section, search bar and filter option -->
-                <div class="w-full flex flex-row items-center justify-evenly  md:flex-row gap-x-5 gap-y-5 max-[450px]:flex-col mt-10 md:mt-0">
-                    <div class="text-[#686868] text-xs">({{total_result}} Results)</div>
-                    <div class="flex items-center gap-x-4  w-fit justify-center max-[450px]:w-full">
-                        <form method="GET" action="{% url 'explore_dev' %}" class="flex gap-x-3 items-center">
-                            <input type="text"  name="q" value="{{ query }}" class="w-70 outline-none border border-black rounded-full border- bg-[#f6f6f6] text-[16px] px-4 py-1 text-black placeholder:text-xs" placeholder="Search...">
-                                <button type="submit"><img src="{% static 'assets/search.svg' %}" alt="" class="w-6 h-6"></button>
-                        </form>
-                        <div class="lg:hidden flex" onclick="openFilter()">
-                            <button class="flex items-center gap-x-2"><i class="fa-solid fa-filter"></i> <span
-                                    class="hidden md:block">Filter</span></button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- People area fill all the people inside this div -->
-                <div class="relative flex  md:w-full px-2 pb-10">
-                    <div class="flex flex-col items- gap-y-10 w-full">
-                        <div class="flex flex-col gap-y-3">
-
-                            <!-- single user -->
-                            {% for dev in filter_user %}
-                            <div class="flex gap-x-2 bg-white px-5 py-5 items-start justify-between gap-y-2 max-[450px]:flex-col rounded-lg shadow-md">
-                                <div class="flex gap-x-4 lg:gap-x-5 w-full">
-                                    {% comment %} <a href='{% url "user_profile" dev.user.username %}' class="h-14 w-14"><img src="{{dev.profile_image.url}}?v={{dev.updated_at.timestamp}}" alt="" class="rounded-lg"></a> {% endcomment %}
-                                    <div class="relative inline-block">
-                                        <a href='{% url "user_profile" dev.user.username %}'>
-                                            <img src="{{ dev.profile_image.url }}?v={{ dev.updated_at.timestamp }}" alt="" class="rounded-lg w-16 h-14 object-cover">
-                                        
-                                        {% if dev.last_seen|is_online %}
-                                            <span class="absolute bottom-5 right-0 block w-3 h-3 bg-green-500 border-2 border-white rounded-full" title='Active'></span>
-                                        {% endif %}
-                                        </a>
-                                    </div>
-                                    <div class="flex flex-col gap-y-1 w-full">
-                                        <a href='{% url "user_profile" dev.user.username %}' class="font-semibold cursor-pointer text-lg hover:underline">{{dev.user.first_name}} {{dev.user.last_name}}</a>
-                                        <p>@{{dev.user.username}}</p>
-                                        {% if dev.cringe_badge %}<p class="break-words">{{dev.cringe_badge.emoji}} {{dev.cringe_badge.name}}</p>
-                                        {% else %}
-                                        <p class="break-words text-gray-600">{{dev.status|default:""}}</p>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                {% if user.info|is_following:dev %}
-                                    <a href="javascript:void(0);" class="follow-btn bg-[#464646] text-white self-center px-2 py-2 w-[110px] text-center rounded-md max-[450px]:m-auto hover:scale-110 transition" data-user-id="{{ dev.id }}">
-                                        <span class="btn-text">&lt;Unfollow/&gt;</span>
-                                    </a>
-                                {% else %}
-                                    <a href="javascript:void(0);" class="follow-btn bg-[#6feb85] self-center px-2 py-2 w-[120px] text-center rounded-md max-[450px]:m-auto hover:scale-110 transition" data-user-id="{{ dev.id }}">   
-                                        <span class="btn-text">&lt;Follow/&gt;</span>
-                                    </a>
-                                {% endif %}
-                            </div>
-                            {% endfor %}
-                            <!-- end of single user -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {% comment %} Pagination Links {% endcomment %}
-            <div>
-                {% if total_result %}
-                <div class="flex justify-center mb-20 lg:mb-12">
-                    <div class="flex flex-wrap items-center gap-2 md:gap-3 text-xs md:text-sm">
-                        {% if filter_user.has_previous %}
-                            <a href="?page=1" class="px-2 py-1 border border-black text-black rounded-md hover:bg-black hover:text-white transition duration-200">&laquo; First</a>
-                            <a href="?page={{filter_user.previous_page_number}}" class="px-2 py-1 border border-black text-black rounded-md hover:bg-black hover:text-white transition duration-200">Previous</a>
-                        {% endif %}
-                
-                        <span class="text-black">
-                            Page<span class="font-semibold"> {{ filter_user.number }}</span> of {{ filter_user.paginator.num_pages }}
-                        </span>
-                
-                        {% if filter_user.has_next %}
-                            <a href="?page={{filter_user.next_page_number}}" class="px-2 py-1 border border-black text-black rounded-md hover:bg-black hover:text-white transition duration-200">Next</a>
-                            <a href="?page={{filter_user.paginator.num_pages}}" class="px-2 py-1 border border-black text-black rounded-md hover:bg-black hover:text-white transition duration-200">Last &raquo;</a>
-                        {% endif %}
-                    </div>
-                </div>
-                {% else %}
-                <div class="flex flex-col items-center justify-center p-4">
-                    <span class="text-lg md:text-xl lg:text-2xl font-normal text-gray-700 mb-4">
-                        Oops! No results Found!
-                    </span>
-                    <img src="{% static 'assets/not-found.png' %}" alt="Not Found" class="w-full rounded-2xl max-w-xs md:max-w-sm lg:max-w-md">
-                </div>
-                {% endif %}
-            </div>
-
-        </div>
-
-        {% comment %} Filter section {% endcomment %}
-        <div class="absolute lg:sticky top-0 flex-col hidden mr-2 lg:mr-4 lg:w-1/4 lg:h-[calc(100vh-1.5rem)] gap-y-6 lg:flex overflow-y-auto z-10" id="openFilterParent">
-            <div class="lg:relative bg-white w-[calc(100%-5rem)] md:w-3/4 lg:w-full top-16 right-0 flex-col hidden px-6 py-8 overflow-y-auto lg:bg-white rounded-xl border border-gray-100 bottom-2 gap-y-6 lg:flex"
-                id="filterElement">
-                
-                <!-- Close Button (Mobile) -->
-                <button class="absolute lg:hidden top-5 right-5 text-gray-400 hover:text-gray-600 transition-colors duration-150" 
-                        onclick="closeFilter()">
-                    <i class="text-2xl fa-solid fa-xmark"></i>
-                </button>
-
+        
+        <!-- Main Content -->
+        <div class="flex-1 w-full max-w-full lg:max-w-5xl mx-auto px-2 sm:px-6 py-6">
+            <!-- Search Section (Simplified) -->
+            <div class="w-full mb-12">
                 <!-- Header -->
-                <div class="flex flex-row items-center justify-between w-full pb-4 border-b border-gray-100 mt-3 lg:mt-0">
-                    <div class="flex items-center gap-x-3">
-                        <p class="text-xl font-semibold text-gray-800">
-                            <span>Filters</span>
-                        </p>
-                        <div class="p-1.5 rounded-md bg-green-50">
-                            <img src="{% static 'assets/filter.svg' %}" alt="Filter Icon" class="w-5 h-5 text-green-600">
-                        </div>
-                    </div>
-                    {% if applied_filter %}
-                    <a href='{% url "explore_dev" %}' class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-500 hover:text-green-600 rounded-lg transition-all duration-300 group">
-                        <span class="transition-all duration-200 group-hover:font-medium">Reset</span>
-                        <i class="fa-solid fa-arrow-rotate-left text-xs transition-transform duration-500 group-hover:rotate-180"></i>
-                    </a>
-                    {% endif %}
+                <div class="mb-6 px-2">
+                    <h1 class="text-2xl font-bold text-[#e6edf3] mb-1">
+                        Find Developers
+                    </h1>
+                    <p class="text-sm text-[#7d8590]">Search by name, username, or skills to connect</p>
                 </div>
-
-                <!-- Status Filter -->
-                <div class="space-y-3">
-                    <p class="text-base font-medium text-gray-700 flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-[#00a63e]"></span>
-                        Status
-                        <i class="fa-solid fa-user"></i>
-                    </p>
-                    <div class="flex flex-wrap gap-2">
-                        {% for status in status_list %}
-                        <a href="?availability={{ request.GET.availability|default:'' }}&skill={{ request.GET.skill|default:'' }}&status={% if request.GET.status == status.id|stringformat:'s' %}{% else %}{{ status.id }}{% endif %}"
-                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg border transition-all duration-200
-                                {% if request.GET.status == status.id|stringformat:'s' %} 
-                                    bg-green-50 border-green-200 text-green-700
-                                {% else %} 
-                                    bg-white border-gray-200 text-gray-600 hover:border-green-300 hover:text-gray-800
-                                {% endif %}">
-                            {{status.name}}
-                            {% if request.GET.status == status.id|stringformat:'s' %}
-                            <i class="ml-1.5 text-xs fa-solid fa-xmark opacity-70 hover:opacity-100 transition-opacity"></i>
-                            {% endif %}
-                        </a>
-                        {% endfor %}
+                
+                <!-- Search Input -->
+                <div class="relative max-w-2xl">
+                    <input type="text" 
+                           id="developer-search-input" 
+                           placeholder="Type to search..." 
+                           class="w-full bg-[#0d1117] border border-[#30363d] text-[#e6edf3] text-base rounded-xl focus:ring-1 focus:ring-[#238636] focus:border-[#238636] block p-4 pl-12 shadow-sm transition-all placeholder-[#7d8590]"
+                           autocomplete="off">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-5 text-[#7d8590] text-lg"></i>
+                    <div id="search-loading" class="absolute right-4 top-5 hidden">
+                        <i class="fa-solid fa-spinner fa-spin text-[#7d8590]"></i>
                     </div>
                 </div>
-
-                <!-- Availability Filter -->
-                <div class="space-y-3">
-                    <p class="text-base font-medium text-gray-700 flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-[#00a63e]"></span>
-                        Availability
-                    </p>
-                    <div class="flex flex-wrap gap-2">
-                        {% for availability in availability_list %}
-                        <a href="?status={{ request.GET.status|default:'' }}&skill={{ request.GET.skill|default:'' }}&availability={% if request.GET.availability == availability.value %}{% else %}{{availability.value}}{% endif %}" 
-                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg border transition-all duration-200
-                                {% if request.GET.availability == availability.value %} 
-                                    bg-green-50 border-green-200 text-green-700
-                                {% else %} 
-                                    bg-white border-gray-200 text-gray-600 hover:border-green-300 hover:text-gray-800
-                                {% endif %}">
-                            {{ availability.label }}
-                            {% if request.GET.availability == availability.value %}
-                            <i class="ml-1.5 text-xs fa-solid fa-xmark opacity-70 hover:opacity-100 transition-opacity"></i>
-                            {% endif %}
-                        </a>
-                        {% endfor %}
+                
+                <!-- Search Results -->
+                <div id="search-results-container" class="mt-6 hidden">
+                    <div class="flex items-center justify-between mb-4 px-1">
+                        <p id="search-results-count" class="text-sm text-[#7d8590]"></p>
+                        <button id="clear-search" class="text-xs text-green-600 hover:text-green-800 transition-colors font-medium">
+                            Clear results
+                        </button>
+                    </div>
+                    <div id="search-results" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Results populated by JavaScript -->
                     </div>
                 </div>
-
-                <!-- Skills Filter -->
-                <div class="space-y-3">
-                    <p class="text-base font-medium text-gray-700 flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-[#00a63e]"></span>
-                        Skills
-                        <i class="fa-solid fa-code"></i>
-                    </p>
-                    <div class="flex flex-wrap gap-2">
-                        {% for skill in top_skill %}
-                        <a href="?availability={{ request.GET.availability|default:'' }}&status={{request.GET.status|default:''}}&skill={% if request.GET.skill == skill.id|stringformat:'s' %}{% else %}{{ skill.id }}{% endif %}" 
-                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg border transition-all duration-200
-                                {% if request.GET.skill == skill.id|stringformat:'s' %} 
-                                    bg-green-50 border-green-200 text-green-700
-                                {% else %} 
-                                    bg-white border-gray-200 text-gray-600 hover:border-green-300 hover:text-gray-800
-                                {% endif %}">
-                            {{ skill.name }}
-                            {% if request.GET.skill == skill.id|stringformat:'s' %}
-                            <i class="ml-1.5 text-xs fa-solid fa-xmark opacity-70 hover:opacity-100 transition-opacity"></i>
-                            {% endif %}
-                        </a>
-                        {% endfor %}
+                
+                <!-- Empty State -->
+                <div id="search-empty-state" class="hidden mt-8 text-center py-12 border border-dashed border-[#30363d] rounded-xl bg-[#0d1117]/50">
+                    <div class="w-16 h-16 bg-[#161b22] rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fa-solid fa-magnifying-glass text-2xl text-[#7d8590]"></i>
                     </div>
+                    <p id="empty-state-message" class="text-[#7d8590] font-medium"></p>
                 </div>
             </div>
+
+            <!-- Visual Divider -->
+            <div class="relative flex py-2 items-center mb-10">
+                <div class="flex-grow border-t border-[#30363d]"></div>
+                <span class="flex-shrink-0 mx-4 text-[#7d8590] text-xs uppercase tracking-wider font-medium">or explore recommendations</span>
+                <div class="flex-grow border-t border-[#30363d]"></div>
+            </div>
+            
+            <!-- Recommended Developers Section -->
+            {% include 'includes/recommended_developers.html' %}
         </div>
     </div>
 
-    {% include "includes/create-post.html" %}
+
+
+<script src="{% static 'scripts/developer-search.js' %}" defer></script>
 
 {% endblock  %}

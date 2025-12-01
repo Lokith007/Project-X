@@ -2,7 +2,7 @@ from django.db import models
 import uuid
 from django.contrib.auth.models import User
 from django.urls import reverse
-from .filter import skill, Domain, user_status, CringeBadge
+from .filter import skill, user_status, CodingStyle
 from phonenumber_field.modelfields import PhoneNumberField
 from django.utils import timezone
 
@@ -20,7 +20,11 @@ class userinfo(models.Model):
     contact_email = models.EmailField(max_length=255, blank=True, null=True)
     about_user = models.TextField(max_length=1000, blank=True, null=True) 
     profile_image = models.ImageField(upload_to='user_profile_img', height_field=None, default='user_profile_img/profile.jpg')
+    banner_image = models.CharField(max_length=255, default='banners/default.jpg', blank=True, null=True)
     location = models.CharField(max_length=50, blank=True, null=True)
+    city = models.CharField(max_length=100, blank=True, null=True)
+    state = models.CharField(max_length=100, blank=True, null=True)
+    country = models.CharField(max_length=100, blank=True, null=True)
     website = models.URLField(blank=True, null=True)
     phone = PhoneNumberField(blank=True, null=True)
     gender = models.CharField(max_length=25, null=True, blank=True, choices=GENDER_CHOICES)
@@ -32,21 +36,14 @@ class userinfo(models.Model):
     stackoverflow = models.URLField(blank=True, null=True) 
     
     skills = models.ManyToManyField(skill, related_name='users', blank=True)
-    domains = models.ManyToManyField(Domain, verbose_name="domains", blank=True)
     years_of_experience = models.PositiveIntegerField(blank=True, null=True)
-    availability = models.CharField(max_length=50, choices=[
-        ('available', 'Available for collaboration'),
-        ('part-time', 'Open to part-time collaboration'),
-        ('freelance', 'Open to freelance collaboration'),
-        ('unavailable', 'Unavailable'),
-    ], blank=True, null=True)
-    cringe_badge = models.ForeignKey(CringeBadge, on_delete=models.SET_NULL, null=True, blank=True, related_name='users')
-    profile_views = models.IntegerField(default=0, blank=True)
+    coding_style = models.ForeignKey(CodingStyle, on_delete=models.SET_NULL, null=True, blank=True, related_name='users')
     created_at = models.DateField(auto_now=False, auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     needs_profile_completion = models.BooleanField(default=False)
     last_seen = models.DateTimeField(default=timezone.now)
+    timezone = models.CharField(max_length=63, default='UTC', help_text="User's timezone for displaying dates/times")
     
     def __str__(self):
         return self.user.username 
@@ -58,10 +55,16 @@ class userinfo(models.Model):
     def follow(self, other_user):
         if not self.is_following(other_user):
             follow.objects.create(follower = self, following=other_user)
+            # Invalidate recommendation cache
+            from myapp.utils.recommendations import invalidate_recommendation_cache
+            invalidate_recommendation_cache(self)
     
     def unfollow(self, other_user):
         if self.is_following(other_user):
             follow.objects.filter(follower = self, following = other_user).delete()
+            # Invalidate recommendation cache
+            from myapp.utils.recommendations import invalidate_recommendation_cache
+            invalidate_recommendation_cache(self)
     
     def is_following(self, other_user):
         return follow.objects.filter(follower = self, following = other_user).exists()
@@ -71,21 +74,6 @@ class userinfo(models.Model):
     
     def get_following(self):
         return userinfo.objects.filter(followers__follower = self).order_by('-followers__created_at')
-    
-    def tot_joined_projects(self):
-        return self.joined_projects.count()
-    
-    def get_availability_type_filters():
-        AVAILABILITY_TYPES = [
-        ('available', 'Available for collaboration'),
-        ('part-time', 'Open to part-time collaboration'),
-        ('freelance', 'Open to freelance collaboration'),
-        ('unavailable', 'Unavailable'),
-    ]
-        """
-        Returns Availability types in a list of dictionaries for frontend filtering.
-        """
-        return [{'value': value, 'label': label} for value, label in AVAILABILITY_TYPES]
 
 class education(models.Model):
     user = models.OneToOneField(userinfo, on_delete=models.CASCADE, related_name='education')
@@ -98,30 +86,6 @@ class education(models.Model):
     
     def __str__(self):
         return f"{self.id}-{self.user}"
-    
-class current_position(models.Model):  #Auto create.
-    user = models.OneToOneField(userinfo, on_delete=models.CASCADE, related_name='current_position')
-    name = models.CharField(max_length=255)
-    role = models.CharField(max_length=100)
-    description = models.TextField(blank=True, null=True)
-    start_date = models.DateField(blank=True, null=True)
-    end_date = models.DateField(blank=True, null=True)  
-    till_now = models.BooleanField(default=False)
-    
-    
-    def __str__(self):
-        return f"{self.id}-{self.user}"
-    
-class user_project(models.Model):
-    user = models.ForeignKey(userinfo, related_name='projects', on_delete=models.CASCADE)
-    name = models.CharField(max_length=100)
-    description = models.TextField(null=True)
-    url = models.URLField(blank=True, null=True)
-    repo_link = models.URLField(blank=True, null=True)
-    tech_stack = models.ManyToManyField(skill, related_name='user_projects', blank=True)
-    media = models.ImageField(upload_to="user-project-files", blank=True, null=True)
-    start_date = models.DateField(null=True, blank=True)
-    end_date = models.DateField(blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -146,6 +110,6 @@ class follow(models.Model):
     def __str__(self):
         return f"{self.follower.user.username} {self.following.user.username}"
     
-    class meta:
+    class Meta:
         unique_together = ('follower', 'following') 
         

@@ -1,13 +1,13 @@
 from django.db import models
 from django.urls import reverse
 
-class CringeBadge(models.Model):
+class CodingStyle(models.Model):
     name = models.CharField(max_length=50, unique=True) 
     description = models.TextField()
-    emoji = models.CharField(max_length=10)
+    logo = models.CharField(max_length=255, default='', blank=True)
 
     def __str__(self):
-        return f"{self.emoji} {self.name}"
+        return f"{self.name}"
 
 class skill(models.Model): #Skills
     category_choices = [
@@ -28,13 +28,6 @@ class skill(models.Model): #Skills
 
     def __str__(self):
         return self.name
-
-class Domain(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    description = models.TextField(blank=True, null=True)
-    
-    def __str__(self):
-        return self.name
     
 class user_status(models.Model):
     name = models.CharField(max_length=50)
@@ -46,8 +39,3 @@ class user_status(models.Model):
     def __str__(self):
         return self.name
     
-class Industry(models.Model): #Filter of industry in Organization
-    name = models.CharField(max_length=255)
-    
-    def __str__(self):
-        return self.name

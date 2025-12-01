@@ -22,8 +22,6 @@ from django.views.generic import RedirectView
 from myapp.views import CustomPasswordChangeView, logout_view
 
 urlpatterns = [
-    path('api/', include('api.urls')),
-    
     path('admin/', include('admin_honeypot.urls')),
     path("admin-project-x/", admin.site.urls),
     path('select2/', include('django_select2.urls')),
@@ -33,10 +31,6 @@ urlpatterns = [
     path('accounts/password/change/', CustomPasswordChangeView.as_view(), name='account_change_password'),
     path('accounts/logout/', logout_view, name='account_logout'),
     path('accounts/', include('allauth.urls')),
-    path("tinymce/", include('tinymce.urls')),
-    path("feature/", include('features.urls')),
-    path("collab-project/", include('collaboration_project.urls')),
-    path("events/", include('events.urls')),
-    path("logs/", include("mindlogs.urls")),
+    path("logs/", include("logs.urls")),
     path('', include('myapp.urls')),
 ] + static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)

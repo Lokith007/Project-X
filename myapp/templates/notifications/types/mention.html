@@ -1,0 +1,17 @@
+{# Mention notification - Spacious #}
+<div class="space-y-2">
+    <div class="flex items-center flex-wrap gap-1.5">
+        <a href="{% url 'user_profile' notification.actor.user.username %}" 
+           class="font-semibold text-[#e6edf3] hover:text-[#58a6ff] hover:underline transition-colors"
+           onclick="event.stopPropagation();">
+            {{ notification.actor.user.username }}
+        </a>
+        <span class="text-[#7d8590]">mentioned you in a log</span>
+    </div>
+
+    {% if notification.target %}
+    <div class="mt-1.5 text-[#8b949e] border-l-2 border-[#30363d] pl-3 py-0.5 text-[14px]">
+        {{ notification.target.content|truncatechars:140 }}
+    </div>
+    {% endif %}
+</div>

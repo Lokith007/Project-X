@@ -1,0 +1,660 @@
+{% extends "myapp/base.html" %} 
+{% load static %}
+{% load custom_filter %}
+
+{% block title %}DevMate{% endblock %} 
+{% block style %}<link rel="stylesheet" href="{% static 'styles/user_profile_page.css' %}"/>
+<link rel="stylesheet" href="{% static 'styles/banner.css' %}"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+{% endblock %} 
+{% block script %}
+<script src="{% static 'scripts/jquery-3.7.1.min.js' %}"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.css"
+        integrity="sha512-087vysR/jM0N5cp13Vlp+ZF9wx6tKbvJLwPO8Iit6J7R+n7uIMMjg37dEgexOshDmDITHYY5useeSmfD1MYiQA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"
+    integrity="sha512-JyCZjCOZoyeQZSd5+YEAcFgz2fowJ1F1hyJOXgtKu4llIa0KneLcidn5bwfutiehUTiOuK87A986BZJMko0eWQ=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+{% if request.user.info == userinfo_obj %}
+<script src="{% static 'scripts/coding-style-selector.js' %}"></script>
+{% endif %}
+{% endblock %} 
+{% block body_class %}text-[15px] h-full bg-[#010409] text-[#a8b3cf] overflow-x-hidden{% endblock %}
+
+{% block content %} 
+
+    <!-- main section -->
+    <div id = 'entireSection' class="flex flex-col lg:flex-row lg:w-full lg:gap-x-1 md:justify-start md:items-start justify-between">
+        <!-- sidenav -->
+        {% include "includes/sidenav.html" %}
+
+        <aside class="order-1 lg:order-3 border-l border-[#2d323b] border-b rounded-md border-opacity-80 w-full lg:w-[36%] p-6 space-y-6">
+            <!-- Profile Card -->
+            <div class="relative bg-[#1a1f2b] mt-2 group">
+                <!-- Banner -->
+                <div class="h-28 sm:h-32 md:h-36 w-full relative">
+                    <img src="{% static 'assets/' %}{{ userinfo_obj.banner_image }}" 
+                         id="profileBanner" 
+                         data-banner-base-url="{% static 'assets/banners/' %}"
+                         alt="Banner" 
+                         class="object-cover w-full h-full rounded-t-xl transition-opacity duration-300"/>
+                    
+                    {% if user == userinfo_obj.user %}
+                    <!-- Edit Cover Button -->
+                    <button onclick="openBannerModal()" class="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white text-xs px-3 py-1.5 rounded-lg backdrop-blur-sm transition-all group-hover:opacity-100 flex items-center gap-2">
+                        <i class="fa-solid fa-camera"></i> Edit Cover
+                    </button>
+                    {% endif %}
+                </div>
+
+                <!-- Profile Image -->
+                <div class="absolute bottom-0 left-4 transform translate-y-1/2">
+                    <div class="relative">
+                        <img src="{{userinfo_obj.profile_image.url}}?v={{userinfo_obj.updated_at.timestamp}}" id="originalProfile" alt="Profile" class="w-22 h-22 md:w-28 md:h-28 rounded-xl border-4 border-[#1a1f2b] object-cover shadow-md cursor-pointer" onclick="viewProfile()"/>
+                        {% if userinfo_obj.last_seen|is_online %}
+                            <span class="absolute bottom-2 right-2 block w-4 h-4 bg-green-500 border-2 border-white rounded-full" title='Active'></span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Banner Selection Modal -->
+            <div id="bannerModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm">
+                <div class="bg-[#161b22] w-full max-w-2xl rounded-2xl border border-[#30363d] shadow-2xl overflow-hidden m-4">
+                    <!-- Header -->
+                    <div class="flex items-center justify-between px-6 py-4 border-b border-[#30363d] bg-[#0d1117]">
+                        <h3 class="text-lg font-semibold text-white">Choose Cover Photo</h3>
+                        <button onclick="closeBannerModal()" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fa-solid fa-xmark text-xl"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Banner Grid -->
+                    <div class="p-6 grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                        {% with banners="nature.png technology.png science.png geometry.png minimalism.png space.png gradients.png abstract.png" %}
+                        {% for banner in banners.split %}
+                        <div class="relative group cursor-pointer" onclick="selectBanner('{{ banner }}')">
+                            <div class="aspect-[3/1] rounded-lg overflow-hidden border-2 border-transparent hover:border-green-500 transition-all">
+                                <img src="{% static 'assets/banners/' %}{{ banner }}" alt="{{ banner }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                            </div>
+                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <span class="text-white font-medium text-sm bg-black/50 px-3 py-1 rounded-full backdrop-blur-md">Select</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% endwith %}
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="pt-8 flex flex-col gap-y-2">
+
+                <!-- Name -->
+                <h2 class="text-2xl font-bold text-white tracking-tight">
+                    {{userinfo_obj.user.first_name}} {{userinfo_obj.user.last_name}}
+                </h2>
+
+                <!-- Username + Join Date -->
+                <p class="text-sm text-gray-300">
+                    <span class="text-[#00a63e] font-mono">@{{ userinfo_obj.user.username }}</span>
+                    <span class="text-xs text-gray-400 ml-1">• Joined {{ userinfo_obj.user.date_joined|date:"M, Y" }}</span>
+                    <!-- Location (if available) -->
+                    {% if userinfo_obj.location %}
+                    <div class="text-xs text-gray-400 flex items-center gap-1">
+                        <i class="fa-solid fa-location-dot text-blue-800"></i>
+                        <span>{{userinfo_obj.location}}</span>
+                    </div>
+                    {% endif %}
+                </p>
+
+                <!-- Follow/Edit Button -->
+                <div class='mt-1'>
+                    {% if user == userinfo_obj.user %}
+                        <button class="px-4 py-2 bg-[#6feb85] text-black font-semibold text-sm rounded-md hover:scale-[1.03] transition" onclick="openEdit()">
+                            Edit Profile
+                        </button>
+                    {% else %}
+                        {% if user.info|is_following:userinfo_obj %}
+                            <a href="javascript:void(0);" class="follow-btn px-4 py-2 bg-[#262b34] text-white font-mono text-sm rounded-md hover:scale-[1.03] transition" data-user-id="{{ userinfo_obj.id }}">
+                                <span class="btn-text">&lt;Unfollow/&gt;</span>
+                            </a>
+                        {% else %}
+                            <a href="javascript:void(0);" class="follow-btn px-4 py-2 bg-[#6feb85] text-black font-mono text-sm rounded-md hover:scale-[1.03] transition" data-user-id="{{ userinfo_obj.id }}">
+                                <span class="btn-text">&lt;Follow/&gt;</span>
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+
+                 <!-- Followers / Following Stats -->
+                <div class="flex gap-6 text-sm text-white font-medium border-t mt-3 border-[#1c1f25] pt-4">
+                    <a href= "{% url 'follow_list' userinfo_obj.user.username %}" class="flex items-center gap-1 cursor-pointer">
+                        <span class="text-base font-bold text-[#f4f4f5] followers-count">{{userinfo_obj.get_followers.count}}</span>
+                        <span class="text-gray-400 hover:underline">Followers</span>
+                    </a>
+                    <a href = "{% url 'follow_list' userinfo_obj.user.username%}?list=following" class="flex items-center gap-1  cursor-pointer">
+                        <span class="text-base font-bold text-[#f4f4f5] following-count">{{ userinfo_obj.get_following.count }}</span>
+                        <span class="text-gray-400 hover:underline">Following</span>
+                    </a>
+                </div>
+
+                <!-- Mutual Connections Section (Instagram/LinkedIn Style) -->
+                {% if mutuals_count > 0 %}
+                <div class="mt-4 pb-4 border-b border-[#1c1f25]">
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-sm text-gray-400">
+                            You both Follow
+                            {% if mutuals_preview %}
+                                {% for mutual in mutuals_preview %}
+                                    <a href="{% url 'user_profile' mutual.user.username %}" class="text-white hover:underline font-medium">{{ mutual.user.username }}</a>{% if not forloop.last %}{% if forloop.revcounter == 2 %} and {% else %}, {% endif %}{% endif %}
+                                {% endfor %}
+                                {% if mutuals_count > 3 %}
+                                    + <a href="{% url 'follow_list' userinfo_obj.user.username %}?list=mutuals" class="hover:underline">{{ mutuals_count|add:"-3" }} other{{ mutuals_count|add:"-3"|pluralize }}</a>
+                                {% endif %}
+                            {% endif %}
+                        </p>
+                    </div>
+                    
+                    <!-- Mutual Avatars Preview -->
+                    <div class="flex items-center gap-3">
+                        <div class="flex -space-x-2">
+                            {% for mutual in mutuals_preview %}
+                            <a href="{% url 'user_profile' mutual.user.username %}" class="relative group">
+                                <img src="{{ mutual.profile_image.url }}?v={{ mutual.updated_at.timestamp }}" 
+                                     alt="{{ mutual.user.username }}" 
+                                     class="w-10 h-10 rounded-full border-2 border-[#1a1f2b] object-cover transition-transform group-hover:scale-110 group-hover:z-10"
+                                     title="{{ mutual.user.username }}">
+                            </a>
+                            {% endfor %}
+                        </div>
+                        
+                        <a href="{% url 'follow_list' userinfo_obj.user.username %}?list=mutuals" 
+                           class="text-xs text-green-600 hover:text-green-700 font-semibold transition-colors flex items-center gap-1">
+                            View all {{ mutuals_count }} mutual{{ mutuals_count|pluralize }}
+                            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Coding Style with Inline Edit -->
+                <div class="flex items-center gap-3 mt-2">
+                    {% if userinfo_obj.coding_style.logo %}
+                    <div id="coding-style-badge" class="text-sm px-3 py-2 w-fit rounded-lg bg-[#262b34] text-white shadow-sm border border-[#333] flex items-center gap-2">
+                        <img src="{% static 'assets/coding-style-logo/' %}{{userinfo_obj.coding_style.logo}}" alt="{{userinfo_obj.coding_style.name}}" class="w-5 h-5">
+                        {{userinfo_obj.coding_style.name}}
+                    </div>
+                    {% else %}
+                    <div id="coding-style-badge" class="text-sm px-3 py-1 inline-block w-fit rounded-lg bg-[#262b34]/50 text-gray-400 shadow-sm border border-dashed border-[#333]">
+                        <span class="mr-2"><i class="fa fa-code" aria-hidden="true"></i></span>No coding style selected
+                    </div>
+                    {% endif %}
+                    
+                    {% if request.user.info == userinfo_obj %}
+                    <button onclick="openCodingStyleModal()" class="text-xs text-[#6feb85] hover:text-[#8ff3a0] transition-colors flex items-center gap-1 cursor-pointer">
+                        <i class="fa fa-edit"></i>
+                        <span>Edit</span>
+                    </button>
+                    {% endif %}
+                </div>
+
+                <!-- Status -->
+                <div class="text-sm mt-2 mb-1 text-gray-400 italic">
+                    {{userinfo_obj.status.name}}
+                </div>
+
+                <!-- Social Links -->
+                {% if link_available %}
+                    <p class="text-lg mt-1 font-bold text-gray-200 tracking-wide mb-2">Links</p>
+                    
+                    <div class="flex flex-wrap gap-3 -mt-2">
+                        {% for link, url in social_links.items %}
+                        {% if url %}
+                        <a href="{{ url }}" target="_blank" class="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#a8b3cf] text-[#a8b3cf] font-semibold bg-[#262b34] hover:shadow-md transition-all duration-200 group">
+                            {% if link == "website" %}
+                            <i class="fa fa-globe text-xl group-hover:text-green-700 transition-all"></i>
+                            {% else %}
+                            <i class="text-xl fa-brands fa-{{ link }} group-hover:text-green-700 transition-all"></i>
+                            {% endif %}
+                        </a>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                {% endif %}
+
+            </div>
+        </aside>
+
+
+        <!-- Center Main Content -->
+        <main class="order-2 lg:order-2 w-full lg:w-[52%] mb-12 px-4 lg:px-6 py-6 space-y-6 overflow-y-auto">
+            <!-- Tab Switcher -->
+            <div class="flex flex-wrap gap-4 w-full justify-start lg:mt-6 -mt-1 sm:justify-center">
+            
+                <!-- Active Tab Button -->
+                <a href="?section=overview" 
+                    class="flex items-center gap-2 px-4 py-2.5 rounded-xl {% if section == '' or section == 'overview' or section == none %}text-white bg-gradient-to-br from-green-600 to-green-900{% else %} text-gray-400 bg-[#1a1f29] border border-[#2d323b] hover:text-white hover:border-indigo-400{% endif %} shadow-md transition-all duration-200">
+                    <i class="fa-solid fa-eye text-sm"></i>
+                    <span class="text-sm font-semibold">Overview</span>
+                </a>
+
+                <!-- Inactive Tab Button -->
+                <a href="?section=info" 
+                    class="flex items-center gap-2 px-4 py-2.5 rounded-xl {% if section == 'info' %}text-white bg-gradient-to-br from-green-600 to-green-900{% else %} text-gray-400 bg-[#1a1f29] border border-[#2d323b] hover:text-white hover:border-indigo-400{% endif %} transition-all duration-200">
+                    <i class="fa-solid fa-circle-info text-sm"></i>
+                    <span class="text-sm font-medium">Info</span>
+                </a>
+
+            </div>
+
+        
+            
+            {% if section == "" or section == "overview" or section == none %}
+                <!-- Developer Bio / ReadMe Section -->
+                <section class="border bg-[#11151b] border-[#2d323b] rounded-2xl p-6 shadow-lg">
+                    <h2 class="text-2xl -mt-1 font-thin text-white flex items-center gap-2">
+                        🧠 ReadMe
+                        <span class="text-sm font-normal text-gray-400 hidden sm:inline">(Bio)</span>
+                    </h2>
+                    
+                    {% if userinfo_obj.bio %}
+                        <p class="text-sm text-gray-300 leading-relaxed tracking-wide whitespace-pre-line">
+                        {{ userinfo_obj.bio }}
+                        </p>
+                    {% else %}
+                        <p class="italic text-gray-500">This developer hasn’t written a bio yet.</p>
+                    {% endif %}
+                </section>
+
+                <!-- Log Streak and heat map-->
+                <section class="w-full mb-6 bg-gradient-to-br from-[#0e1217] to-[#1a1f29] border border-[#2d323b] rounded-xl p-4 shadow-md">
+                    <!-- Header -->
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-fire text-orange-500 text-2xl"></i>
+                        <p class="text-white text-lg font-thin uppercase tracking-wider">Logging Streak</p>
+                        </div>
+                    </div>
+
+                    <!-- Streak Stats (Row layout always) -->
+                    <div class="flex flex-row gap-3">
+                        
+                        <!-- Longest Streak Card -->
+                        <div class="flex items-center justify-between bg-[#161b22] border border-[#2d323b] rounded-lg px-3 py-2 w-full hover:border-green-600 transition">
+                        <div>
+                            <p class="text-white text-xl font-bold">{{max_streak_count}}</p>
+                            <p class="text-xs text-gray-400">Longest streak</p>
+                        </div>
+                        <i class="fa-solid fa-fire-flame-curved text-[#00a63e] text-lg"></i>
+                        </div>
+
+                        <!-- Active Streak Card -->
+                        <div class="flex items-center justify-between bg-[#161b22] border border-[#2d323b] rounded-lg px-3 py-2 w-full hover:border-orange-500 transition">
+                        <div>
+                            <p class="text-white text-xl font-bold">{{streak_count}}</p>
+                            <p class="text-xs text-gray-400">Current streak</p>
+                        </div>
+                        <i class="fa-solid fa-bolt text-orange-400 text-lg"></i>
+                        </div>
+                    </div>
+
+                    {% comment %} heat map {% endcomment %}
+                    <div class="bg-[#0d1117] mt-4 rounded-xl shadow-lg w-full relative pb-4">
+
+                        <!-- Sticky Header -->
+                        <div class="sticky top-0 z-30 bg-[#0d1117] rounded-xl px-4 py-3 border-b border-[#161b22] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-md mt-1">
+
+                            <!-- Left Section -->
+                            <div class="flex items-center gap-3 text-white text-xs font-mono tracking-tight">
+                                <span class="text-green-500 font-semibold ">{{ log_year_count }}</span> 
+                                <span class="opacity-70">Logs in</span> 
+                                <span class="text-green-400">{{ year }}</span>
+                            </div>
+
+                            <!-- Right Section -->
+                            <div class="flex flex-wrap items-center text-xs gap-4 text-gray-400">
+
+                                <div class="whitespace-nowrap text-gray-500">
+                                    Active Days: 
+                                    <span class="text-white font-bold">{{ log_map|length }}</span>
+                                </div>
+
+                                <div class="whitespace-nowrap text-gray-500">
+                                    Max Streak: 
+                                    <span class="text-white font-bold">{{ max_streak_count }}</span>
+                                </div>
+
+                                {% if years_available %}
+                                <div class="flex items-center gap-1 whitespace-nowrap">
+                                        <span class="hidden sm:inline">Year:</span>
+                                        <select onchange="location.href='?year=' + this.value"
+                                                class="bg-[#161b22] text-white px-1 py-1 rounded border border-[#30363d] hover:border-green-400 focus:ring-green-500 focus:outline-none transition">
+                                            {% for y in years_available %}
+                                                <option value="{{ y.year }}" {% if y.year == year %}selected{% endif %}>
+                                                    {{ y.year }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div> 
+                                {% endif %}
+                                    
+
+                            </div>
+                        </div>
+
+                        <!-- Tooltip -->
+                        <div id="heatmap-tooltip"
+                            class="fixed bg-[#161b22] text-white text-xs px-3 py-1 rounded shadow-lg pointer-events-none hidden"
+                            style="white-space:nowrap; z-index:50; border:1px solid #2a2f35;">
+                        </div>
+
+                        <!-- Scrollable Heatmap -->
+                        <div id="heatmap-container" class="overflow-x-auto px-4 py-4 mr-4">
+
+                            <div class="flex gap-4 min-w-[900px] mr-2">
+
+                                {% for month_name, weeks in contribution_months %}
+                                    <div class="flex flex-col items-center">
+
+                                        <!-- Month Label -->
+                                        <div class="text-[12px] text-gray-500 font-medium mb-2">{{ month_name }}</div>
+
+                                        <!-- Weeks of this Month -->
+                                        <div class="flex gap-[4px] ">  <!-- Added more right margin for breathing -->
+                                            {% for week in weeks %}
+                                                <div class="flex flex-col gap-[4px]">
+                                                    {% for day in week %}
+                                                        <div class="w-3 h-3 rounded-sm transition duration-200 ease-out cursor-pointer"
+                                                            data-tooltip="{{ day.count }} log{{ day.count|pluralize }} on {{ day.date|date:'j F' }}"
+                                                            style="
+                                                                background-color: 
+                                                                    {% if day.count > 0 %}
+                                                                        {% if day.count <= 2 %} #016620
+                                                                        {% elif day.count <= 5 %} #109932
+                                                                        {% elif day.count <= 10 %} #7fe18b 
+                                                                        {% else %} #6ee7b7
+                                                                        {% endif %}
+                                                                    {% else %}
+                                                                        #151b23
+                                                                    {% endif %}
+                                                            "
+                                                            onmouseover="showTooltip(event)"
+                                                            onmousemove="moveTooltip(event)"
+                                                            onmouseout="hideTooltip()">
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+
+                <section class="w-full bg-gradient-to-br from-[#0e1217] to-[#1a1f29] border border-[#2d323b] rounded-2xl p-6 shadow-xl">
+                    <!-- Section Header -->
+                    <div class="flex items-center gap-2 mb-6">
+                        <div class="w-1.5 h-6 bg-gradient-to-b from-indigo-500 to-purple-700 rounded"></div>
+                        <p class="text-white text-xl font-thin tracking-wide uppercase">Performance</p>
+                    </div>
+
+                    <!-- Grid Layout -->
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-4">
+
+                        <!-- Total Logs -->
+                        <div class="bg-[#13171d] border border-[#2d323b] rounded-lg p-4 hover:shadow-lg hover:border-blue-500 transition duration-200">
+                            <p class="text-gray-400 text-xs mb-1 flex items-center gap-1">
+                                <i class="fa-regular fa-file-lines text-[#a8b3cf] text-xs"></i> Logs Created
+                            </p>
+                            <p class="text-white text-xl font-medium">{{ total_logs }}</p>
+                        </div>
+
+                        <!-- Last Log -->
+                        <div class="bg-[#13171d] border border-[#2d323b] rounded-lg p-4 hover:shadow-lg hover:border-gray-500 transition duration-200">
+                            <p class="text-gray-400 text-xs mb-1 flex items-center gap-1">
+                                <i class="fa-regular fa-clock text-[#a8b3cf] text-xs"></i> Last Log
+                            </p>
+                            <p class="text-white text-base font-medium">{{ last_log_date|date:"M j, Y"|default:"-" }}</p>
+                        </div>
+
+                    </div>
+                    
+                </section>
+
+
+                <section class="w-full border border-gray-800 rounded-2xl px-2 lg:px-4 py-6  transition-all duration-300 ">
+                    <!-- Section Header -->
+                    <div class="flex justify-between items-center mb-4 -mt-2">
+                        <div class="flex items-center gap-2">
+                            <div class="bg-cyan-950/30 p-2 rounded-xl shadow-inner">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6a4 4 0 018 0v6M5 10h14" />
+                                </svg>
+                            </div>
+                            <p class="text-white text-lg lg:text-xl font-thin tracking-wide uppercase">Latest Logs</p>
+                        </div>
+                    </div>
+
+                    <!-- Logs Container -->
+                    {% if recent_logs %}
+                        <div id="log-container" class="flex flex-col gap-4">
+                            {% include 'logs/partials/personal_log_cards.html' with logs=recent_logs %}
+                        </div>
+
+                        <!-- View More Button -->
+                        {% if has_more_logs %}
+                        <div class="mt-6 flex justify-center text-xs">
+                            <button id="load-more-profile-logs" 
+                                    data-username="{{ userinfo_obj.user.username }}" 
+                                    data-cursor="{{ initial_cursor }}"
+                                    class="px-4 py-2.5 bg-[#262b34] text-white font-medium rounded-xl shadow-lg hover:scale-105 hover:shadow-xl transition-transform duration-300">
+                               <i class="fa fa-spinner" aria-hidden="true"></i> &nbsp;More Logs
+                            </button>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <!-- Empty State -->
+                        <div class="w-full py-10 -mt-6 flex flex-col items-center justify-center text-center text-gray-400">
+                            <i class="fa-solid fa-notes-medical text-4xl mb-4 text-gray-600"></i>
+                            <p class="text-lg font-medium">This developer hasn't posted any logs yet.</p>
+                            <p class="text-sm text-gray-500 mt-1">Showcase your grind, journey, and off-work moments — not just progress, but the real developer life.</p>
+                        </div>
+                    {% endif %}
+                </section>
+
+            {% endif %}
+
+            {% comment %} info section {% endcomment %}
+            {% include "myapp/user-info-section.html" %}
+
+        </main>
+
+
+    </div>
+
+    <!-- zooming profile section -->
+    <div id="zoomProfile" class="fixed hidden items-center justify-center  top-0 bottom-0  w-full">
+        <div class="relative">
+            <img src="{{userinfo_obj.profile_image.url}}?v={{userinfo_obj.updated_at.timestamp}}" alt=""
+                class="w-52 h-52 md:w-80 md:h-80 object-cover rounded-3xl border-4 border-[#00000070]">
+            <button
+                class="absolute -right-3 -top-3 md:top-0 md:right-0 rounded-full w-8 h-8 bg-gray-400" onclick="closeProfile()"><i class="fa fa-times text-black font-semibold" aria-hidden="true"></i></button>
+        </div>
+    </div>
+
+
+    {% if user == userinfo_obj.user %}
+    {% include "includes/edit-profile.html" %}
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            $('#mySelect').select2({
+                placeholder: "Select skills you know",
+                allowClear: true,
+                width: '100%',
+            });
+        });
+    </script>
+    <script src="{% static 'scripts/profile.js' %}"></script>
+    {% endif %}
+
+    <script src="{% static 'scripts/mindlogs.js' %}?v=1.3"></script>
+    <script src="{% static 'scripts/log-banner.js' %}"></script>
+
+    {% comment %} flags {% endcomment %}
+    {% if flag.open_editprofile_flag %}
+    <script>
+        // When the page loads, open the experience form
+        document.addEventListener("DOMContentLoaded", function() {
+        openEdit();
+        });
+    </script>
+    {% endif %}
+
+    
+    {% if flag.open_exp_flag %}
+    <script>
+        // When the page loads, open the experience form
+        document.addEventListener("DOMContentLoaded", function() {
+        openEditExp();
+        });
+    </script>
+    {% endif %}
+
+    {% if flag.open_edu_flag %}
+    <script>
+        document.addEventListener("DOMContentLoaded", function(){
+            openEditEducation();
+        });
+    </script>
+    {% endif %}
+
+    <script>
+        // Heatmap tooltip functions - for fixed-position tooltip
+        function showTooltip(event) {
+            const tooltip = document.getElementById('heatmap-tooltip');
+            const tooltipText = event.target.getAttribute('data-tooltip');
+            if (tooltip && tooltipText) {
+                tooltip.textContent = tooltipText;
+                tooltip.classList.remove('hidden');
+                moveTooltip(event);
+            }
+        }
+
+        function moveTooltip(event) {
+            const tooltip = document.getElementById('heatmap-tooltip');
+            if (!tooltip) return;
+            
+            // Get tooltip dimensions (need to make visible first to measure)
+            const tooltipRect = tooltip.getBoundingClientRect();
+            const tooltipWidth = tooltipRect.width;
+            const tooltipHeight = tooltipRect.height;
+            
+            // Get viewport dimensions
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            
+            // For fixed positioning, use clientX/clientY directly (viewport coordinates)
+            // Default position: above cursor, slightly to the right
+            let left = event.clientX + 10;
+            let top = event.clientY - tooltipHeight - 10;
+            
+            // Adjust horizontal position if tooltip goes off-screen right
+            if (left + tooltipWidth > viewportWidth) {
+                // Position to the left of cursor
+                left = event.clientX - tooltipWidth - 10;
+            }
+            
+            // Adjust horizontal if still off-screen left
+            if (left < 10) {
+                left = 10;
+            }
+            
+            // Adjust vertical position if tooltip goes above viewport
+            if (top < 10) {
+                // Position below cursor
+                top = event.clientY + 20;
+            }
+            
+            // Adjust vertical if goes off bottom
+            if (top + tooltipHeight > viewportHeight) {
+                top = event.clientY - tooltipHeight - 10;
+            }
+            
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = top + 'px';
+        }
+
+        function hideTooltip() {
+            const tooltip = document.getElementById('heatmap-tooltip');
+            if (tooltip) {
+                tooltip.classList.add('hidden');
+            }
+        }
+    </script>
+
+
+<!-- Coding Style Modal -->
+{% if request.user.info == userinfo_obj %}
+<div id="coding-style-modal" class="hidden fixed inset-0 bg-[#0d1117]/80 backdrop-blur-sm z-50 flex items-center justify-center p-0 md:p-4">
+    <div class="bg-[#0d1117] border-0 md:border md:border-[#30363d] rounded-none md:rounded-2xl w-full h-full md:h-auto md:max-h-[85vh] max-w-5xl overflow-hidden flex flex-col shadow-2xl">
+        <!-- Header -->
+        <div class="hidden md:flex items-center justify-between p-2 md:p-4 border-b border-[#30363d] bg-[#161b22]">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-[#262b34] flex items-center justify-center border border-[#a8b3cf]">
+                    <span class="text-xl"></span><i class="fa fa-code text-#a8b3cf" aria-hidden="true"></i></span>
+                </div>
+                
+                <p class="text-xl font-mono text-[#c9d1d9]">Choose Coding Style</p>
+                
+            </div>
+            <button onclick="closeCodingStyleModal()" class="text-[#8b949e] hover:text-[#58a6ff] transition-colors p-2 hover:bg-[#1f6feb]/10 rounded-lg">
+                <i class="fa fa-times text-xl"></i>
+            </button>
+        </div>
+        
+        <!-- Content -->
+        <div class="flex-1 overflow-hidden font-mono flex flex-col md:flex-row bg-[#0d1117]">
+            <!-- Styles Grid (Left) -->
+            <div class="flex-1 p-4 md:p-6 overflow-y-auto custom-scrollbar min-h-0">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xs font-semibold text-[#8b949e] uppercase tracking-wider mb-4">Available Styles</h3>
+                    <button onclick="closeCodingStyleModal()" class="md:hidden text-[#8b949e] transition-colors p-2 hover:bg-[#1f6feb]/10 rounded-lg">
+                        <i class="fa fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div id="styles-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+            
+            <!-- Detail Panel (Right) -->
+            <div class="w-full md:w-80 bg-[#161b22] border-t md:border-t-0 md:border-l border-[#30363d] p-6 flex flex-col shrink-0 z-10">
+                <div class="flex-1 flex flex-col items-center justify-center md:justify-start">
+                    <div class="flex items-center justify-center w-24 h-24 mx-auto mb-4 rounded-full bg-[#0d1117] border border-[#30363d] shadow-sm">
+                        <img id="detail-logo" src="" alt="Style Logo" class="w-16 h-16 object-contain">
+                    </div>
+                    <h3 id="detail-name" class="text-xl font-bold text-[#c9d1d9] text-center mb-4">Coffee Coder</h3>
+                    <div class="bg-[#0d1117] rounded-lg p-4 border border-[#30363d] w-full">
+                        <p class="text-xs font-semibold text-[#8b949e] uppercase tracking-wider mb-2">Description</p>
+                        <p id="detail-description" class="text-sm text-[#c9d1d9] leading-relaxed whitespace-pre-wrap">Loading...</p>
+                    </div>
+                </div>
+                <button id="select-style-btn" onclick="selectCodingStyle()" data-style-id="" class="mt-6 w-full bg-[#238636] text-white px-6 py-3 rounded-md font-semibold hover:bg-[#2ea043] transition-all duration-200 border border-[rgba(240,246,252,0.1)] shadow-sm">
+                    Select Style
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

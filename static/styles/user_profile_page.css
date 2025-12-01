@@ -27,35 +27,6 @@ progress::-webkit-progress-value {
     display: none;
 }
 
-.fl-btn[data-active="true"]{
-    color: white;
-    font-weight: bold;
-    background-color: black;
-    padding: 0.25rem 0.5rem; /* px-2 py-1 */
-    border-radius: 0.375rem; /* rounded-md */
-    transition: background-color 0.2s, color 0.2s;
-}
-
-.fl-btn:hover {
-    background-color: white;
-    color: black;
-}
-
-
-.fl-btn[data-active="false"] {
-    color: #686868;
-    font-weight: bold;
-    padding: 0.25rem 0.5rem; /* px-2 py-1 */
-    border-radius: 0.375rem; /* rounded-md */
-    transition: background-color 0.2s, color 0.2s;
-}
-
-/* 
-.fl-btn[data-active="true"]:hover {
-    background-color: white;
-    color: black;
-} */
-
 /* profile-page */
 
 /* editprofileform */

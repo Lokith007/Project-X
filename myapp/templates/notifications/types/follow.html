@@ -1,0 +1,20 @@
+{% load static %}
+
+{# Follow notification - Spacious #}
+<div class="flex items-center flex-wrap gap-2">
+    <a href="{% url 'user_profile' notification.actor.user.username %}" 
+       class="font-semibold text-[#e6edf3] hover:text-[#58a6ff] hover:underline transition-colors"
+       onclick="event.stopPropagation();">
+        {{ notification.actor.user.username }}
+    </a>
+    <span class="text-[#7d8590]">started following you</span>
+    
+    {% if notification.actor.coding_style %}
+    <div class="flex items-center gap-1.5 ml-1 opacity-80">
+        <span class="w-1 h-1 rounded-full bg-[#30363d]"></span>
+        <img src="{% static 'assets/coding-style-logo/' %}{{ notification.actor.coding_style.logo }}" 
+             alt="" class="w-3.5 h-3.5 opacity-70 grayscale">
+        <span class="text-xs text-[#7d8590]">{{ notification.actor.coding_style.name }}</span>
+    </div>
+    {% endif %}
+</div>

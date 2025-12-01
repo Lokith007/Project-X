@@ -1,18 +1,19 @@
-import base64, time
+from django.views.decorators.http import require_POST
+import base64
 from django.core.files.base import ContentFile
 from django.utils import timezone
 from django.utils.timezone import now, localtime
 from datetime import timedelta
-from django.db.models import F
+from django.db.models import F, Avg
 from django.http import Http404, HttpResponse, HttpResponseNotAllowed, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth import login,logout,authenticate
 from django.urls import reverse, reverse_lazy
 from django.views import View
-from .forms import RegistrationForm, EditProfileForm,OrganizationForm, EditEducationForm, EditExperienceForm, PostForm, UserProjectForm, EditSkillForm, EditCurrentPositionForm, EditOrgForm, Postsignup_infoForm
-from mindlogs.forms import MindLogForm
+from .forms import RegistrationForm, EditProfileForm, EditEducationForm, EditExperienceForm, EditSkillForm, Postsignup_infoForm
+from logs.forms import LogForm
 from django.contrib.auth.models import User
-from .models import userinfo, projects, Domain, skill, project_comment, project_reply, user_status, organization, SavedItem, education, post, post_comments, user_project, event, current_position, event_comment, event_reply, experience, Notification, Industry, follow
+from .models import userinfo, user_status, education, experience, CodingStyle
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, PageNotAnInteger
 from django.db.models import Q
@@ -21,8 +22,12 @@ from itertools import groupby
 from .algorithms import get_explore_users, get_personalized_feed, top_skills_list
 from allauth.account.views import PasswordChangeView
 from django.contrib import messages
-from .utils import send_notification_email, verified_user_ids
-from mindlogs.utils import get_24h_mindlog_stats
+from datetime import date, timedelta
+
+#Logs
+from logs.models import Log
+from logs.views import build_contribution_months
+from logs.utils.streaks import streak_calculation, calculate_max_streak
 
 # Create your views here.
 class CustomPasswordChangeView(PasswordChangeView):
@@ -50,9 +55,8 @@ class sign_up(View):
         if form.is_valid():
             user = form.save()
             userinfo.objects.create(user=user)
-            current_position.objects.create(user = user.info)
             education.objects.create(user = user.info)
-            SavedItem.objects.create(user = user.info)
+            # SavedItem creation removed in MindLog pivot
             # user.save()
             
             username = form.cleaned_data.get("username") #Authenticate the user:
@@ -120,32 +124,34 @@ def contribute_page(request):
 def feedback_page(request):
     return render(request, 'myapp/feedback.html')
 
-# @login_required
-def index(request):
+def home_page(request):
     if not request.user.is_authenticated:
         return render(request, 'myapp/landing_page.html')
     
     if request.user.info.needs_profile_completion:
         return redirect('signup_about', uuid=request.user.info.uuid)
-    type = request.GET.get('feed', "all")
-    page = 1 
-    feed_page = get_personalized_feed(request, type=type, page=page, per_page=7)
-    followed_orgs = request.user.info.followed_organization.all() | request.user.organization.all()
-    followed_orgs = followed_orgs.distinct() 
-    tot_upcoming_events = event.objects.filter(organization__in=followed_orgs, start_date__gte=timezone.now()).count()
-    post_form = PostForm()
-    logform = MindLogForm()
-    mindlog_obj = get_24h_mindlog_stats()
+    
+    # Get feed type from query params
+    feed_type = request.GET.get('feed', 'network')
+    
+    # Fetch personalized feed
+    from .algorithms import get_personalized_feed
+    feed_items = get_personalized_feed(request, type=feed_type, page=1, per_page=20)
+    
+    # Fetch trending logs (What's Hot Now)
+    from logs.utils.trending import get_trending_logs
+    trending_logs = get_trending_logs(limit=5, hours=24)
+    
+    logform = LogForm()
     context = {
-        'active_home': "px-5 py-1 -ml-5 text-lg text-black font-semibold bg-[#0000002a] rounded-xl w-[calc(100%+1.25rem)]",
-        'post_form': post_form,
         'logform': logform,
-        'feed_items': feed_page,
-        'tot_upcoming_events': tot_upcoming_events,
-        'mindlog_obj': mindlog_obj,
-        'type': type,
+        'feed_items': feed_items,
+        'feed_type': feed_type,
+        'trending_logs': trending_logs,
     }
-    return render(request, 'myapp/index.html', context) 
+
+    # User is authenticated and profile is complete
+    return render(request, 'myapp/home.html', context)
 
 @login_required
 def load_more_feed(request):
@@ -167,54 +173,56 @@ def load_more_feed(request):
     })
 
 @login_required
-def notification_page(request):
-    post_form = PostForm()
-    base_notifications = Notification.objects.filter(user=request.user.info).order_by('-created_at')
-    unread_count = base_notifications.filter(is_read=False).count()
-    notifications = base_notifications[:70]
-    # Group notifications by time
-    today = localtime(now()).date()
-    yesterday = today - timedelta(days=1)
-    week_ago = today - timedelta(days=7)
-
-    grouped_notifications = {
-        "Today": [],
-        "Yesterday": [],
-        "This Week": [],
-        "Older": []
-    }
-
-    for notification in notifications:
-        notification_date = localtime(notification.created_at).date()
-
-        if notification_date == today:
-            grouped_notifications["Today"].append(notification)
-        elif notification_date == yesterday:
-            grouped_notifications["Yesterday"].append(notification)
-        elif notification_date >= week_ago:
-            grouped_notifications["This Week"].append(notification)
-        else:
-            grouped_notifications["Older"].append(notification)
-                  
-    # Mark unread notifications as read after viewing 
-    Notification.objects.filter(user=request.user.info, is_read=False).update(is_read=True)
+def view_log_in_feed(request, log_sig):
+    """
+    Display a specific log in the home feed with highlighting
+    Routes from notifications and trending logs to show the target log in feed context
+    """
+    from logs.models import Log
+    from logs.utils.trending import get_trending_logs
+    
+    # Get the target log
+    try:
+        target_log = Log.objects.select_related('user__user').get(sig=log_sig)
+    except Log.DoesNotExist:
+        # Fallback to regular home page if log doesn't exist
+        return redirect('index')
+    
+    # Get feed type and source from query params
+    feed_type = request.GET.get('feed', 'network')
+    source = request.GET.get('from', 'notification')  # 'notification' or 'trending'
+    
+    # Fetch personalized feed
+    from .algorithms import get_personalized_feed
+    feed_items = get_personalized_feed(request, type=feed_type, page=1, per_page=20)
+    
+    # Check if target log is in feed, if not prepend it
+    log_in_feed = any(item.id == target_log.id for item in feed_items)
+    if not log_in_feed:
+        # Prepend target log and limit to 20 total items
+        feed_items = [target_log] + list(feed_items)[:19]
+    
+    # Fetch trending logs
+    trending_logs = get_trending_logs(limit=5, hours=24)
+    
+    logform = LogForm()
     context = {
-        "grouped_notifications": grouped_notifications,
-        "post_form": post_form,
-        'notification_count': unread_count
+        'logform': logform,
+        'feed_items': feed_items,
+        'feed_type': feed_type,
+        'trending_logs': trending_logs,
+        'highlighted_log_sig': log_sig,  # Pass to template for highlighting
+        'source': source,  # 'notification' or 'trending'
+        'active_home': True,
     }
-    return render(request, 'myapp/notification.html', context)
-
-@login_required
-def get_notification_count(request):
-    unread_count = Notification.objects.filter(user=request.user.info, is_read=False).count()
-    return JsonResponse({"unread_count": unread_count})
+    
+    return render(request, 'myapp/home.html', context)
 
 #profile-page
 @login_required
 def user_profile(request, user_name):
     userinfo_obj = get_object_or_404(userinfo, user__username = user_name)
-    user_project = user_created_project = post_qs= link_available = open_exp_flag = open_edu_flag = open_editprofile_flag = open_project_flag = open_cp_flag =editprofile_form = edu_form = exp_form = project_form = skill_form = cp_form = False
+    link_available = open_exp_flag = open_edu_flag = open_editprofile_flag =editprofile_form = edu_form = exp_form = skill_form  = False
     social_links = { 
     'github': userinfo_obj.github if userinfo_obj.github else None,
     'linkedin': userinfo_obj.linkedin if userinfo_obj.linkedin else None,
@@ -225,39 +233,92 @@ def user_profile(request, user_name):
         link_available = True
     skill_list = userinfo_obj.skills.all()
     exp_obj = userinfo_obj.experiences.all().order_by('-start_date')
-    post_form = PostForm()
+    
+    #streak and other logs calculations
+    logs = Log.objects.filter(user = userinfo_obj).order_by("-timestamp")
+    
+    # Paginate recent logs (first 10 for initial load)
+    logs_paginator = Paginator(logs, 10)
+    recent_logs_page = logs_paginator.page(1)
+    recent_logs = list(recent_logs_page.object_list)
+    has_more_logs = recent_logs_page.has_next()
+    
+    # Get cursor for pagination (last log's timestamp)
+    initial_cursor = recent_logs[-1].timestamp.isoformat() if recent_logs else None
+    
+    total_logs = logs.count()
+    last_log_date = timezone.localtime(logs.first().timestamp).date() if total_logs else None
+    
+    
+    streak_count = streak_calculation(logs, userinfo_obj.user)
+    max_streak_count = calculate_max_streak(logs)
+    
+    year = int(request.GET.get('year', timezone.now().year))
+    
+    # Get user's timezone for accurate date conversion
+    from myapp.timezone_utils import get_user_timezone
+    import pytz
+    user_tz = get_user_timezone(userinfo_obj.user)
+    
+    # Optimized: Use database aggregation with timezone conversion
+    from django.db.models.functions import TruncDate
+    from django.db.models import Count
+    
+    # Aggregate logs by date at database level, converting to user's timezone
+    log_heat_map = logs.filter(
+        timestamp__year=year
+    ).annotate(
+        log_date=TruncDate('timestamp', tzinfo=user_tz)
+    ).values('log_date').annotate(
+        count=Count('id')
+    ).order_by('log_date')
+    
+    # Build efficient lookup dict
+    log_map = {item['log_date'].strftime('%Y-%m-%d'): item['count'] 
+               for item in log_heat_map}
+
+    # Prepare full 1-year grid
+    start_date = date(year, 1, 1)
+    end_date = date(year, 12, 31)
+    total_days = (end_date - start_date).days + 1
+
+    contribution_days = []
+    for i in range(total_days):
+        current_day = start_date + timedelta(days=i)
+        contribution_days.append({
+            'date': current_day,  # Pass date object, not string
+            'date_str': current_day.strftime('%Y-%m-%d'),  # Keep string for lookup
+            'count': log_map.get(current_day.strftime('%Y-%m-%d'), 0)
+        })
+        
+    contribution_months = build_contribution_months(contribution_days)
+    log_year_count =  sum(log_map.values())
+    years_available = logs.dates('timestamp', 'year')
+    
+    #latest 5 logs 
+    recent_logs = logs[:5]
     
     section = request.GET.get('section', 'overview') 
-    if section == 'projects':
-        project = request.GET.get('project')
-        if project == 'created':
-            user_created_project = userinfo_obj.created_projects.all()
-        else:
-            user_project = userinfo_obj.projects.all().order_by('-start_date')
-            if not user_project and userinfo_obj.created_projects.all():
-                redirect_url = reverse("user_profile", args=[userinfo_obj.user.username])
-                return redirect(f'{redirect_url}?section=projects&project=created')
-        
-    if section == 'posts':
-        post_qs = post.objects.filter(user = userinfo_obj).order_by('-created_at')
+    print(section)
     
     is_following = request.user.info.is_following(userinfo_obj)
-    # Suggested Project
-    suggested_project = projects.objects.filter(skill_needed__in = request.user.info.skills.all()).distinct().order_by('-created_at')[:5]
-    if not suggested_project:
-        suggested_project = projects.objects.all().order_by('-created_at')[:5] #For user, with no skill    
+    
+    # Calculate mutual count efficiently (only for authenticated users viewing other profiles)
+    if request.user.is_authenticated and request.user != userinfo_obj.user:
+        my_following_ids = request.user.info.get_following().values_list('id', flat=True)
+        mutuals_queryset = userinfo_obj.get_following().filter(id__in=my_following_ids)
+        mutuals_count = mutuals_queryset.count()
+        # Fetch first 3 mutual connections for preview display (Instagram/LinkedIn style)
+        mutuals_preview = list(mutuals_queryset[:3])
+    else:
+        mutuals_count = 0
+        mutuals_preview = []
+    
     if request.user.info == userinfo_obj: #Edit options
         edu_form = EditEducationForm(instance=request.user.info.education)
         exp_form = EditExperienceForm()
         editprofile_form = EditProfileForm(instance=request.user.info)
-        project_form = UserProjectForm()
         skill_form = EditSkillForm(instance=request.user.info)
-        cp_form = EditCurrentPositionForm(instance=request.user.info.current_position)
-    else:
-        session_key = f'user_viewed_{user_name}'
-        if not request.session.get(session_key, False):
-            userinfo.objects.filter(user__username=user_name).update(profile_views=F('profile_views') + 1)
-            request.session[session_key] = True
         
     if request.method == 'POST' and userinfo_obj == request.user.info:
         form_type = request.POST.get('form_type')
@@ -283,12 +344,22 @@ def user_profile(request, user_name):
                 request.user.info.education.delete()
                 education.objects.create(user = request.user.info)
                 redirect_url = reverse("user_profile", args=[request.user.username])
-                return redirect(f"{redirect_url}")
+                return redirect(f"{redirect_url}?section=info")
                 
         elif form_type == 'editprofile':
             editprofile_form = EditProfileForm(request.POST, request.FILES, instance = request.user.info)
             if editprofile_form.is_valid():
                 userinfo_obj = editprofile_form.save(commit=False)
+                
+                # Extract and save location data
+                city = request.POST.get('city')
+                state = request.POST.get('state')
+                country = request.POST.get('country')
+                
+                if city: userinfo_obj.city = city
+                if state: userinfo_obj.state = state
+                if country: userinfo_obj.country = country
+                
                 cropped_image_data = request.POST.get('croppedImage', '')
                 if cropped_image_data:
                     try:
@@ -305,36 +376,12 @@ def user_profile(request, user_name):
                 return redirect(redirect_url)
             else:
                 open_editprofile_flag = True
-        elif form_type == 'project':
-            project_form = UserProjectForm(request.POST, request.FILES)
-            if project_form.is_valid():
-                form = project_form.save(commit=False)
-                form.user = request.user.info
-                form.save()
-                project_form = UserProjectForm()
-                redirect_url = reverse('user_profile', args=[request.user.username])
-                return redirect(f'{redirect_url}?section=projects')
-            else:
-                open_project_flag = True
-        elif form_type ==  'current_position':
-            action = request.POST.get('action')
-            if action == 'save':
-                cp_form = EditCurrentPositionForm(request.POST, instance=request.user.info.current_position)
-                if cp_form.is_valid():
-                    form = cp_form.save()       
-                else: 
-                    open_cp_flag = True   
-            elif action == 'delete':
-                request.user.info.current_position.delete()
-                current_position.objects.create(user = request.user.info)
-                redirect_url = reverse("user_profile", args=[request.user.username])
-                return redirect(f"{redirect_url}")
         elif form_type == 'skill':
             skill_form = EditSkillForm(request.POST, instance=request.user.info)
             if skill_form.is_valid():
                 skill_form.save()
                 redirect_url = reverse('user_profile', args=[request.user.username])
-                return redirect(f'{redirect_url}')  
+                return redirect(f'{redirect_url}?section=info')  
                 
     context = {
         'userinfo_obj': userinfo_obj,
@@ -342,27 +389,31 @@ def user_profile(request, user_name):
         'link_available': link_available,
         'exp_obj': exp_obj,
         'section': section,
-        'color': {
-            'active':"bg-black px-2 md:px-4 py-2 cursor-pointer rounded-md text-white font-bold hover:bg-[white] transition hover:text-black",
-            'normal':"px-2 py-2 rounded-md cursor-pointer md:px-2 hover:bg-[white] transition"
-            },
         'is_following': is_following,
-        'user_project': user_project,
-        'user_created_project': user_created_project,
-        'post_qs': post_qs,
-        'suggested_project': suggested_project,
+        'mutuals_count': mutuals_count,
+        'mutuals_preview': mutuals_preview,
         'ep_form': editprofile_form,
         'edu_form': edu_form,
         'exp_form': exp_form,
-        'post_form': post_form,
         'skill_form': skill_form,
-        'project_form': project_form,
-        'cp_form': cp_form,
         'skill_list': skill_list,
         'profile_type': 'user',
-        'flag': {'open_edu_flag': open_edu_flag, 'open_exp_flag': open_exp_flag, 'open_editprofile_flag': open_editprofile_flag, 'open_project_flag': open_project_flag, 'open_cp_flag': open_cp_flag}
+        'flag': {'open_edu_flag': open_edu_flag, 'open_exp_flag': open_exp_flag, 'open_editprofile_flag': open_editprofile_flag},
+
+        'streak_count': streak_count,
+        'max_streak_count': max_streak_count,
+        'log_map': dict(log_map),
+        'year': year,
+        'years_available': years_available,
+        'contribution_months': contribution_months,
+        'log_year_count': log_year_count,
+        'total_logs': total_logs,
+        'last_log_date': last_log_date,
+        'recent_logs': recent_logs,
+        'has_more_logs': has_more_logs,
+        'initial_cursor': initial_cursor,
     }
-    return render(request, 'myapp/user-profile_1.html', context)
+    return render(request, 'myapp/user_profile_v2.html', context)
 
 #follow request:
 @login_required
@@ -371,9 +422,6 @@ def unfollow_user(request, otheruserinfo_id):
     user = request.user.info
     if user != otheruser:
         user.unfollow(otheruser)
-        Notify_obj = Notification.objects.filter(user=otheruser, sender=user, notification_type="follow")
-        if Notify_obj:  
-            Notify_obj.delete()
         return JsonResponse({"status": "unfollowed", "message": "User unfollowed Successfully.", 'followers_count': otheruser.get_followers().count(), 'following_count': otheruser.get_following().count()})
     return JsonResponse({"status":"error", "message": "Invalid request."}, status = 400)
 
@@ -383,688 +431,270 @@ def follow_user(request, otheruserinfo_id):
     user = request.user.info
     if user != otheruser:
         user.follow(otheruser)
-        notify = Notification.objects.create(user=otheruser, sender=user, notification_type="follow")
-        send_notification_email(otheruser, f'🧑‍💻 {user.user.username} {notify.get_notification_type_display()}!')
         return JsonResponse({"status": "followed", "message": "User followed successfully.", 'followers_count': otheruser.get_followers().count(), 'following_count': otheruser.get_following().count()})
     return JsonResponse({"status": "error", "message": "Invalid request."}, status=400)
     
 @login_required
 def follow_list(request, username):
         userinfo_obj = userinfo.objects.get(user__username = username) #user-profile list
-        post_form = PostForm()
         l = request.GET.get('list')
         grp = False
         if l == None:
             return HttpResponseRedirect(f'{request.path}?list=followers')
+        
+        # Pre-calculate following IDs for mutuals check (lazy queryset)
+        # Using 'id' (userinfo PK) is cleaner than 'user__id'
+        is_self = request.user == userinfo_obj.user
+        my_following_ids = []
+        if not is_self:
+            my_following_ids = request.user.info.get_following().values_list('id', flat=True)
+
         if l == 'followers':
             list = userinfo_obj.get_followers()
         elif l == 'following':   
             list = userinfo_obj.get_following()
-        elif l == 'org':
-            list = userinfo_obj.followed_organization.all()[::-1]
-            print(list)
-            grp = True
-        
-        if request.user.info.skills.all():
-            suggested_project = projects.objects.filter(skill_needed__in = request.user.info.skills.all()).distinct().order_by('-created_at')[:5]
+        elif l == 'mutuals':
+            if is_self:
+                list = userinfo.objects.none()
+            else:
+                # Get users that userinfo_obj follows AND are in my_following_ids
+                list = userinfo_obj.get_following().filter(id__in=my_following_ids)
         else:
-            suggested_project = projects.objects.all()[:5] #For user, with no skill
-            
+            # Invalid list type, default to followers
+            return HttpResponseRedirect(f'{request.path}?list=followers')
+        
         print(list)
-        p = Paginator(list, 20)
+        p = Paginator(list, 25)
         page_number = request.GET.get('page')
         page_obj = p.get_page(page_number)
+        
+        # Calculate counts for context
+        followers_count = userinfo_obj.get_followers().count()
+        following_count = userinfo_obj.get_following().count()
+        
+        if is_self:
+            mutuals_count = 0
+        else:
+            mutuals_count = userinfo_obj.get_following().filter(id__in=my_following_ids).count()
+
         context = {
             'userinfo_obj': userinfo_obj,
             'user_list': page_obj,
             'l': l,
             'grp': grp,
-            'suggested_project': suggested_project,
-            'post_form': post_form,
+            'followers_count': followers_count,
+            'following_count': following_count,
+            'mutuals_count': mutuals_count,
+            'is_self': is_self,
         }
         
         return render(request, 'myapp/followList.html', context)
-    
-# Organization
-@login_required
-def create_organization(request):
-    if request.method == "POST":
-        form = OrganizationForm(request.POST, request.FILES)
-        if form.is_valid():
-            org = form.save(commit=False)
-            org.user = request.user
-            org.save()
-            return redirect('organization_detail', id=org.id)
-    else:
-        form = OrganizationForm()      
-    context  = {'form': form}
-    return render(request, 'myapp/create-org.html', context)  
-        
-@login_required
-def explore_organization(request):
-    
-    type_filter = request.GET.get('type', '').strip()  #string
-    industry_filter = request.GET.get('industry', '').strip()   #industry 
-    query = request.GET.get('q', '').strip()
-    
-    filter_conditions = {}
-    if industry_filter:
-        filter_conditions["industry__id"] = industry_filter
-    if type_filter:
-        filter_conditions["organization_type"] = type_filter
-        
-    filtered_org = organization.objects.filter(**filter_conditions).order_by('-created_at')
-    
-    if query:
-        filtered_org = filtered_org.filter(
-            Q(name__icontains=query) |  
-            Q(organization_type__icontains=query) |  
-            Q(industry__name__icontains=query) |  
-            Q(description__icontains=query) | 
-            Q(location__icontains=query) 
-        ).distinct()
-        
-    applied_filter = bool(type_filter or industry_filter)
-    
-    if not (applied_filter or query):
-        filtered_org = filtered_org[:20]
-    
-    p = Paginator(filtered_org, 20)
-    page_number = request.GET.get("page")
-    try:
-        page_obj = p.get_page(page_number)  # returns the desired page object
-    except PageNotAnInteger:
-        page_obj = p.page(1)
-    
-    result_count = filtered_org.count()
-    post_form = PostForm()
-    industries = Industry.objects.all().exclude(name__iexact="Other")
-    types = organization.get_organization_type_filters
-    
-    context = {
-        'filtered_org': page_obj,
-        'post_form': post_form,
-        'active_explore': "px-5 py-1 -ml-5 text-lg text-black font-semibold bg-[#0000002a] rounded-xl w-[calc(100%+1.25rem)]",
-        'result_count': result_count,
-        'query': query,
-        'applied_filter': applied_filter,
-        'types': types,
-        'industries': industries
-    } 
-    return render(request, 'myapp/explore-organization.html', context)
-
-@login_required
-def manage_organization(request):
-    org_list = request.user.organization.all()
-    post_form = PostForm()
-    if request.method == 'POST':
-        action = request.POST.get('action')
-        if action == 'delete_org':
-            org_obj = get_object_or_404(organization, id = request.POST.get('org_id'))
-            if org_obj.user == request.user:
-                org_obj.delete()    
-    context = {
-        'org_list': org_list,
-        'post_form' : post_form,
-        'manage_org_page': True
-    }
-    return render(request, 'myapp/manage_organization.html', context)
-        
-@login_required
-def organization_detail(request, id):
-    organization_obj = get_object_or_404(organization, id = id)
-    org_post = org_events= link_available = orgForm = editOrg_flag = False
-    post_form = PostForm()
-    section = request.GET.get('section', 'overview') 
-    
-    session_key = f'org_viewed_{id}'
-    has_viewed = request.session.get(session_key, False)
-
-    if not has_viewed and getattr(organization_obj, 'user', None) != request.user:
-        if organization_obj.followers.filter(id=request.user.info.id).exists():
-            organization.objects.filter(id=id).update(
-                profile_views_followers=F('profile_views_followers') + 1
-            )
-        else:
-            organization.objects.filter(id=id).update(
-                profile_views_nonfollowers=F('profile_views_nonfollowers') + 1
-            )
-        request.session[session_key] = True  # Mark as viewed in this session
-    social_links = { 
-        'github': organization_obj.github if organization_obj.github else None,
-        'linkedin': organization_obj.linkedin if organization_obj.linkedin else None,
-        'x-twitter': organization_obj.twitter if organization_obj.twitter else None,
-        'discord': organization_obj.discord if organization_obj.discord else None,
-        'instagram': organization_obj.instagram if organization_obj.instagram else None
-    }
-    print(social_links)
-    suggested_org = organization.objects.filter(industry=organization_obj.industry, organization_type=organization_obj.organization_type).exclude(Q(id=organization_obj.id) | Q(user=request.user) | Q(followers=request.user.info)).order_by('?')[:5]
-    # suggested_org = organization.objects.all()
-    if social_links.get('github') or social_links.get('linkedin') or social_links.get('x-twitter') or social_links.get('discord') or social_links.get('instagram'):
-            link_available = True
-            
-    if section == 'posts':
-        org_post = post.objects.filter(Organization = organization_obj).order_by('-created_at')
-        
-    if section == 'events':
-        org_events = event.objects.filter(organization = organization_obj).order_by('-created_at')
-        
-    if organization_obj.user == request.user:
-        orgForm = EditOrgForm(instance=organization_obj)
-        
-    if request.method == "POST" and organization_obj.user == request.user:
-        orgForm = EditOrgForm(request.POST, request.FILES, instance=organization_obj)   
-        if orgForm.is_valid():
-            org_obj = orgForm.save(commit=False)
-            cropped_image_data = request.POST.get('croppedImage', '')
-            if cropped_image_data:
-                try:
-                    format, imgstr = cropped_image_data.split(';base64,')
-                    ext = format.split('/')[-1]
-                    image_data = base64.b64decode(imgstr)
-                    file_name = f"{org_obj.name}_profile.{ext}"
-                    org_obj.logo = ContentFile(image_data, name=file_name)
-                except (ValueError, base64.binascii.Error):
-                    orgForm.add_error(None, "Invalid image data. Please upload a valid image.")
-                    editOrg_flag = True
-            org_obj.save()
-            reverse_url = reverse('organization_detail', args=[organization_obj.id])
-            return redirect(reverse_url) 
-        else:
-            print("Validation errors:", orgForm.errors)
-            editOrg_flag = True
-    context = {
-        'organization': organization_obj,
-        'section': section,
-        'social_links': social_links,
-        'link_available': link_available,
-        'org_post': org_post,
-        'org_events': org_events,
-        'color_active' : "bg-black text-white font-bold",
-        'suggested_org': suggested_org,
-        'post_form': post_form,
-        'profile_type': 'organization',
-        'EditOrgForm': orgForm,
-        'open_editOrg_flag': editOrg_flag
-    }
-    return render(request, 'myapp/organization-profile.html', context)
-
-@login_required
-def org_follow_list(request, org_id):
-    org = get_object_or_404(organization, id = org_id)
-    list = org.get_followers()
-    print(list)
-    post_form = PostForm()
-    if request.user.info.skills.all():
-            suggested_project = projects.objects.filter(skill_needed__in = request.user.info.skills.all()).distinct().order_by('-created_at')[:5]
-    else:
-        suggested_project = projects.objects.all()[:5] #For user, with no skill
-    print(list)
-    p = Paginator(list, 25)
-    page_number = request.GET.get('page')
-    page_obj = p.get_page(page_number)
-    context = {
-        'org': org,
-        'user_list': page_obj,
-        'suggested_project': suggested_project,
-        'post_form': post_form
-    }
-    return render(request, 'myapp/org-followlist.html', context)
-
-
-@login_required
-def follow_organization(request, organization_id):
-    try:
-        org = organization.objects.get(id=organization_id)
-        user_info = request.user.info 
-        if user_info not in org.followers.all() and user_info != org.user.info:
-            org.followers.add(user_info)
-            Notification.objects.create(user=org.user.info, sender=user_info, notification_type='follow', organization=org)
-            send_notification_email(org.user.info, f'🧑‍💻 {user_info.user.username} Started Following {org.name}')
-            return JsonResponse({'status': 'followed', 'action': 'follow', 'message': 'You are now following this organization.', 'followers_count': org.get_followers().count()})
-        else:
-            return JsonResponse({'status': 'error', 'message': 'You are already following this organization.'}, status=400)
-    except org.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Organization not found.'}, status=404)
-    
-@login_required
-def unfollow_organization(request, organization_id):
-    try:
-        org = organization.objects.get(id=organization_id)
-        user_info = request.user.info
-        if user_info in org.followers.all() and user_info != org.user.info:
-            org.followers.remove(user_info)
-            notify_obj = Notification.objects.filter(user=org.user.info, sender=user_info, notification_type='follow', organization=org)
-            if notify_obj:
-                notify_obj.delete()
-            return JsonResponse({'status': 'unfollowed', 'action': 'unfollow', 'message': 'You have unfollowed this organization.', 'followers_count': org.get_followers().count()})
-        else:
-            return JsonResponse({'status': 'error', 'message': 'You are not following this organization.'}, status=400)
-    except org.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Organization not found.'}, status=404)
 
 #explore page:
 @login_required
-def explore_project(request):
-    #filter
-    domain_filter = request.GET.get('domain', '').strip()  # ID
-    type_filter = request.GET.get('type', '').strip()      # Name
-    skill_filter = request.GET.get('skill', '').strip()    # ID
-    level_filter = request.GET.get('level', '').strip()    # Name
-    query = request.GET.get('q', '').strip()
-    
-    filter_conditions = {}
-    if domain_filter:
-        filter_conditions["domain__id"] = domain_filter
-    if type_filter:
-        filter_conditions["type"] = type_filter
-    if level_filter:
-        filter_conditions["level"] = level_filter
-    if skill_filter:
-        filter_conditions["skill_needed__id"] = skill_filter
-        
-    filter_project = projects.objects.filter(**filter_conditions).order_by('-created_at')
-    if query:
-        projects_qs = projects.objects.all()
-        filter_project = projects_qs.filter(
-            Q(title__icontains=query) |  # Partial match on name
-            Q(description__icontains=query) |  # Partial match on description
-            Q(skill_needed__name__icontains=query) |  # Partial match on skills
-            Q(domain__name__icontains=query) | 
-            Q(type__icontains = query) |# Partial match on domain
-            Q(level__icontains=query)  # Exact match on level (adjust if partial needed)
-        ).distinct()
-    
-    applied_filter = bool(domain_filter or type_filter or skill_filter or level_filter)
-    
-    if not (applied_filter or query):
-        filter_project = filter_project[:200]
-    
-    #Pagination
-    p = Paginator(filter_project, 20)
-    page_number = request.GET.get("page")
-    post_form = PostForm()
-    
-    try:
-        page_obj = p.get_page(page_number)  # returns the desired page object
-    except PageNotAnInteger:
-        page_obj = p.page(1)
-    
-    r = filter_project.count()
-    top_domain = Domain.objects.all()[:10]
-    top_skills = top_skills_list()
-        
-    context = {
-        'filtered_project': page_obj,
-        'total_result': r,
-        'top_domains': top_domain,
-        'types': ['Open-Source', 'Learning', 'Paid', 'Freelance'],
-        'levels': ['Beginner', 'Intermediate', 'Expert'],
-        'top_skill': top_skills,
-        'applied_filter': applied_filter,
-        'post_form': post_form,
-        'query': query,
-        'active_explore': "px-5 py-1 -ml-5 text-lg text-black font-semibold bg-[#0000002a] rounded-xl w-[calc(100%+1.25rem)]"
-    }
-    # print(request.GET)
-    return render(request,"myapp/explore-projects.html", context)
-
-@login_required
 def explore_dev(request):
-
-    availability_filter = request.GET.get('availability', '').strip()
-    status_filter = request.GET.get('status', '').strip()  #ID
-    skill_filter = request.GET.get('skill', '').strip()    #ID
-    query = request.GET.get('q', '').strip()
+    from .utils.recommendations import get_recommended_developers
     
-    filter_conditions = {}
-    if availability_filter:
-        filter_conditions["availability"] = availability_filter
-    if status_filter:
-        filter_conditions["status__id"] = status_filter 
-    if skill_filter:
-        filter_conditions["skills__id"] = skill_filter
+    # Get personalized recommendations
+    recommendations = get_recommended_developers(
+        user=request.user,
+        limit=12,
+        exclude_following=True,
+        use_cache=True
+    )
     
-    filter_dev = userinfo.objects.filter(**filter_conditions).exclude(user=request.user).filter(user__in=verified_user_ids).select_related('user')
-
-    if query:
-        filter_dev = filter_dev.filter(
-            Q(user__first_name__icontains=query) |
-            Q(user__last_name__icontains=query) |
-            Q(user__username__iexact=query) |
-            Q(skills__name__iexact=query) |
-            Q(availability__icontains=query) |
-            Q(status__name__iexact=query) |
-            Q(about_user__icontains=query)
-        ).distinct()
-    
-    applied_filter = bool(availability_filter or status_filter or skill_filter)
-    
-    if not (applied_filter or query):
-        filter_dev = get_explore_users(filter_dev, request)
-        
-    top_skill= top_skills_list()
-    status = user_status.objects.all()
-    availability_list = userinfo.get_availability_type_filters
-    #Pagination
-    p = Paginator(filter_dev, 25)
-    page_number = request.GET.get('page')
-    try:
-        page_obj = p.page(page_number)
-    except PageNotAnInteger:
-        page_obj = p.page(1)
-    r = filter_dev.count()
-    post_form = PostForm()
     context = {
-        'filter_user': page_obj,
-        'top_skill': top_skill,
-        'status_list': status,   
-        'availability_list': availability_list,
-        'total_result': r,  
-        'post_form': post_form,  
-        'query': query,
-        'applied_filter': applied_filter,
-        'active_explore_dev': "px-5 py-1 -ml-5 text-lg text-black font-semibold bg-[#0000002a] rounded-xl w-[calc(100%+1.25rem)]"
+        'recommendations': recommendations,
     }
+    
     return render(request, 'myapp/explore_dev.html', context)
 
-#Explore event and single page event
+
 @login_required
-def explore_events(request):
-    #filter
-    type_filter = request.GET.get('type', '').strip()  #string
-    mode_filter = request.GET.get('mode', '').strip()  #string
+def load_more_recommendations(request):
+    """
+    API endpoint for loading more developer recommendations
+    """
+    from .utils.recommendations import get_recommended_developers
+    from django.http import JsonResponse
+    
+    offset = int(request.GET.get('offset', 0))
+    limit = int(request.GET.get('limit', 12))
+    
+    try:
+        # Get recommendations with offset
+        recommendations = get_recommended_developers(
+            user=request.user,
+            limit=limit,
+            offset=offset,
+            exclude_following=True,
+            use_cache=True
+        )
+        
+        # Check if there are more results
+        has_more = len(recommendations) == limit
+        
+        # Format response
+        data = []
+        for dev, score, reason in recommendations:
+            data.append({
+                'id': dev.id,
+                'username': dev.user.username,
+                'avatar': dev.profile_image.url if dev.profile_image else None,
+                'city': dev.city,
+                'state': dev.state,
+                'coding_style': {
+                    'name': dev.coding_style.name,
+                    'logo': dev.coding_style.logo
+                } if dev.coding_style else None,
+                'reason': reason,
+                'score': round(score, 2),
+                'is_following': request.user.info.is_following(dev)
+            })
+        
+        return JsonResponse({
+            'results': data,
+            'count': len(data),
+            'has_more': has_more,
+            'next_offset': offset + len(data)
+        })
+        
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f'Load more recommendations error: {str(e)}')
+        
+        return JsonResponse({
+            'results': [],
+            'count': 0,
+            'has_more': False,
+            'error': 'An error occurred'
+        }, status=500)
+
+
+
+@login_required
+def search_developers_api(request):
+    """
+    API endpoint for developer search with fuzzy matching and network ranking
+    """
+    from .utils.search import search_developers
+    from django.http import JsonResponse
+    
     query = request.GET.get('q', '').strip()
     
-    filter_conditions = {}
-    if type_filter:
-        filter_conditions["event_type"] = type_filter
-    if mode_filter:
-        filter_conditions["mode"] = mode_filter
-        
-    filtered_events = event.objects.filter(**filter_conditions).order_by('-created_at')
+    # Edge case: Empty query
+    if not query:
+        return JsonResponse({
+            'results': [],
+            'count': 0,
+            'message': 'Please enter a search term'
+        })
     
-    if query:
-        filtered_events = filtered_events.filter(
-            Q(title__icontains=query) |
-            Q(event_type__icontains=query) |
-            Q(organization__name__icontains=query) |
-            Q(description__icontains=query) |
-            Q(short_description__icontains=query) |
-            Q(location__icontains=query) |
-            Q(mode__iexact=query)
-        ).distinct()
+    # Edge case: Query too short
+    if len(query) < 2:
+        return JsonResponse({
+            'results': [],
+            'count': 0,
+            'message': 'Enter at least 2 characters'
+        })
     
-    applied_filter = bool(type_filter or mode_filter)
-    
-    if not (applied_filter or query):
-        filtered_events = filtered_events[:100]
-        
-    p = Paginator(filtered_events, 12)
-    page_number = request.GET.get('page')
     try:
-        page_obj = p.get_page(page_number)
-    except PageNotAnInteger:
-        page_obj = p.page(1)
-    result_count = filtered_events.count()
-    post_form = PostForm()
-    modes = event.get_mode_filters()
-    types = event.get_event_type_filters()
-    context = {
-        'post_form': post_form,
-        'applied_filter': applied_filter,
-        'filtered_event': page_obj,
-        'result_count': result_count,
-        'query': query,
-        'active_explore': "px-5 py-1 -ml-5 text-lg text-black font-semibold bg-[#0000002a] rounded-xl w-[calc(100%+1.25rem)]",
-        'modes': modes,
-        'types': types,
-    }
-    print(types)
-    return render(request, 'myapp/explore-events.html', context)
+        # Perform search
+        results = search_developers(query, request.user, limit=30)
+        
+        # Edge case: No results
+        if not results:
+            return JsonResponse({
+                'results': [],
+                'count': 0,
+                'message': 'No developers found. Try different keywords.'
+            })
+        
+        # Format response
+        data = []
+        for dev, score, mutual_count in results:
+            data.append({
+                'id': dev.id,
+                'username': dev.user.username,
+                'first_name': dev.user.first_name,
+                'last_name': dev.user.last_name,
+                'full_name': dev.user.get_full_name() or dev.user.username,
+                'avatar': dev.profile_image.url if dev.profile_image else None,
+                'bio': dev.bio[:150] if dev.bio else '',
+                'location': dev.location or f"{dev.city}, {dev.state}" if dev.city and dev.state else dev.city or dev.state or '',
+                'city': dev.city,
+                'coding_style': {
+                    'name': dev.coding_style.name,
+                    'logo': dev.coding_style.logo
+                } if dev.coding_style else None,
+                'mutual_count': mutual_count,
+                'score': round(score, 2),
+                'is_following': request.user.info.is_following(dev)
+            })
+        
+        return JsonResponse({
+            'results': data,
+            'count': len(data),
+            'message': None
+        })
+        
+    except Exception as e:
+        # Log error and return graceful response
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f'Search error: {str(e)}')
+        
+        return JsonResponse({
+            'results': [],
+            'count': 0,
+            'message': 'An error occurred. Please try again.'
+        }, status=500)
 
-@login_required
-def saved_page(request):
-    saved_item  = request.user.info.saved_items
-    saved_post = saved_item.posts.all()
-    saved_project = saved_item.project.all()
-    saved_event = saved_item.events.all()
-    post_form = PostForm()
-    print(saved_item, request.META.get('HTTP_REFERER', '/'))
-    print(saved_event)
-    context = {
-        'saved_item': saved_item,
-        'section': 'posts',
-        'post_form': post_form,
-        'saved_post': saved_post,
-        'saved_project': saved_project,
-        'saved_events': saved_event,
-    }
-    return render(request, 'myapp/saved.html', context)
 
-@login_required
-def calendar_page(request):
-    post_form = PostForm()
-    followed_orgs = request.user.info.followed_organization.all() | request.user.organization.all()
-    followed_orgs = followed_orgs.distinct() 
-    grouped_events = {}
-    projects_qs = False
-    
-    section = request.GET.get('section', '')
-    
-    if section == "joined-projects":
-        projects_qs = projects.objects.filter(members=request.user.info)[::-1]
-    else:
-        events_qs = event.objects.filter(organization__in=followed_orgs, start_date__gte=timezone.now()).order_by('start_date')
-        # print(events_qs)
-        events = list(events_qs)
-        for event_date, group in groupby(events, key=lambda e: e.start_date):
-            grouped_events[event_date] = list(group)
-    context = {
-        'grouped_events': grouped_events,
-        'post_form': post_form,
-        'section': section,
-        'joined_projects': projects_qs,
-    }
-    return render(request, 'myapp/calendar.html', context)
 
 @login_required
 def settings_page(request):
     userinfo_obj = request.user.info
+    
+    # Handle timezone update
+    if request.method == 'POST' and 'timezone' in request.POST:
+        new_timezone = request.POST.get('timezone')
+        # Validate timezone
+        import pytz
+        from django.contrib import messages
+        from django.shortcuts import redirect
+        if new_timezone in pytz.all_timezones:
+            userinfo_obj.timezone = new_timezone
+            userinfo_obj.save()
+            messages.success(request, 'Timezone updated successfully!')
+        else:
+            messages.error(request, 'Invalid timezone selected.')
+        return redirect('settings_page')
+    
+    # Get timezone choices for the dropdown
+    from myapp.timezone_utils import get_common_timezones
+    timezone_choices = get_common_timezones()
+    
     context = {
-        'userinfo_obj': userinfo_obj
+        'userinfo_obj': userinfo_obj,
+        'timezone_choices': timezone_choices,
     }
     return render(request, 'myapp/account_setting.html', context)
 
-@login_required
-def toggle_like(request, post_id):
-    post_obj = get_object_or_404(post, id = post_id)
-    userinfo_obj = request.user.info
-    post_owner = post_obj.user if post_obj.user else post_obj.Organization.user.info if post_obj.Organization else None
-    print(post_owner)
-    if userinfo_obj in post_obj.likes.all():
-        post_obj.likes.remove(userinfo_obj)
-        liked = False
-        if userinfo_obj != post_owner and post_owner:
-            Notify_obj = Notification.objects.filter(user=post_owner, sender=userinfo_obj, notification_type="like", post=post_obj)
-            print(Notify_obj)
-            if Notify_obj:
-                Notify_obj.delete()
-    else:
-        post_obj.likes.add(userinfo_obj)
-        liked = True
-        if userinfo_obj != post_owner and post_owner:
-            notify = Notification.objects.create(user=post_owner, sender=userinfo_obj, notification_type="like", post=post_obj)
-            if post_obj.user:
-                send_notification_email(post_owner, f'🧑‍💻 {userinfo_obj.user.username} Liked one of your Post 💚')
-            elif post_obj.Organization:
-                send_notification_email(post_owner, f'🧑‍💻 {userinfo_obj.user.username} {notify.get_notification_type_display()} 💚 on {post_obj.Organization.name}!')
-    return JsonResponse({'liked': liked, 'total_likes': post_obj.total_likes()}) 
 
 @login_required
-#for saving post
-def save_post(request):
-    form = PostForm(request.POST, request.FILES)
-    action = request.POST.get('action')
-    if action == 'user-post':
-        if form.is_valid():
-            new_post = form.save(commit=False)
-            new_post.user = request.user.info  # Set current user's profile
-            new_post.aspect = request.POST.get("aspect_ratio", "16:9")
-            new_post.save()
-            redirect_url = reverse('user_profile', args=[request.user.username])
-            return redirect(f'{redirect_url}?section=posts')
-        else:
-            return HttpResponseRedirect('/')
-    else:
-        org = get_object_or_404(organization, id = action)
-        if form.is_valid() and org.user == request.user:
-            new_post = form.save(commit=False)
-            new_post.Organization = org
-            new_post.aspect = request.POST.get("aspect_ratio", "16:9")
-            new_post.save()
-            redirect_url = reverse('organization_detail', args=[org.id])
-            return redirect(f'{redirect_url}?section=posts')
-        else:
-            return HttpResponseRedirect('/')
-        
-@login_required
-def delete_post(request, post_id):
-    post_obj = get_object_or_404(post, id = post_id)
-    User = request.user
-    if post_obj.user == User.info:
-        post_obj.delete()
-        return redirect(request.META.get('HTTP_REFERER', '/')) 
-
-    elif post_obj.Organization and post_obj.Organization.user == User:
-        post_obj.delete()
-        return redirect(request.META.get('HTTP_REFERER', '/')) 
-    return HttpResponse("Sorry! You Can't have permission To Delete!...")
-    
-@login_required
-#for saving post comments
-def save_comment(request):
-    comment_text = request.POST.get('comment')   
-    post_id = request.POST.get('post_id')
-    Post_obj = get_object_or_404(post, id=post_id)
-    post_owner = Post_obj.user if Post_obj.user else Post_obj.Organization.user.info if Post_obj.Organization else None
-    comment = post_comments.objects.create(
-        Post=Post_obj,
-        user=request.user.info,
-        content=comment_text
-    )
-    profile_image_url = comment.user.profile_image.url
-    if request.user.info != post_owner:
-        Notification.objects.create(user=post_owner, sender=request.user.info, notification_type="comment", post_comment=comment)
-        if Post_obj.user:
-            send_notification_email(post_owner, f'🧑‍💻 {request.user.username} Commented on one of your post\n\n💬 {comment_text[:50]}...')
-        elif Post_obj.Organization:
-            send_notification_email(post_owner, f'🧑‍💻 {request.user.username} Commented on {Post_obj.Organization.name}\'s post\n\n💬 {comment_text[:50]}...')
-    data = {
-        'username': comment.user.user.username,
-        'comment': comment.content,
-        'comment_id': comment.id,
-        'created_at': comment.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-        'profile_image_url': profile_image_url,
-        'comments_count': Post_obj.tot_comments(),
-    }
-    return JsonResponse(data)
-
-@login_required
-def delete_post_comment(request, comment_id):
-    if request.method == 'DELETE':
-        try:
-            comment = post_comments.objects.get(id=comment_id)
-            post_id = comment.Post.id
-            if comment.user == request.user.info:
-                comment.delete()
-                comments_count = post_comments.objects.filter(Post__id=post_id).count()
-                return JsonResponse({
-                    'message': 'Comment deleted',
-                    'post_id': post_id,
-                    'comments_count': comments_count
-                })
-            else:
-                return
-        except post_comments.DoesNotExist:
-            return JsonResponse({'error': 'Comment not found'}, status=404)
-    else:
-        return HttpResponseNotAllowed(['DELETE'])
-
-@login_required
-def toggle_post_save(request, post_id):
-    post_obj = get_object_or_404(post, id = post_id)
-    saved_obj, created = SavedItem.objects.get_or_create(user=request.user.info)
-    print(created)
-    if post_obj in saved_obj.posts.all():
-        saved_obj.posts.remove(post_obj)
-        saved = False
-    else:
-        saved_obj.posts.add(post_obj)
-        saved = True
-    return JsonResponse({'saved': saved})
-
 @login_required
 def delete_data(request):
     if request.method == "POST":
         form_type = request.POST.get("form_type")
-        if form_type == 'project_comment':
-            comment_id = request.POST.get("comment_id")
-            try:
-                comment = project_comment.objects.get(id=comment_id, user=request.user.info)
-                Notify_obj = Notification.objects.filter(user=comment.project.creator, sender=request.user.info, project_comment = comment, notification_type="project_comment")
-                if Notify_obj:  
-                    Notify_obj.delete()
-                comment.delete()
-                comment_count = comment.project.tot_comments()
-                return JsonResponse({"success": True, "comment_count": comment_count})
-            except project_comment.DoesNotExist:
-                return JsonResponse({"success": False, "error": "Comment not found"})
-        elif form_type == 'project_reply':
-                reply_id = request.POST.get("comment_id")
-                try:
-                    comment = project_reply.objects.get(id=reply_id, user=request.user.info)
-                    Notify_obj = Notification.objects.filter(user=comment.user, sender=request.user.info, project_reply = comment, notification_type="project_reply")
-                # Notification.objects.create(user=r.comment.user, sender=userinfo_obj, project_reply=r, notification_type='project_reply')
-                    if Notify_obj:  
-                        Notify_obj.delete()
-                    comment.delete()
-                    comment_count = comment.comment.project.tot_comments()
-                    return JsonResponse({"success": True, "comment_count": comment_count})
-                except project_reply.DoesNotExist:
-                    return JsonResponse({"success": False, "error": "Comment not found"})
-        elif form_type == 'event_comment':
-            comment_id = request.POST.get("comment_id")
-            try:
-                comment = event_comment.objects.get(id=comment_id, user=request.user.info)
-                comment.delete()
-                comment_count = comment.event.tot_comments()
-                return JsonResponse({"success": True, "comment_count": comment_count})
-            except event_comment.DoesNotExist:
-                return JsonResponse({"success": False, "error": "Comment not found"})
-        elif form_type == 'event_reply':
-            reply_id = request.POST.get("comment_id")
-            try:
-                comment = event_reply.objects.get(id=reply_id, user=request.user.info)
-                comment.delete()
-                comment_count = comment.comment.event.tot_comments()
-                return JsonResponse({"success": True, "comment_count": comment_count})
-            except event_reply.DoesNotExist:
-                return JsonResponse({"success": False, "error": "Comment not found"})
-        elif form_type == 'delete_exp_obj':
+        
+        if form_type == 'delete_exp_obj':
             Id = request.POST.get("exp_id")
             print(Id)
             experience.objects.get(id = Id).delete()
             redirect_url = reverse("user_profile", args=[request.user.username])
-            return redirect(f"{redirect_url}")
-        elif form_type == 'user_work':
-            Id = request.POST.get('id')
-            work_obj = get_object_or_404(user_project, id = Id)
-            if work_obj.user == request.user.info:
-                work_obj.delete()
-                return redirect(f"{reverse('user_profile', args=[request.user.username])}?section=projects")   
-            else:
-                return HttpResponse("You have No Authority to Delete.")     
+            return redirect(f"{redirect_url}?section=info")
     return JsonResponse({"success": False, "error": "Invalid request"})
 
 @login_required
@@ -1081,3 +711,199 @@ def logout_view(request):
     logout(request)
     list(messages.get_messages(request))  # Force-clear any leftover messages
     return redirect('account_login')
+
+@login_required
+@require_POST
+def update_banner(request):
+    banner_name = request.POST.get('banner')
+    allowed_banners = [
+        'nature.png', 'technology.png', 'science.png', 'geometry.png',
+        'minimalism.png', 'space.png', 'gradients.png', 'abstract.png'
+    ]
+    
+    if banner_name in allowed_banners:
+        request.user.info.banner_image = f'banners/{banner_name}'
+        request.user.info.save()
+        return JsonResponse({'success': True, 'banner_url': request.user.info.banner_image})
+    
+    return JsonResponse({'success': False, 'error': 'Invalid banner selection'})
+
+@login_required
+@require_POST  
+def update_coding_style(request):
+    """Update user's coding style via AJAX"""
+    
+    style_id = request.POST.get('style_id')
+    
+    if not style_id:
+        return JsonResponse({'success': False, 'error': 'No style selected'})
+    
+    try:
+        coding_style = CodingStyle.objects.get(id=style_id)
+        request.user.info.coding_style = coding_style
+        request.user.info.save()
+        
+        return JsonResponse({
+            'success': True,
+            'style': {
+                'id': coding_style.id,
+                'name': coding_style.name,
+                'logo': coding_style.logo,
+                'description': coding_style.description
+            }
+        })
+    except CodingStyle.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Invalid coding style'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@login_required
+def get_coding_styles(request):
+    """Get all available coding styles for the modal"""
+    
+    styles = CodingStyle.objects.all().values('id', 'name', 'logo', 'description')
+    current_style_id = request.user.info.coding_style.id if request.user.info.coding_style else None
+    
+    return JsonResponse({
+        'styles': list(styles),
+        'current_style_id': current_style_id
+    })
+
+# ============= NOTIFICATION VIEWS =============
+
+@login_required
+def notification_page(request):
+    """
+    Display notifications page with grouped notifications and pagination
+    """
+    from logs.utils.notifications import get_user_notifications, get_notification_count, group_notifications_by_date
+    from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+    
+    # Get all notifications for the user (without limit for pagination)
+    all_notifications = get_user_notifications(request.user)
+    
+    # Paginate notifications (20 per page)
+    paginator = Paginator(all_notifications, 20)
+    page = request.GET.get('page', 1)
+    
+    try:
+        notifications = paginator.page(page)
+    except PageNotAnInteger:
+        notifications = paginator.page(1)
+    except EmptyPage:
+        notifications = paginator.page(paginator.num_pages)
+    
+    # Group by date
+    grouped_notifications = group_notifications_by_date(notifications)
+    
+    # Get unread count
+    notification_count = get_notification_count(request.user, unread_only=True)
+    
+    context = {
+        'grouped_notifications': grouped_notifications,
+        'notification_count': notification_count,
+        'active_notifications': True,
+        'page_obj': notifications,
+        'paginator': paginator,
+    }
+    
+    return render(request, 'myapp/notification.html', context)
+
+
+@login_required
+@require_POST
+def mark_all_read(request):
+    """
+    AJAX endpoint to mark all notifications as read
+    """
+    from logs.utils.notifications import mark_all_as_read
+    
+    count = mark_all_as_read(request.user)
+    
+    return JsonResponse({
+        'success': True,
+        'marked_count': count
+    })
+
+
+@login_required
+def get_notification_count_api(request):
+    """
+    AJAX endpoint to get real-time notification count for badge
+    """
+    from logs.utils.notifications import get_notification_count
+    
+    count = get_notification_count(request.user, unread_only=True)
+    
+    return JsonResponse({
+        'count': count
+    })
+
+
+@login_required
+@require_POST
+def mark_notification_read(request, notification_id):
+    """
+    Mark a single notification as read
+    """
+    from logs.models import Notification
+    
+    try:
+        notification = Notification.objects.get(
+            id=notification_id,
+            recipient=request.user.info
+        )
+        notification.mark_as_read()
+        
+        return JsonResponse({
+            'success': True
+        })
+    except Notification.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'Notification not found'
+        }, status=404)
+
+
+@login_required
+def load_more_notifications(request):
+    """
+    AJAX endpoint to load more notifications for pagination
+    """
+    from logs.utils.notifications import get_user_notifications, group_notifications_by_date
+    from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+    from django.template.loader import render_to_string
+    
+    page = request.GET.get('page', 2)
+    
+    # Get all notifications
+    all_notifications = get_user_notifications(request.user)
+    
+    # Paginate
+    paginator = Paginator(all_notifications, 20)
+    
+    try:
+        notifications = paginator.page(page)
+    except PageNotAnInteger:
+        return JsonResponse({'error': 'Invalid page number'}, status=400)
+    except EmptyPage:
+        return JsonResponse({
+            'html': '',
+            'has_more': False,
+            'next_page': None
+        })
+    
+    # Group by date
+    grouped_notifications = group_notifications_by_date(notifications)
+    
+    # Render HTML for notifications
+    html = render_to_string('notifications/notification_list_partial.html', {
+        'grouped_notifications': grouped_notifications,
+    }, request=request)
+    
+    return JsonResponse({
+        'html': html,
+        'has_more': notifications.has_next(),
+        'next_page': notifications.next_page_number() if notifications.has_next() else None,
+        'current_page': notifications.number
+    })

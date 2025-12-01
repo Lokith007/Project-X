@@ -1,47 +1,168 @@
-<div class="text-[#2b2b2b] hidden w-1/5 flex-col justify-between h-[calc(100vh-57px)] sticky top-14 mt-14 py-7 bg-[#ffffff]  shadow-lg md:hidden min-w-62 lg:flex">
-    <div class="flex px-10">
-        <div class="flex flex-col justify-center py-3 gap-y-6 w-full mt-3 text-xl">
-            <!-- Home & Explore -->
-            <span class="uppercase text-xs text-gray-500 tracking-widest px-2 mb-2">DISCOVER</span>
+{% load static %}
 
-            <a href='{% url "index" %}' class="{{active_home}}">
-            <i class="fa-solid fa-house text-xl"></i>&nbsp;&nbsp;Home
-            </a>
-            <a href='{% url "explore-project" %}' class="{{active_explore}}">
-            <i class="fa-regular fa-compass text-2xl"></i>&nbsp;&nbsp;Explore
-            </a>
-            <a href='{% url "explore_dev" %}' class="{{active_explore_dev}}">
-            <i class="fa-solid fa-code text-xl"></i>&nbsp;&nbsp;Find Dev
-            </a>
-
-            <!-- Divider -->
-            <hr class="border-gray-400 my-4">
-
-            <span class="uppercase text-xs text-gray-500 tracking-widest px-2 ">TERMINAL</span>
-            <a href='{% url "explore_logs_page" %}' class="{{active_logs}}">
-            <i class="fa-solid fa-brain text-lg"></i>&nbsp;&nbsp;Logs
-            </a>
-            <a href='{% url "terminal_page" %}' class="{{active_terminal}}">
-            <i class="fa-solid fa-terminal  text-lg"></i>&nbsp;&nbsp;Command
-            </a>
-            <a href='{% url "personal_logbook" user.username %}' class="{{active_logbook}}">
-            <i class="fa-solid fa-book text-lg"></i>&nbsp;&nbsp;Logbook
-            </a>
-        </div>
+<!-- Desktop Sidebar (Fixed Left) -->
+<aside class="hidden lg:flex flex-col w-60 h-screen fixed left-0 top-0 bg-[#0e1217] border-r border-[#2d323b] z-50">
+    
+    <!-- Brand Header -->
+    <div class="flex items-center px-6 py-4 border-b border-[#2d323b] bg-[#161b22]">
+        <a href="{% url 'index' %}" class="flex items-center gap-3 group">
+            <span class="text-xl font-mono text-white tracking-tight">DevMate</span>
+        </a>
     </div>
 
-    <!-- Bottom Controls -->
-    <div class="flex flex-col justify-between items-center gap-y-8 px-10">
-        <a href="{% url 'leaderboard_page' %}"
-            class="inline-flex items-center px-5 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-            <i class="fa-solid fa-trophy text-xl mr-2"></i>
-                    Leaderboard
-        </a> 
+    <!-- Navigation -->
+    <nav class="flex-1 overflow-y-auto px-3 space-y-1 mt-8">
+        
+        <!-- Home -->
+        <a href="{% url 'index' %}" class="flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 group
+            {% if active_home %}bg-white/5 text-white font-medium{% else %}text-[#a8b3cf] hover:bg-[#161b22] hover:text-white{% endif %}">
+            <i class="fa-solid fa-house text-xl w-6 text-center"></i>
+            <span class="text-[16px]">Home</span>
+        </a>
+
+        <!-- Discover -->
+        <a href="{% url 'explore_dev' %}" class="flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 group
+            {% if active_explore_dev %}bg-white/5 text-white font-medium{% else %}text-[#a8b3cf] hover:bg-[#161b22] hover:text-white{% endif %}">
+            <i class="fa-solid fa-compass text-xl w-6 text-center"></i>
+            <span class="text-[16px]">Discover</span>
+        </a>
+
+        <!-- Notifications -->
+        <a href="{% url 'notification_page' %}" class="flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 group relative
+            {% if active_notifications %}bg-white/5 text-white font-medium{% else %}text-[#a8b3cf] hover:bg-[#161b22] hover:text-white{% endif %}">
+            <div class="relative">
+                <i class="fa-solid fa-bell text-xl w-6 text-center"></i>
+                <span class="notification-badge absolute -top-1 -right-1 bg-green-600 text-white text-[9px] font-bold rounded-full h-4 w-4 flex items-center justify-center hidden"></span>
+            </div>
+            <span class="text-[16px]">Notifications</span>
+        </a>
+
+
+        <!-- Settings -->
+        <a href="{% url 'settings_page' %}" class="flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 group
+            {% if active_settings %}bg-white/5 text-white font-medium{% else %}text-[#a8b3cf] hover:bg-[#161b22] hover:text-white{% endif %}">
+            <i class="fa-solid fa-gear text-xl w-6 text-center"></i>
+            <span class="text-[16px]">Settings</span>
+        </a>
+
+    </nav>
+
+    <!-- Footer - Profile & Logout -->
+    <div class="p-3 mt-auto border-t border-[#2d323b] space-y-2">
+        <!-- Profile Link with Picture -->
+        <a href="{% url 'user_profile' user.username %}" class="flex items-center gap-3 w-full px-3 py-3 rounded-xl hover:bg-[#161b22] transition-all duration-200 group">
+            <img src="{{ user.info.profile_image.url }}?v={{ user.info.updated_at.timestamp }}" class="w-10 h-10 rounded-full object-cover border-2 border-[#2d323b] group-hover:border-green-500 transition-colors" alt="">
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold text-white truncate">{{ user.first_name }}</p>
+                <p class="text-xs text-[#a8b3cf] truncate">@{{ user.username }}</p>
+            </div>
+            <i class="fa-solid fa-chevron-right text-[#a8b3cf] text-sm opacity-0 group-hover:opacity-100 transition-opacity"></i>
+        </a>
+
+        <!-- Logout Button -->
+        <form method="POST" action="{% url 'account_logout' %}" class="w-full">
+            {% csrf_token %}
+            <button type="submit" class="flex items-center gap-4 w-full px-4 py-2.5 text-[#a8b3cf] hover:text-red-400 hover:bg-[#161b22] rounded-xl transition-all duration-200 group">
+                <i class="fa-solid fa-right-from-bracket text-lg w-6 text-center"></i>
+                <span class="text-[15px]">Logout</span>
+            </button>
+        </form>
+    </div>
+</aside>
+
+<!-- Mobile Bottom Navigation (Fixed Bottom) -->
+<nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-[#0e1217] border-t border-[#2d323b] z-50 pb-safe">
+    <div class="flex items-center justify-around px-2 h-14">
+        <!-- Home -->
+        <a href="{% url 'index' %}" class="flex flex-col items-center justify-center w-full h-full gap-1
+            {% if active_home %}text-white{% else %}text-[#7d8590]{% endif %}">
+            <i class="fa-solid fa-house text-xl"></i>
+        </a>
+
+        <!-- Notifications (Center - Most Prominent) -->
+        <a href="{% url 'notification_page' %}" class="flex flex-col items-center justify-center w-full h-full gap-1 relative
+            {% if active_notifications %}text-white{% else %}text-[#7d8590]{% endif %}">
+            <div class="relative">
+                <i class="fa-solid fa-bell text-2xl"></i>
+                <span class="notification-badge absolute -top-1 -right-1 bg-green-600 text-white text-[9px] font-bold rounded-full h-4 w-4 flex items-center justify-center hidden"></span>
+            </div>
+        </a>
+
+        <!-- Discover -->
+        <a href="{% url 'explore_dev' %}" class="flex flex-col items-center justify-center w-full h-full gap-1
+            {% if active_explore_dev %}text-white{% else %}text-[#7d8590]{% endif %}">
+            <i class="fa-solid fa-compass text-xl"></i>
+        </a>
+
+        <!-- Menu Toggle (Profile Pic) -->
+        <button onclick="toggleMobileMenu()" class="flex flex-col items-center justify-center w-full h-full gap-1">
+            <img src="{{ user.info.profile_image.url }}?v={{ user.info.updated_at.timestamp }}" class="w-6 h-6 rounded-full object-cover border border-[#2d323b] {% if active_profile %}ring-1 ring-white{% endif %}" alt="">
+        </button>
+    </div>
+</nav>
+
+<!-- Mobile Menu Sheet (Compact) -->
+<div id="mobile-menu-sheet" class="lg:hidden fixed inset-0 z-[60] invisible opacity-0 transition-all duration-300">
+    <!-- Backdrop -->
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 opacity-0" id="menu-backdrop" onclick="toggleMobileMenu()"></div>
     
-        <div class="flex justify-around w-full">
-            <div><a href='{% url "calendar_page" %}'><i class="text-2xl fa-solid fa-calendar-days"></i></a></div>
-            <div><a href='{% url "saved_page" %}'><i class="text-2xl fa-regular fa-bookmark"></i></a></div>
-            <div><a href='{% url "user_profile" user.username %}'><i class="text-2xl fa-solid fa-user"></i></a></div>   
+    <!-- Sheet Content -->
+    <div class="absolute bottom-0 left-0 right-0 bg-[#161b22] rounded-t-2xl border-t border-[#2d323b] p-4 pb-safe transform translate-y-full transition-transform duration-300 cubic-bezier(0.4, 0, 0.2, 1)" id="menu-content">
+        <!-- Handle -->
+        <div class="w-10 h-1 bg-[#2d323b] rounded-full mx-auto mb-4"></div>
+
+        <!-- Menu Links (Compact List) -->
+        <div class="space-y-1">
+            <a href="{% url 'user_profile' user.username %}" class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#262b34] text-white transition-colors">
+                <i class="fa-solid fa-user text-lg w-6 text-center text-[#a8b3cf]"></i>
+                <span class="text-[15px] font-medium">Profile</span>
+            </a>
+            
+            <a href="{% url 'settings_page' %}" class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#262b34] text-white transition-colors">
+                <i class="fa-solid fa-gear text-lg w-6 text-center text-[#a8b3cf]"></i>
+                <span class="text-[15px] font-medium">Settings</span>
+            </a>
+            
+
+            <div class="h-px bg-[#2d323b] my-2 mx-3"></div>
+
+            <form method="POST" action="{% url 'account_logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#262b34] text-red-400 transition-colors">
+                    <i class="fa-solid fa-right-from-bracket text-lg w-6 text-center"></i>
+                    <span class="text-[15px] font-medium">Logout</span>
+                </button>
+            </form>
         </div>
     </div>
 </div>
+
+<!-- Spacer for Desktop Sidebar -->
+<div class="hidden lg:block w-64 shrink-0"></div>
+
+<script>
+    function toggleMobileMenu() {
+        const sheet = document.getElementById('mobile-menu-sheet');
+        const backdrop = document.getElementById('menu-backdrop');
+        const content = document.getElementById('menu-content');
+        
+        if (sheet.classList.contains('invisible')) {
+            // Open
+            sheet.classList.remove('invisible', 'opacity-0');
+            // Small delay to allow display:block to apply before transition
+            setTimeout(() => {
+                backdrop.classList.remove('opacity-0');
+                content.classList.remove('translate-y-full');
+            }, 10);
+        } else {
+            // Close
+            backdrop.classList.add('opacity-0');
+            content.classList.add('translate-y-full');
+            
+            // Wait for transition to finish before hiding
+            setTimeout(() => {
+                sheet.classList.add('invisible', 'opacity-0');
+            }, 300);
+        }
+    }
+</script>

@@ -57,17 +57,12 @@ INSTALLED_APPS = [
     'django_select2',
     'storages',
     'admin_honeypot',
-    'tinymce',
     'corsheaders',  # For CORS
     'rest_framework',  # For DRF
     'rest_framework_simplejwt',
     
     'myapp',
-    'features',
-    'collaboration_project',
-    'events',
-    'api',    
-    'mindlogs',
+    'logs',
 ]
 
 REST_FRAMEWORK = {
@@ -156,16 +151,7 @@ else:
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        'NAME': 'myapp.validators.MinimumLengthSpecialCharValidator',
     },
 ]
 
@@ -175,8 +161,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-# TIME_ZONE = 'UTC'
-TIME_ZONE = 'Asia/Kolkata'
+TIME_ZONE = 'UTC'
+# TIME_ZONE = 'Asia/Kolkata'
 
 USE_I18N = True
 
@@ -248,6 +234,8 @@ ACCOUNT_AUTHENTICATION_METHOD = 'email'  #Use email for authentication
 ACCOUNT_USERNAME_REQUIRED = True  # Default is True, so this is optional
 ACCOUNT_USERNAME_MIN_LENGTH = 3
 
+SOCIALACCOUNT_LOGIN_ON_GET = True 
+
 SOCIALACCOUNT_PROVIDERS = {
     "google":{
          "SCOPE":[
@@ -269,13 +257,17 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'devmate.teams@gmail.com'  #Replace with your Gmail
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+else:
+    # Production SMTP configuration
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'smtp.gmail.com'
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = config('EMAIL_HOST_USER')  # Replace via env var
+    EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # Logging
 LOGGING = {

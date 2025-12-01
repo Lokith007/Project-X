@@ -3,30 +3,13 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 import re
-from .models import project_comment, project_reply, userinfo, skill, Domain, organization, education, experience, post, user_project, event, current_position, projects
+from .models import userinfo, skill, education, experience
 from django.forms.widgets import ClearableFileInput
 # from django_select2.forms import Select2MultipleWidget
-from django.core.exceptions import ValidationError
 from allauth.account.forms import SignupForm, LoginForm
 from django.contrib.auth import authenticate, get_user_model
-from tinymce.widgets import TinyMCE
 
 User = get_user_model()
-
-class CustomLoginForm(LoginForm): #Not user. becoz it enforces username and email both.
-    def clean(self):
-        login_input = self.cleaned_data.get('login')
-        password = self.cleaned_data.get('password')
-
-        # If it's an email, resolve it to a username
-        try:
-            user = User.objects.get(email__iexact=login_input)
-            self.cleaned_data['login'] = user.username
-        except User.DoesNotExist:
-            # Assume it's a username
-            pass
-
-        return super().clean()
 
 class CustomSignupForm(SignupForm):
     first_name = forms.CharField(max_length=30, label="First Name", required=True)
@@ -35,6 +18,9 @@ class CustomSignupForm(SignupForm):
     def clean_username(self):
         username = self.cleaned_data.get("username")
         if username:
+            if len(username) > 24:
+                raise forms.ValidationError("Username cannot exceed 24 characters.")
+            
             is_valid = (
                 username[0].isalpha() and
                 bool(re.match(r'^[a-zA-Z0-9_.]+$', username)) and
@@ -103,94 +89,50 @@ class RegistrationForm(UserCreationForm):
 class Postsignup_infoForm(forms.ModelForm):
     class Meta:
         model = userinfo
-        fields = ['status', 'availability', 'cringe_badge']
+        fields = ['status', 'coding_style', 'timezone']
         widgets = {
-            'availability': forms.Select(attrs={
-                'class': 'w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent'
-            }),
-            'cringe_badge': forms.Select(attrs={
+            'coding_style': forms.Select(attrs={
                 'class': 'w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent'
             }),
             'status': forms.Select(attrs={
                 'class': 'w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent'
             }),
+            'timezone': forms.Select(attrs={
+                'class': 'w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent',
+                'style': 'height: 48px; max-height: 48px;',
+                'size': '1'
+            }),
         }
     
-
-class OrganizationForm(forms.ModelForm):
-    founded_date = forms.DateField(
-        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-        required=False
-    )
-    class Meta:
-        model = organization
-        exclude = ['user', 'followers', 'profile_views_followers', 'profile_views_nonfollowers', 'updated_at']
-
-        widgets = {
-            'logo': forms.ClearableFileInput(attrs={
-                'class': 'border border-gray-700 p-2 rounded-lg w-full file:bg-black file:text-white file:border-none file:px-4 file:py-2 file:rounded-lg cursor-pointer'
-            },),
-            "name": forms.TextInput(attrs={"placeholder": "Enter organization name"}),
-            "description": forms.Textarea(attrs={"placeholder": "Enter a brief description about your organization"}),
-            "phone": forms.TextInput(attrs={'type': 'tel', "placeholder": "Enter phone number (e.g., +1 234 567 890)"}),
-            "website": forms.URLInput(attrs={"placeholder": "organization website URL (if any)"}),
-            "linkedin": forms.URLInput(attrs={"placeholder": "https://www.linkedin.com/company/organization-name"}),
-            "github": forms.URLInput(attrs={"placeholder": "https://github.com/organization-name"}),
-            "twitter": forms.URLInput(attrs={"placeholder": "https://twitter.com/organization-handle"}),
-            "location": forms.TextInput(attrs={"placeholder": "Enter headquarters location (City, Country)"}),
-            'contact_email': forms.EmailInput(attrs={'placeholder': 'Email'}),
-            "instagram": forms.URLInput(attrs={"placeholder": "https://www.instagram.com/organization-name"}),
-            "discord": forms.URLInput(attrs={"placeholder": "https://discord.com/invite/organization-link"}),
-        }
-        
-class EditOrgForm(forms.ModelForm):
-    
-    class Meta:
-        model = organization
-        exclude = ['user', 'followers']
-        widgets = {
-            'name': forms.TextInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Organization Name'}),
-            'description': forms.Textarea(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Description...', 'rows': 8}),
-            'website': forms.URLInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'www.samplesite.com'}),
-            'industry': forms.Select(attrs={'class': 'outline-none border border-black px-2 py-1 bg-white'}),
-            'location': forms.TextInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Location'}),
-            'organization_type': forms.Select(attrs={'class': 'outline-none border border-black px-2 py-1 bg-white'}),
-            'founded_date': forms.DateInput(attrs={'type': 'date', 'class': 'outline-none border border-black px-2 py-1'}),
-            'contact_email': forms.EmailInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Email'}),
-            'phone': forms.TextInput(attrs={'type': 'tel', 'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Phone'}),
-            'github': forms.URLInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Github URL'}),
-            'linkedin': forms.URLInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'LinkedIn URL'}),
-            'instagram': forms.URLInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Instagram URL'}),
-            'twitter': forms.URLInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Twitter URL'}),
-            'discord': forms.URLInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Discord URL'}),
-            'logo': forms.ClearableFileInput(attrs={'id': 'imgInput','class': 'hidden'}),
-        }
-
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Populate timezone choices
+        from myapp.timezone_utils import get_common_timezones
+        self.fields['timezone'].widget.choices = get_common_timezones()
+        self.fields['timezone'].required = True
 
 class EditProfileForm(forms.ModelForm):
-    first_name = forms.CharField(max_length=50, required=True, widget=forms.TextInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'First'}))
-    last_name = forms.CharField(max_length=50, required=False, widget=forms.TextInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Last'}))
-    username = forms.CharField(max_length = 50, required=True, widget=forms.TextInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Username'}))
+    first_name = forms.CharField(max_length=50, required=True, widget=forms.TextInput(attrs={'class': 'outline-none border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-1', 'placeholder': 'First'}))
+    last_name = forms.CharField(max_length=50, required=False, widget=forms.TextInput(attrs={'class': 'outline-none border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-1', 'placeholder': 'Last'}))
+    username = forms.CharField(max_length = 24, required=True, widget=forms.TextInput(attrs={'class': 'outline-none border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-1', 'placeholder': 'Username'}))
     
     class Meta:
         model = userinfo
-        exclude = ['user', 'years_of_experience', 'skills', 'domains', 'profile_views', 'updated_at', 'needs_profile_completion', 'last_seen']
+        exclude = ['user', 'years_of_experience', 'skills', 'profile_views', 'updated_at', 'needs_profile_completion', 'last_seen', 'timezone', 'coding_style']
         
         widgets = {
-            'bio': forms.Textarea(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Bio...', 'rows': 7,'cols': 40,}),
-            'dob': forms.DateInput(attrs={'type': 'date', 'class': 'outline-none border border-black px-2 py-1', 'id':"dob"}),
-            'location': forms.TextInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Location'}),
-            'contact_email': forms.EmailInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Email'}),
-            'phone': forms.TextInput(attrs={'type': 'tel','class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Phone'}),
-            'gender': forms.Select(attrs={'class': 'outline-none border border-black px-2 py-1 bg-white', }),
-            'availability': forms.Select(attrs={'class': 'outline-none border border-black px-2 py-1 bg-white', }),
-            'status': forms.Select(attrs={'class': 'outline-none border border-black px-2 py-1 bg-white', }),
-            'website': forms.URLInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'www.samplesite.in'}),
-            'linkedin': forms.URLInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Linkedin URL'}),
-            'github': forms.URLInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Github URL'}),
-            'stackoverflow': forms.URLInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Stackoverflow URL'}),
+            'bio': forms.Textarea(attrs={'class': 'outline-none border border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', 'placeholder': 'Bio...', 'rows': 7,'cols': 40,}),
+            'dob': forms.DateInput(attrs={'type': 'date', 'class': 'outline-none border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', 'id':"dob"}),
+            'location': forms.TextInput(attrs={'class': 'outline-none border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', 'placeholder': 'Location'}),
+            'contact_email': forms.EmailInput(attrs={'class': 'outline-none border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', 'placeholder': 'Email'}),
+            'phone': forms.TextInput(attrs={'type': 'tel','class': 'outline-none border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', 'placeholder': 'Phone'}),
+            'gender': forms.Select(attrs={'class': 'outline-none border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', }),
+            'status': forms.Select(attrs={'class': 'outline-none border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', }),
+            'website': forms.URLInput(attrs={'class': 'outline-none border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', 'placeholder': 'www.samplesite.in'}),
+            'linkedin': forms.URLInput(attrs={'class': 'outline-none border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', 'placeholder': 'Linkedin URL'}),
+            'github': forms.URLInput(attrs={'class': 'outline-none border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', 'placeholder': 'Github URL'}),
+            'stackoverflow': forms.URLInput(attrs={'class': 'outline-none border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', 'placeholder': 'Stackoverflow URL'}),
             'profile_image': forms.ClearableFileInput(attrs={'id': 'imgInput','class': 'hidden'}),
-            'cringe_badge': forms.Select(attrs={'class': 'outline-none border border-black px-2 py-1 bg-white'})
         }
         labels = {
             'bio': 'Short Bio',
@@ -199,6 +141,7 @@ class EditProfileForm(forms.ModelForm):
         
     def __init__(self, *args, **kwargs):
         super(EditProfileForm, self).__init__(*args, **kwargs)
+        
         if self.instance and self.instance.user:
             user = self.instance.user
             self.fields['first_name'].initial =  user.first_name
@@ -254,20 +197,20 @@ class EditProfileForm(forms.ModelForm):
 class EditEducationForm(forms.ModelForm):
     start_date = forms.CharField(
         required=False,
-        widget=forms.TextInput(attrs={'type': 'month', 'class': 'outline-none border border-black px-2 py-1'})
+        widget=forms.TextInput(attrs={'type': 'month', 'class': 'outline-none border border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2'})
     )
     end_date = forms.CharField(
         required=False,
-        widget=forms.TextInput(attrs={'type': 'month', 'class': 'outline-none border border-black px-2 py-1'})
+        widget=forms.TextInput(attrs={'type': 'month', 'class': 'outline-none border border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2'})
     )
     class Meta:
         model = education
         exclude = ['user']
         
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Eg: Harvard University'}),
-            'field_of_study': forms.TextInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Eg: Computer Science'}),
-            'degree': forms.TextInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Eg: B.Tech'}),
+            'name': forms.TextInput(attrs={'class': 'outline-none border border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', 'placeholder': 'Eg: Harvard University'}),
+            'field_of_study': forms.TextInput(attrs={'class': 'outline-none border border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', 'placeholder': 'Eg: Computer Science'}),
+            'degree': forms.TextInput(attrs={'class': 'outline-none border border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', 'placeholder': 'Eg: B.Tech'}),
             # 'start_date': forms.DateInput(attrs={'type': 'month', 'class': 'outline-none border border-black px-2 py-1'}),
             # 'end_date': forms.DateInput(attrs={'type': 'month', 'class': 'outline-none border border-black px-2 py-1', 'id':"endDate"}),
         }                                                               
@@ -302,84 +245,14 @@ class EditEducationForm(forms.ModelForm):
             return datetime.strptime(end_date, "%Y-%m").date().replace(day=1)  # Convert YYYY-MM to YYYY-MM-01
         return None
         
-class UserProjectForm(forms.ModelForm):
-    class Meta:
-        model = user_project
-        exclude = ['user', 'techstack']
-        labels = {
-            'name': 'Project Name',
-            'description': 'Description',
-            'url': 'URL (If any)',
-            'repo_link': 'Github-URL (If any)',
-            'end_date': "End Date",
-            'media': 'Thumbnail (If any)'
-        }
-        
-        widgets = {
-            'name': forms.TextInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Project Name'}),
-            'description': forms.Textarea(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Tell More about your Project'}),
-            'url': forms.TextInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder':'https://livedemo.in/'}),
-            'repo_link': forms.TextInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'https://github.com'}),
-            'start_date': forms.DateInput(attrs={'type': 'date', 'class': 'outline-none border border-black px-2 py-1'}),
-            'end_date': forms.DateInput(attrs={'type': 'date', 'class': 'outline-none border border-black px-2 py-1'}),
-            'media': forms.ClearableFileInput(attrs={'class': 'border border-gray-700 p-2 rounded-lg w-full file:bg-black file:text-white file:border-none file:px-4 file:py-2 file:rounded-lg cursor-pointer'})
-        }
-        
-class EditCurrentPositionForm(forms.ModelForm):
-    start_date = forms.CharField(
-        required=False,
-        widget=forms.TextInput(attrs={'type': 'month', 'class': 'outline-none border border-black px-2 py-1'})
-    )
-    end_date = forms.CharField(
-        required=False,
-        widget=forms.TextInput(attrs={'type': 'month', 'class': 'outline-none border border-black px-2 py-1'})
-    )
-    class Meta:
-        model = current_position
-        exclude = ['user']
-        labels = {
-            'name': 'Enter your Current Position',
-            'role': 'Enter your Role',
-            'description': 'Explain Your Role',
-            'till_now': 'Currently Working',
-        }
-        widgets = {
-            'name': forms.TextInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Company Name'}),               
-            'role': forms.TextInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Role'}),      
-            'description': forms.Textarea(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Briefly Describe your Role.'}),
-            'till_now': forms.CheckboxInput(attrs={'id': 'presentDate'}),
-            # 'start_date': forms.DateInput(attrs={'type': 'month', 'class': 'outline-none border border-black px-2 py-1'}),
-            # 'end_date': forms.DateInput(attrs={'type': 'month', 'class': 'outline-none border border-black px-2 py-1', 'id':"endDate"}),                       
-        }
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Format initial value to 'YYYY-MM' if data exists
-        if self.instance and self.instance.start_date:
-            self.initial['start_date'] = self.instance.start_date.strftime('%Y-%m')
-        if self.instance and self.instance.end_date:
-            self.initial['end_date'] = self.instance.end_date.strftime('%Y-%m')
-            
-    def clean_start_date(self):
-        start_date = self.cleaned_data.get("start_date")
-        print(start_date)
-        if start_date:
-            return datetime.strptime(start_date, "%Y-%m").date().replace(day=1)  # Convert YYYY-MM to YYYY-MM-01
-        return None
-
-    def clean_end_date(self):
-        end_date = self.cleaned_data.get("end_date")
-        if end_date:
-            return datetime.strptime(end_date, "%Y-%m").date().replace(day=1)  # Convert YYYY-MM to YYYY-MM-01
-        return None
-
 class EditExperienceForm(forms.ModelForm):
     start_date = forms.CharField(
         required=False,
-        widget=forms.TextInput(attrs={'type': 'month', 'class': 'outline-none border border-black px-2 py-1'})
+        widget=forms.TextInput(attrs={'type': 'month', 'class': 'outline-none border border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2'})
     )
     end_date = forms.CharField(
         required=False,
-        widget=forms.TextInput(attrs={'type': 'month', 'class': 'outline-none border border-black px-2 py-1'})
+        widget=forms.TextInput(attrs={'type': 'month', 'class': 'outline-none border border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2'})
     )
     class Meta:
         model = experience
@@ -389,9 +262,9 @@ class EditExperienceForm(forms.ModelForm):
             'till_now': 'Currently Working',
         }
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Company Name'}),
-            'role': forms.TextInput(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Role'}),
-            'description': forms.Textarea(attrs={'class': 'outline-none border border-black px-2 py-1', 'placeholder': 'Briefly Describe your Role.'}),
+            'name': forms.TextInput(attrs={'class': 'outline-none border border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', 'placeholder': 'Company Name'}),
+            'role': forms.TextInput(attrs={'class': 'outline-none border border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', 'placeholder': 'Role'}),
+            'description': forms.Textarea(attrs={'class': 'outline-none border border-gray-700 bg-[#262b34] text-[#ffffff] px-2 py-2', 'placeholder': 'Briefly Describe your Role.', 'rows': 7}),
             'till_now': forms.CheckboxInput(attrs={'id': 'exp_presentDate'})
         }
         error_messages = {
@@ -433,24 +306,3 @@ class EditSkillForm(forms.ModelForm):
     class Meta:
         model = userinfo
         fields = ('skills',)
-        
-class PostForm(forms.ModelForm):
-    content = forms.CharField(widget=TinyMCE(attrs={
-                'class': 'text-gray-700 w-full h-36 mx-auto',
-                'placeholder': 'Content....',
-                'id': 'eventDescription'
-            }))
-    class Meta:
-        model = post
-        fields = ['file', 'content']
-        widgets = {
-            'file': forms.FileInput(attrs={
-                'class': 'hidden',
-                'id': 'uploadPost',
-                'name': 'post',
-            }),
-            # 'content': forms.Textarea(attrs={
-            #     'class': 'text-gray-700 w-full h-36 outline-none resize-none',
-            #     'placeholder': 'Content....'
-            # }),
-        }

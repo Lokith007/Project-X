@@ -2,173 +2,210 @@
 {% load static %}
 {% load custom_filter %}
 
-{% block title %}DevMate{% endblock %} 
+{% block title %}
+    {% if request.GET.list == 'following' %}Following{% elif request.GET.list == 'mutuals' %}Mutuals{% else %}Followers{% endif %} · {{ userinfo_obj.user.username }}
+{% endblock %} 
 
-{% block style %}<link rel="stylesheet" href="{% static 'styles/user_profile_page.css' %}"/>{% endblock %} 
-{% block body_class %}text-[15px] h-full bg-[#f4f2ee] overflow-x-hidden{% endblock %}
+{% block style %}
+<link rel="stylesheet" href="{% static 'styles/user_profile_page.css' %}"/>
+{% endblock %} 
+
+{% block body_class %}text-[14px] h-full bg-[#0d1117] text-[#c9d1d9] overflow-x-hidden{% endblock %}
 
 {% block content %}
 
-    <!-- navbar -->
-    {% include "includes/navbar.html" %}
+<div class="flex flex-col lg:flex-row min-h-screen">
+    
+    <!-- Sidenav -->
+    {% include "includes/sidenav.html" %}
 
-    <!-- main section -->
-    <div id='entireSection' class="w-full lg:flex-row lg:flex lg:gap-x-5 md:flex flex flex-col md:justify-start md:items-start">
-        <!-- sidenav -->
-        {% include "includes/sidenav.html" %}
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col items-center py-8 px-4 sm:px-6 lg:px-8 w-full">
+        
+        <!-- Modern Header -->
+        <div class="w-full max-w-xl mb-8">
+            <!-- Breadcrumb / Back -->
+            <nav class="flex items-center gap-2 text-xs text-[#8b949e] mb-4 font-medium">
+                <a href="{% url 'index' %}" class="hover:text-green-600 transition-colors">Home</a>
+                <span class="text-[#30363d]">/</span>
+                <a href="{% url 'user_profile' userinfo_obj.user.username %}" class="hover:text-green-600 transition-colors">{{ userinfo_obj.user.username }}</a>
+                <span class="text-[#30363d]">/</span>
+                <span class="text-[#c9d1d9]">Network</span>
+            </nav>
 
-        <!-- list section -->
-        <div class="relative flex mt-32 lg:mt-32 md:w-full px-2 flex-[5] pb-16">
-            <a href = '{% url "user_profile" userinfo_obj.user.username %}' class="transition border-black hover:bg-white border hover:border-black hover:text-black absolute -top-12  right-3  mt-1 bg-black text-white flex items-center gap-x-2 px-3 py-1 rounded">
-                <i class="fa-solid fa-arrow-left"></i> <span class="hidden md:block">Back</span></a>
-                    
-            <div class="flex flex-col items- gap-y-10 w-full">
-                <div class="flex justify-start gap-x-2 md:gap-x-10 items-end bg-[#00000036] px-3 py-2 rounded-md">
-
-                    <a href = '?list=followers' data-active = "{% if request.GET.list == 'followers' or request.GET.list == None %}true{% else %}false{% endif %}" class="fl-btn">Followers</a>
-
-                    <a href = '?list=following' data-active = "{% if request.GET.list == 'following' %}true{% else %}false{% endif %}" class="fl-btn">Following</a>
-                    
-                    <a href='?list=org' data-active = "{% if request.GET.list == 'org' %}true{% else %}false{% endif %}" class="fl-btn">Groups</a>
+            <!-- Title Section -->
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-2xl sm:text-3xl font-bold text-white tracking-tight mb-1.5">
+                        {% if request.GET.list == 'following' %}Following{% elif request.GET.list == 'mutuals' %}Mutuals{% else %}Followers{% endif %}
+                    </p>
+                    <p class="text-[#8b949e] text-sm">
+                        People connected with <span class="text-[#c9d1d9] font-medium">@{{ userinfo_obj.user.username }}</span>
+                    </p>
                 </div>
+                <a href="{% url 'user_profile' userinfo_obj.user.username %}" class=" sm:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#30363d] bg-[#21262d] text-xs font-medium text-[#c9d1d9] hover:bg-[#30363d] hover:text-white transition-all shadow-sm">
+                    <i class="fa-solid fa-arrow-left"></i> Back
+                </a>
+            </div>
+        </div>
 
-
-                <div class="flex flex-col gap-y-3">
-
-                    {% if not grp %}
-                        {% for people in user_list %}
-                        <div class="bg-white px-3 py-3 rounded-md flex g items-center w-full flex-wrap gap-y-2 justify-between max-[470px]:flex-col max-[470px]:items-start">
-                            <div class="flex gap-x-5 ">
-                                <div class="">
-                                    <div class="relative inline-block">
-                                        <a href="{% url 'user_profile' people.user.username %}">
-                                            <img src="{{people.profile_image.url}}?v={{people.updated_at.timestamp}}" class="rounded-lg w-14 h-14" alt="">
-                                            {% if people.last_seen|is_online %}
-                                                <span class="absolute bottom-0 right-0 block w-3 h-3 bg-green-500 border-2 border-white rounded-full" title='Active'></span>
-                                            {% endif %}
-                                        </a>
-                                    </div>
-                                </div>
-                                <div class="flex flex-col gap-y-1 ">
-                                    <a href="{% url 'user_profile' people.user.username %}" class="font-semibold cursor-pointer hover:underline transition text-base">{{people.user.first_name}} {{people.user.last_name}}</a>
-                                    <p>@{{people.user.username}}</p>
-                                    <p class="break-words">{{people.cringe_badge.emoji}} {{people.cringe_badge.name}}</p>
-                                </div>
-                            </div>
-                            <div class="self-center">
-                                {% if user.info == people %}
-                                <a href='{% url "user_profile" user.username %}' class="bg-green-100 px-3 py-1 rounded-md text-green-600 font-semibold border border-green-500 transition-all hover:bg-green-200">View</a>
-                                {% else %}
-                                    {% if user.info|is_following:people %}
-                                        <a href="javascript:void(0);" class="follow-btn bg-[#464646] text-white py-2 text-center rounded-md inline-block min-w-[100px]" data-user-id="{{ people.id }}">
-                                            <span class="btn-text">&lt;Unfollow/&gt;</span>
-                                        </a>
-                                    {% else %}
-                                    <a href="javascript:void(0);" class="follow-btn bg-[#6feb85] text-center py-2 rounded-md inline-block min-w-[100px]" data-user-id="{{ people.id }}">
-                                            <span class="btn-text">&lt;Follow/&gt;</span>
-                                        </a>
-                                    {% endif %}
-                                {% endif %}
-                            </div>
-                        </div>
-                        {% endfor %}
-                    {% elif grp %}
-                        {% for org in user_list %}
-                        <div class="bg-white px-3 py-2 rounded-md flex g items-center w-full flex-wrap gap-y-2 justify-between max-[470px]:flex-col max-[470px]:items-start">
-                            <div class="flex gap-x-5 ">
-                                <div class="">
-                                    <div><a href="{% url 'organization_detail' org.id %}"><img src="{{org.logo.url}}?v={{org.updated_at.timestamp}}" class="rounded-lg w-14 h-14" alt=""></a></div>
-                                </div>
-                                <div class="flex flex-col gap-y-1 ">
-                                    <a href="{% url 'organization_detail' org.id %}" class="font-semibold text-base cursor-pointer hover:underline transition">{{org.name}}</a>
-                                    <p>{{org.industry.name}}</p>
-                                    {% comment %} <p class="break-words">#mood...</p> {% endcomment %}
-                                </div>
-                            </div>
-                            <div class="self-center">
-                                {% if org in user.organization.all %}
-                                <a href="{% url 'organization_detail' org.id %}" class="bg-green-100 px-3 py-1 rounded-md text-green-600 font-semibold border border-green-500 transition-all hover:bg-green-200">View</a>
-                                {% else %}
-                                    {% if user.info|is_following_org:org %}
-                                    <a href="javascript:void(0);" class="px-4 py-2 rounded-md follow-toggle-org bg-[#464646] text-white w-[100px] text-center flex justify-center" 
-                                        data-org-id="{{ org.id }}">
-                                        Unfollow
-                                    </a>
-                                    {% else %}
-                                    <a href="javascript:void(0);" class="px-4 py-2 rounded-md follow-toggle-org bg-[#6feb85] w-[100px] text-center flex justify-center"  
-                                        data-org-id="{{ org.id }}">
-                                        Follow
-                                    </a>
-                                    {% endif %}
-                                {% endif %}
-                            </div>
-                        </div>
-                        {% endfor %}
+        <!-- Main Card -->
+        <div class="w-full max-w-xl -mt-2 bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden shadow-sm ring-1 ring-white/5">
+            
+            <!-- Switch Component (Tabs) -->
+            <div class="p-4 border-b border-[#30363d]">
+                <div class="flex p-1 bg-[#0d1117] rounded-lg border border-[#30363d] overflow-x-auto custom-scrollbar">
+                    <a href="?list=followers" class="flex-1 min-w-[120px] whitespace-nowrap py-1.5 text-center text-sm font-medium rounded-md transition-all duration-200
+                        {% if request.GET.list == 'followers' or request.GET.list == None %}
+                            bg-[#21262d] text-white shadow-sm ring-1 ring-white/10
+                        {% else %}
+                            text-[#8b949e] hover:text-[#c9d1d9] hover:bg-[#21262d]/50
+                        {% endif %}">
+                        Followers <span class="ml-1.5 text-xs opacity-70 bg-[#30363d] px-1.5 py-0.5 rounded-full">{{ followers_count }}</span>
+                    </a>
+                    <a href="?list=following" class="flex-1 min-w-[120px] whitespace-nowrap py-1.5 text-center text-sm font-medium rounded-md transition-all duration-200
+                        {% if request.GET.list == 'following' %}
+                            bg-[#21262d] text-white shadow-sm ring-1 ring-white/10
+                        {% else %}
+                            text-[#8b949e] hover:text-[#c9d1d9] hover:bg-[#21262d]/50
+                        {% endif %}">
+                        Following <span class="ml-1.5 text-xs opacity-70 bg-[#30363d] px-1.5 py-0.5 rounded-full">{{ following_count }}</span>
+                    </a>
+                    {% if not is_self %}
+                    <a href="?list=mutuals" class="flex-1 min-w-[120px] whitespace-nowrap py-1.5 text-center text-sm font-medium rounded-md transition-all duration-200
+                        {% if request.GET.list == 'mutuals' %}
+                            bg-[#21262d] text-white shadow-sm ring-1 ring-white/10
+                        {% else %}
+                            text-[#8b949e] hover:text-[#c9d1d9] hover:bg-[#21262d]/50
+                        {% endif %}">
+                        Mutuals <span class="ml-1.5 text-xs opacity-70 bg-[#30363d] px-1.5 py-0.5 rounded-full">{{ mutuals_count }}</span>
+                    </a>
                     {% endif %}
-
                 </div>
+            </div>
 
-                {% comment %} pagination {% endcomment %}
+            <!-- List Content -->
+            <div class="divide-y divide-[#30363d] max-h-[65vh] overflow-y-auto custom-scrollbar bg-[#0d1117]/20">
                 {% if user_list %}
-                <div class="flex justify-center mb-6 lg:mb-12">
-                    <div class="flex flex-wrap items-center gap-2 md:gap-3 text-xs md:text-sm">
-                        {% if user_list.has_previous %}
-                        <a href="?list={{request.GET.list}}&page=1" class="px-2 py-1 border border-black text-black rounded-md hover:bg-black hover:text-white transition duration-200">&laquo; First</a>
-                        <a href="?list={{request.GET.list}}&page={{user_list.previous_page_number}}" class="px-2 py-1 border border-black text-black rounded-md hover:bg-black hover:text-white transition duration-200">Previous</a>
-                        {% endif %}
+                    {% for people in user_list %}
+                    <div class="flex items-center justify-between px-4 py-4 hover:bg-[#21262d]/40 transition-colors group">
+                        
+                        <!-- User Info -->
+                        <div class="flex items-center gap-4 flex-1 min-w-0">
+                            <a href="{% url 'user_profile' people.user.username %}" class="relative shrink-0">
+                                <img src="{{people.profile_image.url}}?v={{people.updated_at.timestamp}}" 
+                                     class="w-12 h-12 rounded-full border-2 border-[#30363d] object-cover group-hover:bg-green-600 transition-colors" 
+                                     alt="{{people.user.username}}">
+                                {% if people.last_seen|is_online %}
+                                    <span class="absolute bottom-0.5 right-0.5 w-3 h-3 bg-[#3fb950] border-2 border-[#161b22] rounded-full" title="Online"></span>
+                                {% endif %}
+                            </a>
+                            
+                            <div class="flex flex-col min-w-0">
+                                <a href="{% url 'user_profile' people.user.username %}" class="text-[15px] font-semibold text-white hover:text-green-600 hover:underline truncate transition-colors">
+                                    {{people.user.username}}
+                                </a>
+                                <div class="flex items-center gap-2 text-xs text-[#8b949e] mt-0.5">
+                                    <span class="truncate max-w-[120px]">{{people.user.first_name}} {{people.user.last_name}}</span>
+                                    {% if people.coding_style %}
+                                            <img src="{% static 'assets/coding-style-logo/' %}{{people.coding_style.logo}}" 
+                                                 class="w-4 h-4 opacity-80" 
+                                                 alt="{{people.coding_style.name}}">
+                                            {% comment %} <span class="font-medium text-[10px]">{{people.coding_style.name}}</span> {% endcomment %}
+                                        
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
 
-                        <span class="text-black font-medium">
-                            <span class="font-semibold">Page {{ user_list.number }}</span> of {{ user_list.paginator.num_pages }}
-                        </span>
-
-                        {% if user_list.has_next %}
-                        <a href="?list={{request.GET.list}}&page={{user_list.next_page_number}}" class="px-2 py-1 border border-black text-black rounded-md hover:bg-black hover:text-white transition duration-200">Next</a>                            
-                        <a href="?list={{request.GET.list}}&page={{user_list.paginator.num_pages}}" class="px-2 py-1 border border-black text-black rounded-md hover:bg-black hover:text-white transition duration-200">&laquo; Last</a>
-                        {% endif %}
+                        <!-- Action Button -->
+                        <div class="ml-4 shrink-0">
+                            {% if user.info == people %}
+                                <!-- Self -->
+                            {% else %}
+                                {% if user.info|is_following:people %}
+                                    <a href="javascript:void(0);" class="follow-btn bg-[#262b34] text-white py-2 text-center rounded-md inline-block min-w-[100px]" data-user-id="{{ people.id }}">
+                                        <span class="btn-text">&lt;Unfollow/&gt;</span>
+                                    </a>
+                                {% else %}
+                                    <a href="javascript:void(0);" class="follow-btn bg-[#6feb85] text-black text-center py-2 rounded-md inline-block min-w-[100px]" data-user-id="{{ people.id }}">
+                                        <span class="btn-text">&lt;Follow/&gt;</span>
+                                    </a>
+                                {% endif %}
+                            {% endif %}
+                        </div>
                     </div>
-                </div>
+                    {% endfor %}
                 {% else %}
-                <div class="flex flex-col items-center justify-center p-4">
-                    <img src="{% static 'assets/no-follower.svg' %}" alt="Not Found" class="w-24 md:w-32 lg:w-48 xl:w-64">
-                    <span class="text-lg md:text-xl lg:text-2xl mt-5 font-normal text-gray-700 mb-4">
-                        This user has no connections yet.
-                    </span>
-                </div>
+                    <!-- Empty State -->
+                    <div class="flex flex-col items-center justify-center py-20 px-4 text-center">
+                        <div class="w-16 h-16 bg-[#21262d] rounded-full flex items-center justify-center mb-4 border border-[#30363d] shadow-sm">
+                            <i class="fa-solid fa-user-group text-[#8b949e] text-2xl"></i>
+                        </div>
+                        <h3 class="text-white font-semibold text-lg mb-1">No connections yet</h3>
+                        <p class="text-[#8b949e] text-sm max-w-xs mx-auto">
+                            {% if request.GET.list == 'following' %}
+                                {{ userinfo_obj.user.username }} isn't following anyone.
+                            {% elif request.GET.list == 'mutuals' %}
+                                No mutual connections found.
+                            {% else %}
+                                {{ userinfo_obj.user.username }} doesn't have any followers.
+                            {% endif %}
+                        </p>
+                    </div>
                 {% endif %}
-
-
             </div>
-        </div>
 
-        <!-- skill project section -->
-        <div class=" hidden lg:flex flex-col px-4 mt-10 lg:w-1/4 lg:flex-col lg:mt-28 gap-y-5 md:flex-row md:w-full md:gap-x-5 md:mr-3 rounded-md">
-
-            <div class="flex flex-col pb-20 bg-white md:pb-4 gap-y-5 md:w-1/2 lg:w-full rounded-md">
-                <p class="text-lg bg-[#303034] font-light text-center text-white px-3 py-2 rounded-md">Projects You’ll Love</p>
-                {% for project in suggested_project %}
-                <div class="flex flex-col gap-y-2 border border-[#6868682f] mx-2 p-2 rounded-md">
-                    <div class="flex items-start gap-x-4 w-full p-1">
-                        <div class="h-20 shrink-0">
-                            <a href='{% url "project_detail" project.id %}'><img src="{{project.image.url}}" alt="" class='w-14 h-14 rounded-md shrink-0 object-cover'></a>
-                        </div>
-                        <div class="flex flex-col w-4/5  gap-y-2">
-                            <div class="font-semibold">{{project.title}}</div>
-                            <a href='{% url "project_detail" project.id %}' class="break-words">{{project.description|slice:":90"}}...</a>
-                        </div>
-                    </div>
-                    <hr class="border-t border-gray-300">
-                    <div class="flex flex-wrap items-center gap-x-5 gap-y-2">
-                        <a href='{% url "project_joined_members" project.id %}' class="bg-[#464646] text-white px-2 py-1 border rounded-md">{{project.tot_member}}  Joined
+            <!-- Pagination -->
+            {% if user_list.paginator.num_pages > 1 %}
+            <div class="border-t border-[#30363d] bg-[#161b22] p-3 flex justify-center">
+                <div class="flex items-center gap-1 bg-[#0d1117] p-1 rounded-lg border border-[#30363d]">
+                    {% if user_list.has_previous %}
+                        <a href="?list={{request.GET.list}}&page={{user_list.previous_page_number}}" class="p-1.5 text-[#8b949e] hover:text-[#58a6ff] hover:bg-[#21262d] transition-all rounded-md">
+                            <i class="fa-solid fa-chevron-left"></i>
                         </a>
-                        <a href='{% url "explore-project" %}?domain={{ project.domain.id }}' class="cursor-pointer bg-[#00000031] px-2 py-1 border border-[#000000] text-[#000000] rounded-md">
-                            {{project.domain}}</a>
-                    </div>
+                    {% else %}
+                        <span class="p-1.5 text-[#484f58] cursor-not-allowed">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </span>
+                    {% endif %}
+                    
+                    <span class="text-xs text-[#c9d1d9] font-medium px-3 py-1">
+                        Page {{ user_list.number }} of {{ user_list.paginator.num_pages }}
+                    </span>
+
+                    {% if user_list.has_next %}
+                        <a href="?list={{request.GET.list}}&page={{user_list.next_page_number}}" class="p-1.5 text-[#8b949e] hover:text-[#58a6ff] hover:bg-[#21262d] transition-all rounded-md">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </a>
+                    {% else %}
+                        <span class="p-1.5 text-[#484f58] cursor-not-allowed">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </span>
+                    {% endif %}
                 </div>
-                {% endfor %}    
             </div>
+            {% endif %}
+
         </div>
-    </div>
+    </main>
+</div>
 
-    {% include "includes/create-post.html" %}
+<style>
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background-color: #30363d;
+        border-radius: 20px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background-color: #8b949e;
+    }
+</style>
 
-{% endblock  %}
+{% endblock %}

@@ -2,20 +2,21 @@
 <!-- edit profile -->
 <div class="hidden fixed items-center justify-center top-20 bottom-12 left-0 right-0" id="editContainer">
     <form method='POST' enctype="multipart/form-data"
-        class="relative flex flex-col gap-y-3 h-full overflow-y-scroll py-10 bg-white w-full lg:w-1/2 px-5 border">
+        class="relative flex flex-col gap-y-3 h-full overflow-y-scroll py-10 bg-[#0e1217] w-full lg:w-1/2 px-5 border border-gray-600">
         {% csrf_token %}
         <div class="cursor-pointer absolute top-5 right-5" onclick="closeEdit()"><i
                 class="text-3xl fa-solid fa-circle-xmark"></i></div>
         <div class="max-[500px]:self-stretch self-center flex flex-col gap-y-3 w-full lg:w-[85%]">
-            <p class="mt-5 text-2xl font-bold bg-black text-white px-3 py-1 text-center rounded w-fit self-center">
-                Edit Details
+            <p class="mt-2 mb-4 text-lg font-tjin text-white text-center px-6 py-3 w-fit self-center rounded-xl bg-[#262b34] backdrop-blur-md border border-white/10 shadow-md shadow-black/50 tracking-wide">
+                <i class="fa-solid fa-pen-to-square"></i>&nbsp Edit Details
             </p>
+
             <div class="self-center mb-4">
                 <div class="flex gap-x-5 items-center max-[500px]:flex-col gap-y-5">
                     <div class="relative">
                         <img src="{{userinfo_obj.profile_image.url}}?v={{userinfo_obj.updated_at.timestamp}}" alt="" class="rounded-lg w-40 h-40" id="image">
                         <label id="imageContainer" for="imgInput"
-                            class="absolute -right-3 -bottom-3 bg-black rounded-full p-2 cursor-pointer"><img
+                            class="absolute -right-3 -bottom-3 bg-[#1a1f26] rounded-full p-2 cursor-pointer"><img
                                 src="{% static 'assets/edit.svg' %}" alt="" class="w-7 h-7"></label>
                     </div>
 
@@ -25,7 +26,9 @@
 
                     <input type="file" name="profileImg" class="hidden" id="imgInput" accept="image/*">
                     <input type="hidden" name="croppedImage" id="croppedImage"> <!-- Hidden field for cropped image -->
-                    <div class="cursor-pointer hidden bg-[#6feb85] px-2 py-1 rounded-md" id="cropBtn" onclick="crop()">Done</div>
+                    {% comment %} <div class="cursor-pointer hidden bg-[#6feb85] text-black px-2 py-1 rounded-md" id="cropBtn" onclick="crop()">Done</div> {% endcomment %}
+                    <div class="cursor-pointer hidden bg-[#00a63e] text-black font-medium px-3 py-1.5 rounded-lg shadow-sm transition-all duration-200 ease-in-out" id="cropBtn" onclick="crop()"><i class="fa-solid fa-circle-check"></i>&nbsp Done</div>
+
                 </div>
             </div>
             <div class="max-[500px]:flex-col gap-y-3 flex gap-x-3 ">
@@ -58,30 +61,40 @@
                 {% endif %}
             </div>
 
-            <div class="flex flex-col gap-y-1">
+            <div class="flex flex-col gap-y-1 w-full">
                 <p>{{ep_form.bio.label}}</p>
                 {{ep_form.bio}}
             </div>
-            <div class="gap-y-3 flex gap-x-3 ">
-                <div class="flex flex-col gap-y-1 w-full">
-                    <p>{{ep_form.dob.label}}</p>
-                    {{ep_form.dob}}
-                </div>
-                <div class="flex flex-col gap-y-1 w-1/2 lg:w-full">
-                    <p>{{ep_form.availability.label}}</p>
-                    {{ep_form.availability}}
-                </div>
+            <div class="flex flex-col gap-y-1 w-full">
+                <p>{{ep_form.dob.label}}</p>
+                {{ep_form.dob}}
             </div>
             <div>
-                <div class="flex flex-col gap-y-1 w-full">
-                    <p>{{ep_form.cringe_badge.label}}</p>
-                    {{ep_form.cringe_badge}}
-                </div>
-            </div>
-            <div>
-                <div class="flex flex-col gap-y-1 w-full">
+                <div class="flex flex-col gap-y-1 w-full relative">
                     <p>{{ep_form.location.label}}</p>
-                    {{ep_form.location}}
+                    <!-- Autocomplete Input -->
+                    <input type="text" 
+                           id="location-search" 
+                           name="location" 
+                           value="{{userinfo_obj.location|default:''}}" 
+                           placeholder="Search for your city..." 
+                           class="bg-[#161b22] border border-[#30363d] text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                           autocomplete="off">
+                    
+                    <!-- Dropdown Results -->
+                    <div id="location-results" class="absolute top-full left-0 w-full bg-[#161b22] border border-[#30363d] rounded-b-lg shadow-xl z-50 hidden max-h-60 overflow-y-auto">
+                        <!-- Results populated by JS -->
+                    </div>
+                    
+                    <!-- Hidden Fields for Structured Data -->
+                    <input type="hidden" name="city" id="city" value="{{userinfo_obj.city|default:''}}">
+                    <input type="hidden" name="state" id="state" value="{{userinfo_obj.state|default:''}}">
+                    <input type="hidden" name="country" id="country" value="{{userinfo_obj.country|default:''}}">
+                    
+                    <!-- Loading Indicator -->
+                    <div id="location-loading" class="absolute right-3 top-9 hidden">
+                        <i class="fa-solid fa-spinner fa-spin text-gray-400"></i>
+                    </div>
                 </div>
             </div>
             <div class="max-[500px]:flex-col gap-y-3 flex gap-x-3 ">
@@ -168,78 +181,21 @@
             </div>
 
             <div class="self-center mt-5">
-                <button class="bg-[#6feb85] px-3 py-1 rounded-lg" type="submit">Save</button>
+                <button class="bg-[#00a63e] px-3 py-1 text-black rounded-lg cursor-pointer" type="submit"><i class="fa-solid fa-circle-check"></i>&nbsp; Save</button>
             </div>
         </div>
     </form>
 </div>
 
-{% comment %} edit current position {% endcomment %}
-<form method = 'POST' class=" hidden fixed items-center justify-center top-20 left-0 right-0 w-full" id="editCurrentPosition">
-    {% csrf_token %}
-    <div
-        class="relative flex flex-col gap-y-4 h-full overflow-y-scroll item-c py-10 bg-white w-full lg:w-2/5 px-5 border">
-        <div class="cursor-pointer absolute top-5 right-5" onclick="closeCurrentPosition()"><i
-                class="text-3xl fa-solid fa-circle-xmark"></i></div>
-        <p class="mt-5 text-2xl font-bold bg-black text-white px-3 py-1 text-center rounded w-fit self-center">Edit Current Position</p>
-        <input type ='hidden' name = 'form_type' value='current_position'>
-        <div class="flex flex-col gap-y-1 w-full">
-            <p>{{cp_form.name.label}}</p>
-            {{cp_form.name}}
-            {% if cp_form.name.errors %}
-                <div class="text-red-500 text-sm">
-                    {% for error in cp_form.name.errors %}
-                        <p>{{ error }}</p>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        </div>
-        <div class="flex flex-col gap-y-1 w-full">
-            <p>{{cp_form.role.label}}</p>
-            {{cp_form.role}}
-            {% if cp_form.role.errors %}
-                <div class="text-red-500 text-sm">
-                    {% for error in cp_form.role.errors %}
-                        <p>{{ error }}</p>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        </div>
-        <div class="flex flex-col gap-y-1 w-full">
-            <p>{{cp_form.description.label}}</p>
-            {{cp_form.description}}
-        </div>
-        <div class="flex gap-x-3 w-full" id="dateSec">
-            <div class="flex flex-col gap-y-1 w-full">
-                <p>{{cp_form.start_date.label}}</p>
-                {{cp_form.start_date}}
-            </div>
-            <div class="flex flex-col gap-y-1 w-full">
-                <p>{{cp_form.end_date.label}}</p>
-               {{cp_form.end_date}}
-               <div class="flex gap-x-2">
-                {{cp_form.till_now}}
-                <label for="presentDate">{{cp_form.till_now.label}}</label>
-            </div> 
-            </div>
-        </div>
-        <div class="self-center flex flex-row gap-x-5">
-            <button type="submit" name="action" value="save" class="bg-[#6feb85] text-black px-3 py-1 rounded-lg cursor-pointer">Save</button>
-            {% if cp_form.name.value and cp_form.role.value %}
-            <button type="submit" name="action" value="delete" class="bg-red-600 text-white px-3 py-1 rounded-lg cursor-pointer">Delete</button>
-            {% endif %}
-        </div>
-    </div>
-</form>
 
 <!-- edit experience -->
 <form method = 'POST' class=" hidden fixed items-center justify-center top-20 left-0 right-0 w-full" id="editExp">
     {% csrf_token %}
     <div
-        class="relative flex flex-col gap-y-4 h-full overflow-y-scroll item-c py-10 bg-white w-full lg:w-2/5 px-5 border">
+        class="relative flex flex-col gap-y-4 h-full overflow-y-scroll item-c py-10 bg-[#0e1217] w-full lg:w-2/5 px-5 border border-gray-600">
         <div class="cursor-pointer absolute top-5 right-5" onclick="closeEditExp()"><i
                 class="text-3xl fa-solid fa-circle-xmark"></i></div>
-        <p class="mt-5 text-2xl font-bold bg-black text-white px-3 py-1 text-center rounded w-fit self-center">Edit
+        <p class="text-xl font-light bg-[#262b34] text-white px-3 py-1 text-center rounded w-fit self-center">Add
             Experience</p>
         <input type ='hidden' name = 'form_type' value='experience'>
         <div class="flex flex-col gap-y-1 w-full">
@@ -269,11 +225,11 @@
             {{exp_form.description}}
         </div>
         <div class="flex gap-x-3 w-full" id="dateSec">
-            <div class="flex flex-col gap-y-1 w-full">
+            <div class="flex flex-col gap-y-1 w-1/2 lg:w-full">
                 <p>{{exp_form.start_date.label}}</p>
                 {{exp_form.start_date}}
             </div>
-            <div class="flex flex-col gap-y-1 w-full">
+            <div class="flex flex-col gap-y-1 w-1/2 lg:w-full">
                 <p>{{exp_form.end_date.label}}</p>
                {{exp_form.end_date}}
                 <div class="flex gap-x-2">
@@ -287,13 +243,13 @@
 </form>
 
 <!-- edit education -->
-<form method='post' action = '' class="hidden fixed items-center justify-center top-20 left-0 right-0 w-full" id="editEducation">
+<form method='post' action = '' class="hidden fixed items-center justify-center top-30 left-0 right-0 w-full" id="editEducation">
     {% csrf_token %}
     <div
-        class="relative flex flex-col gap-y-4 h-full overflow-y-scroll item-c py-10 bg-white w-full md:w-3/4 lg:w-2/5 px-5 border">
+        class="relative flex flex-col gap-y-4 h-full overflow-y-scroll item-c py-10 bg-[#0e1217] w-full md:w-3/4 lg:w-2/5 px-5 border border-gray-600">
         <div class="cursor-pointer absolute top-5 right-5" onclick="closeEditEducation()"><i
                 class="text-3xl fa-solid fa-circle-xmark"></i></div>
-        <p class="mt-5 w-fit self-center text-2xl font-bold bg-black text-white px-3 py-1 text-center rounded">Edit
+        <p class="mt-5 w-fit self-center text-2xl font-light bg-[#262b34] text-white px-3 py-1 text-center rounded">Edit
             Education</p>
         <input type ='hidden' name = 'form_type' value='education'>
         <div class="flex flex-col gap-y-1 w-full">
@@ -324,11 +280,11 @@
         </div>
 
         <div class="flex gap-x-3 w-full">
-            <div class="flex flex-col gap-y-1 w-full">
+            <div class="flex flex-col gap-y-1 w-1/2 lg:w-full">
                 <p>{{edu_form.start_date.label}}</p>
                 {{edu_form.start_date}}
             </div>
-            <div class="flex flex-col gap-y-1 w-full">
+            <div class="flex flex-col gap-y-1 w-1/2 lg:w-full">
                 <p>{{edu_form.end_date.label}}</p>
                {{edu_form.end_date}}
             </div>
@@ -343,82 +299,98 @@
     </div>
 </form>
 
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('location-search');
+        const resultsDiv = document.getElementById('location-results');
+        const loadingDiv = document.getElementById('location-loading');
+        const cityInput = document.getElementById('city');
+        const stateInput = document.getElementById('state');
+        const countryInput = document.getElementById('country');
+        
+        let debounceTimer;
+        
+        searchInput.addEventListener('input', function(e) {
+            const query = e.target.value;
+            
+            // Clear previous timeout
+            clearTimeout(debounceTimer);
+            
+            if (query.length < 3) {
+                resultsDiv.classList.add('hidden');
+                return;
+            }
+            
+            // Show loading
+            loadingDiv.classList.remove('hidden');
+            
+            // Debounce API call
+            debounceTimer = setTimeout(() => {
+                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&addressdetails=1&limit=5`, {
+                    headers: {
+                        'Accept-Language': 'en-US,en;q=0.5',
+                        'User-Agent': 'DevMate/1.0'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    resultsDiv.innerHTML = '';
+                    loadingDiv.classList.add('hidden');
+                    
+                    if (data.length > 0) {
+                        resultsDiv.classList.remove('hidden');
+                        
+                        data.forEach(place => {
+                            const address = place.address;
+                            const city = address.city || address.town || address.village || address.hamlet || '';
+                            const state = address.state || address.region || '';
+                            const country = address.country || '';
+                            
+                            // Create result item
+                            const div = document.createElement('div');
+                            div.className = 'p-3 hover:bg-[#262b34] cursor-pointer border-b border-[#30363d] last:border-0 transition-colors';
+                            div.innerHTML = `
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-location-dot text-gray-400 text-xs"></i>
+                                    <div>
+                                        <p class="text-sm text-white font-medium">${place.display_name.split(',')[0]}</p>
+                                        <p class="text-xs text-gray-400">${place.display_name}</p>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            div.addEventListener('click', () => {
+                                // Update inputs
+                                searchInput.value = place.display_name;
+                                cityInput.value = city;
+                                stateInput.value = state;
+                                countryInput.value = country;
+                                
+                                // Hide results
+                                resultsDiv.classList.add('hidden');
+                            });
+                            
+                            resultsDiv.appendChild(div);
+                        });
+                    } else {
+                        resultsDiv.classList.add('hidden');
+                    }
+                })
+                .catch(err => {
+                    console.error('Location search error:', err);
+                    loadingDiv.classList.add('hidden');
+                });
+            }, 500); // 500ms debounce
+        });
+        
+        // Close results when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !resultsDiv.contains(e.target)) {
+                resultsDiv.classList.add('hidden');
+            }
+        });
+    });
+</script>
 
-{% comment %} Edit or Add User work {% endcomment %}
-<div class="hidden fixed items-center justify-center top-20 bottom-12 left-0 right-0" id="editProject">
-<form method = 'POST' enctype="multipart/form-data" class="relative flex flex-col gap-y-3 overflow-y-scroll py-10 bg-white w-full lg:w-2/5 px-5 border">
-    {% csrf_token %}
-        <div class="cursor-pointer absolute top-5 right-5" onclick="closeEditProject()"><i
-                class="text-3xl fa-solid fa-circle-xmark"></i></div>
-        <p class="mt-5 text-2xl font-bold bg-black text-white px-3 py-1 text-center rounded w-fit self-center">Add Work</p>
-        <input type ='hidden' name = 'form_type' value='project'>
-        <div class="flex flex-col gap-y-1 w-full">
-            <p>{{project_form.name.label}}</p>
-            {{project_form.name}}
-            {% if project_form.name.errors %}
-                <div class="text-red-500 text-sm">
-                    {% for error in project_form.name.errors %}
-                        <p>{{ error }}</p>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        </div>
-        <div class="flex flex-col gap-y-1 w-full">
-            <p>{{project_form.description.label}}</p>
-            {{project_form.description}}
-            {% if project_form.description.errors %}
-                <div class="text-red-500 text-sm">
-                    {% for error in project_form.description.errors %}
-                        <p>{{ error }}</p>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        </div>
-        <div class="flex flex-col gap-y-1 w-full">
-            <p>{{project_form.media.label}}</p>
-            {{project_form.media}}
-            {% if project_form.media.errors %}
-                <div class="text-red-500 text-sm">
-                    {% for error in project_form.media.errors %}
-                        <p>{{ error }}</p>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        </div>
-        <div class="flex gap-x-3 w-full">
-            <div class="flex flex-col gap-y-1 w-1/2">
-                <p>{{project_form.url.label}}</p>
-                {{project_form.url}}
-                {% if project_form.url.errors %}
-                <div class="text-red-500 text-sm">
-                    {% for error in project_form.url.errors %}
-                        <p>{{ error }}</p>
-                    {% endfor %}
-                </div>
-                {% endif %}
-            </div>
-            <div class="flex flex-col gap-y-1 w-1/2">
-                <p>{{project_form.repo_link.label}}</p>
-               {{project_form.repo_link}}
-               {% if project_form.repo_link.errors %}
-                <div class="text-red-500 text-sm">
-                    {% for error in project_form.repo_link.errors %}
-                        <p>{{ error }}</p>
-                    {% endfor %}
-                </div>
-                {% endif %}
-            </div>
-        </div>
-        <div class="flex gap-x-3 w-full" id="dateSec">
-            <div class="flex flex-col gap-y-1 w-full">
-                <p>{{project_form.start_date.label}}</p>
-                {{project_form.start_date}}
-            </div>
-            <div class="flex flex-col gap-y-1 w-full">
-                <p>{{project_form.end_date.label}}</p>
-               {{project_form.end_date}}
-            </div>
-        </div>
-        <div class="self-center"><button type="submit" class="bg-[#6feb85] text-black px-3 py-1">Save</button></div>
-</form>
-</div>
+
+
