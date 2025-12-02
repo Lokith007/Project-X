@@ -3,7 +3,22 @@
 {% load comment_tags %}
 
 {% for log in feed_items %}
-<div id="log-{{ log.sig }}" class="bg-[#151b23] border border-[#21262d] rounded-xl overflow-hidden hover:border-[#30363d] transition-all duration-200 shadow-lg relative {% if highlighted_log_sig == log.sig %}highlighted-from-{{ source }}{% endif %}">
+<div id="log-{{ log.sig }}" 
+     data-log-sig="{{ log.sig }}"
+     class="bg-[#151b23] border border-[#21262d] rounded-xl overflow-hidden hover:border-[#30363d] transition-all duration-200 shadow-lg relative {% if highlighted_log_sig == log.sig %}highlighted-from-{{ source }}{% endif %}">
+    
+    <!-- Suggestion Label - Only for Secondary Network (LinkedIn/Instagram style) -->
+    {% if log.recommendation_reason %}
+    <div class="px-4 py-2 bg-[#161b22] border-b border-[#21262d]/50 flex items-center gap-2">
+        <i class="fa {{ log.recommendation_reason.icon }} text-[11px] text-gray-500"></i>
+        <span class="text-[11px] text-gray-400">
+            {{ log.recommendation_reason.text }}
+        </span>
+        {% if log.recommendation_reason.subtext %}
+        <span class="text-[10px] text-gray-600">· {{ log.recommendation_reason.subtext }}</span>
+        {% endif %}
+    </div>
+    {% endif %}
     
     <!-- User Header -->
     <div class="flex items-center gap-3 p-4 bg-[#151b23] border-b border-[#282e35]">

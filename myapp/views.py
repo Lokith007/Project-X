@@ -141,6 +141,7 @@ def home_page(request):
     # Fetch trending logs (What's Hot Now)
     from logs.utils.trending import get_trending_logs
     trending_logs = get_trending_logs(limit=5, hours=24)
+    print(feed_items)
     
     logform = LogForm()
     context = {

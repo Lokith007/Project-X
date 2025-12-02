@@ -310,3 +310,118 @@ def search_users_for_mention(request):
     
     return JsonResponse({'users': result[:10]})
 
+
+@login_required
+@require_POST
+def track_log_view(request):
+    """
+    Track when a user views a log in their feed.
+    Used for calculating feed freshness penalties.
+    
+    Expects POST data:
+    - log_sig: The signature of the log being viewed
+    """
+    import json
+    from .models import Log, LogViews
+    
+    try:
+        data = json.loads(request.body)
+        log_sig = data.get('log_sig')
+        
+        if not log_sig:
+            return JsonResponse({'error': 'log_sig required'}, status=400)
+        
+        log = Log.objects.get(sig=log_sig)
+        user = request.user.info
+        
+        # Create or update the view record
+        log_view, created = LogViews.objects.get_or_create(
+            user=user,
+            log=log
+        )
+        
+        if not created:
+            # Increment view count for existing record
+            log_view.increment_view()
+        
+        return JsonResponse({
+            'success': True,
+            'created': created,
+            'view_count': log_view.view_count
+        })
+        
+    except Log.DoesNotExist:
+        return JsonResponse({'error': 'Log not found'}, status=404)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@require_POST
+def track_batch_log_views(request):
+    """
+    Track multiple log views in a single request (more efficient).
+    
+    Expects POST data:
+    - log_sigs: Array of log signatures being viewed
+    """
+    import json
+    from .models import Log, LogViews
+    from django.utils import timezone
+    
+    try:
+        data = json.loads(request.body)
+        log_sigs = data.get('log_sigs', [])
+        
+        if not log_sigs:
+            return JsonResponse({'error': 'log_sigs required'}, status=400)
+        
+        user = request.user.info
+        
+        # Get all logs by signature
+        logs = Log.objects.filter(sig__in=log_sigs)
+        log_map = {log.sig: log for log in logs}
+        
+        # Get existing views for these logs
+        existing_views = LogViews.objects.filter(
+            user=user,
+            log__in=logs
+        ).select_related('log')
+        existing_view_map = {view.log.sig: view for view in existing_views}
+        
+        created_count = 0
+        updated_count = 0
+        
+        for sig in log_sigs:
+            if sig not in log_map:
+                continue  # Log doesn't exist
+            
+            if sig in existing_view_map:
+                # Increment view count and update timestamp
+                view = existing_view_map[sig]
+                view.view_count += 1
+                view.viewed_at = timezone.now()
+                view.save(update_fields=['view_count', 'viewed_at'])
+                updated_count += 1
+            else:
+                # Create new view
+                LogViews.objects.create(
+                    user=user,
+                    log=log_map[sig]
+                )
+                created_count += 1
+        
+        return JsonResponse({
+            'success': True,
+            'created': created_count,
+            'updated': updated_count,
+            'total': created_count + updated_count
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
