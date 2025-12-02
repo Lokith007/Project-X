@@ -988,6 +988,9 @@
   .animate-spin {
     animation: var(--animate-spin);
   }
+  .cursor-default {
+    cursor: default;
+  }
   .cursor-not-allowed {
     cursor: not-allowed;
   }
@@ -2813,6 +2816,13 @@
       }
     }
   }
+  .hover\:bg-\[\#7fec92\] {
+    &:hover {
+      @media (hover: hover) {
+        background-color: #7fec92;
+      }
+    }
+  }
   .hover\:bg-\[\#58a6ff\] {
     &:hover {
       @media (hover: hover) {
@@ -2918,6 +2928,13 @@
     &:hover {
       @media (hover: hover) {
         background-color: var(--color-gray-200);
+      }
+    }
+  }
+  .hover\:bg-gray-600 {
+    &:hover {
+      @media (hover: hover) {
+        background-color: var(--color-gray-600);
       }
     }
   }

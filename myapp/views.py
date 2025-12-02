@@ -434,6 +434,64 @@ def follow_user(request, otheruserinfo_id):
         user.follow(otheruser)
         return JsonResponse({"status": "followed", "message": "User followed successfully.", 'followers_count': otheruser.get_followers().count(), 'following_count': otheruser.get_following().count()})
     return JsonResponse({"status": "error", "message": "Invalid request."}, status=400)
+
+@login_required
+@require_POST
+def quick_follow_user(request):
+    """
+    AJAX endpoint for quick follow/unfollow toggle from feed.
+    Accepts username in POST data.
+    Returns current follow status after toggle.
+    """
+    import json
+    
+    try:
+        data = json.loads(request.body)
+        target_username = data.get('username')
+        
+        if not target_username:
+            return JsonResponse({"status": "error", "message": "Username required."}, status=400)
+        
+        # Get target user
+        try:
+            target_user = userinfo.objects.select_related('user').get(user__username=target_username)
+        except userinfo.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "User not found."}, status=404)
+        
+        current_user = request.user.info
+        
+        # Prevent self-follow
+        if current_user == target_user:
+            return JsonResponse({"status": "error", "message": "Cannot follow yourself."}, status=400)
+        
+        # Check current follow status and toggle
+        is_following = current_user.is_following(target_user)
+        
+        if is_following:
+            # Unfollow
+            current_user.unfollow(target_user)
+            return JsonResponse({
+                "status": "success",
+                "action": "unfollowed",
+                "is_following": False,
+                "message": f"You unfollowed @{target_username}",
+                "username": target_username
+            })
+        else:
+            # Follow
+            current_user.follow(target_user)
+            return JsonResponse({
+                "status": "success",
+                "action": "followed",
+                "is_following": True,
+                "message": f"You are now following @{target_username}",
+                "username": target_username
+            })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({"status": "error", "message": "Invalid JSON data."}, status=400)
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
     
 @login_required
 def follow_list(request, username):

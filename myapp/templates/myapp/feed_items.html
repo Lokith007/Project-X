@@ -9,14 +9,34 @@
     
     <!-- Suggestion Label - Only for Secondary Network (LinkedIn/Instagram style) -->
     {% if log.recommendation_reason %}
-    <div class="px-4 py-2 bg-[#13171d] border-b border-gray-800 flex items-center gap-2">
-        <i class="fa {{ log.recommendation_reason.icon }} text-[11px] text-gray-500"></i>
-        <span class="text-[11px] text-gray-400">
-            {{ log.recommendation_reason.text|linkify_usernames|safe }}
-        </span>
-        {% if log.recommendation_reason.subtext %}
-        <span class="text-[10px] text-gray-600">· {{ log.recommendation_reason.subtext }}</span>
+    <div class="px-4 py-2 bg-[#13171d] border-b border-gray-800 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <i class="fa {{ log.recommendation_reason.icon }} text-[11px] text-gray-500"></i>
+            <span class="text-[11px] text-gray-400">
+                {{ log.recommendation_reason.text|linkify_usernames|safe }}
+            </span>
+            {% if log.recommendation_reason.subtext %}
+            <span class="text-[10px] text-gray-600">· {{ log.recommendation_reason.subtext }}</span>
+            {% endif %}
+        </div>
+        <!-- Quick Follow/Unfollow Toggle Button for Secondary Network -->
+        {% with is_following=request.user.info|is_following:log.user %}
+        {% if is_following %}
+        <button onclick="quickFollowUser('{{ log.user.user.username }}', this)" 
+                data-username="{{ log.user.user.username }}"
+                data-following="true"
+                class="quick-follow-btn text-xs px-3 py-1 bg-gray-700 text-gray-300 rounded-md hover:bg-gray-600 transition-colors font-medium border border-gray-600">
+            <i class="fa fa-check"></i> Following
+        </button>
+        {% else %}
+        <button onclick="quickFollowUser('{{ log.user.user.username }}', this)" 
+                data-username="{{ log.user.user.username }}"
+                data-following="false"
+                class="quick-follow-btn text-xs px-3 py-1 bg-[#238636] text-white rounded-md hover:bg-[#2ea043] transition-colors font-medium border border-[rgba(240,246,252,0.1)] shadow-sm">
+            Follow
+        </button>
         {% endif %}
+        {% endwith %}
     </div>
     {% endif %}
     

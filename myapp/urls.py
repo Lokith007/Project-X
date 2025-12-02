@@ -24,6 +24,7 @@ urlpatterns = [
     path("<str:username>/user-follow-list/", views.follow_list, name="follow_list"),
     path("unfollow/<int:otheruserinfo_id>/", views.unfollow_user, name = 'unfollow_user'),
     path("follow/<int:otheruserinfo_id>/", views.follow_user, name = 'follow_user'),
+    path("api/quick-follow/", views.quick_follow_user, name='quick_follow_user'),
 
     path('update-banner/', views.update_banner, name='update_banner'),
     path("settings/", views.settings_page, name="settings_page"),
