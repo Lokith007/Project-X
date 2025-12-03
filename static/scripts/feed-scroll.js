@@ -315,86 +315,102 @@
     // ==========================================================================
     // Browser Geolocation (for Local feed accuracy)
     // ==========================================================================
+    // 
+    // WORKFLOW:
+    // START → User opens Local Feed
+    //        ↓
+    // Browser location fresh? (within 7 days)
+    //        ↓ Yes → Use existing location → END
+    //        ↓ No
+    // User previously denied? (within 24 hours)
+    //        ↓ Yes → Use IP location (don't prompt) → END  
+    //        ↓ No
+    // Ask browser permission
+    //      ↓        ↓
+    //    Allow     Deny/Fail
+    //      ↓        ↓
+    // Update browser   Force update IP
+    // timestamp        timestamp
+    //      ↓        ↓
+    // Use browser   Use IP → END
+    // location
+    //      ↓
+    //    END
+    //
+    // ==========================================================================
     
-    // LocalStorage keys for geolocation state
+    // LocalStorage keys for geolocation state management
     const GEO_STATE = {
-        PERMISSION_DENIED: 'geo_permission_denied',      // User denied browser permission
-        LOCATION_UPDATED: 'geo_location_updated',        // Location was just updated (prevent reload loop)
-        LAST_PROMPT: 'geo_last_prompt',                  // Last time we prompted for location
+        PERMISSION_DENIED: 'geo_permission_denied',   // Timestamp when user denied browser permission
+        LOCATION_UPDATED: 'geo_location_updated',    // Timestamp when location was last updated (prevents reload loop)
+        IP_FALLBACK_DONE: 'geo_ip_fallback_done',    // Timestamp when IP fallback was completed
     };
     
     // Cooldown periods (in milliseconds)
     const GEO_COOLDOWNS = {
-        AFTER_UPDATE: 30 * 1000,           // 30 seconds after successful update
-        AFTER_DENIAL: 24 * 60 * 60 * 1000, // 24 hours after permission denied
-        BETWEEN_PROMPTS: 5 * 60 * 1000,    // 5 minutes between prompts
+        AFTER_UPDATE: 30 * 1000,            // 30 seconds - prevents reload loop after update
+        AFTER_DENIAL: 24 * 60 * 60 * 1000,  // 24 hours - don't re-prompt after denial
+        IP_FALLBACK: 60 * 60 * 1000,        // 1 hour - don't retry IP fallback too often
     };
 
     /**
-     * Clean up stale geolocation localStorage entries.
-     * Removes keys that have exceeded their cooldown period.
+     * Clean up expired geolocation localStorage entries.
+     * Called on every page load to prevent stale data accumulation.
      */
-    function cleanupStaleGeoState() {
+    function cleanupExpiredGeoState() {
         const now = Date.now();
         
-        // Clean up LOCATION_UPDATED if past cooldown
-        const lastUpdated = localStorage.getItem(GEO_STATE.LOCATION_UPDATED);
-        if (lastUpdated && (now - parseInt(lastUpdated)) >= GEO_COOLDOWNS.AFTER_UPDATE) {
-            localStorage.removeItem(GEO_STATE.LOCATION_UPDATED);
-        }
-        
-        // Clean up PERMISSION_DENIED if past cooldown
-        const deniedAt = localStorage.getItem(GEO_STATE.PERMISSION_DENIED);
-        if (deniedAt && (now - parseInt(deniedAt)) >= GEO_COOLDOWNS.AFTER_DENIAL) {
-            localStorage.removeItem(GEO_STATE.PERMISSION_DENIED);
-        }
-        
-        // Clean up LAST_PROMPT if past cooldown
-        const lastPrompt = localStorage.getItem(GEO_STATE.LAST_PROMPT);
-        if (lastPrompt && (now - parseInt(lastPrompt)) >= GEO_COOLDOWNS.BETWEEN_PROMPTS) {
-            localStorage.removeItem(GEO_STATE.LAST_PROMPT);
-        }
+        Object.entries({
+            [GEO_STATE.LOCATION_UPDATED]: GEO_COOLDOWNS.AFTER_UPDATE,
+            [GEO_STATE.PERMISSION_DENIED]: GEO_COOLDOWNS.AFTER_DENIAL,
+            [GEO_STATE.IP_FALLBACK_DONE]: GEO_COOLDOWNS.IP_FALLBACK,
+        }).forEach(([key, maxAge]) => {
+            const timestamp = localStorage.getItem(key);
+            if (timestamp && (now - parseInt(timestamp)) >= maxAge) {
+                localStorage.removeItem(key);
+            }
+        });
     }
 
+    /**
+     * Check if a localStorage timestamp is within its cooldown period.
+     */
+    function isWithinCooldown(key, cooldownMs) {
+        const timestamp = localStorage.getItem(key);
+        if (!timestamp) return false;
+        return (Date.now() - parseInt(timestamp)) < cooldownMs;
+    }
+
+    /**
+     * Initialize geolocation for Local feed.
+     * Entry point called on page load.
+     */
     function initGeolocation() {
-        const feedType = getFeedTypeFromURL();
-        
-        // Always clean up stale entries (runs on any page)
-        cleanupStaleGeoState();
+        // Always clean up expired entries on any page
+        cleanupExpiredGeoState();
         
         // Only run geolocation logic on Local tab
-        if (feedType !== 'local') {
+        if (getFeedTypeFromURL() !== 'local') {
             return;
         }
         
-        console.log('Local tab detected, checking geolocation status...');
+        console.log('[Geo] Local tab detected, checking geolocation status...');
         
-        // Check if we just updated location (prevent reload loop)
-        const lastUpdated = localStorage.getItem(GEO_STATE.LOCATION_UPDATED);
-        if (lastUpdated && (Date.now() - parseInt(lastUpdated)) < GEO_COOLDOWNS.AFTER_UPDATE) {
-            console.log('Location recently updated, skipping check to prevent loop');
-            localStorage.removeItem(GEO_STATE.LOCATION_UPDATED);  // Clear flag
+        // GUARD: Prevent reload loop - if we just updated, skip
+        if (isWithinCooldown(GEO_STATE.LOCATION_UPDATED, GEO_COOLDOWNS.AFTER_UPDATE)) {
+            console.log('[Geo] Location recently updated, skipping to prevent loop');
+            localStorage.removeItem(GEO_STATE.LOCATION_UPDATED); // Clear after check
             return;
         }
         
-        // Check if user denied permission recently
-        const deniedAt = localStorage.getItem(GEO_STATE.PERMISSION_DENIED);
-        if (deniedAt && (Date.now() - parseInt(deniedAt)) < GEO_COOLDOWNS.AFTER_DENIAL) {
-            console.log('Permission was denied recently, skipping browser prompt');
-            return;
-        }
-        
-        // Check rate limit between prompts
-        const lastPrompt = localStorage.getItem(GEO_STATE.LAST_PROMPT);
-        if (lastPrompt && (Date.now() - parseInt(lastPrompt)) < GEO_COOLDOWNS.BETWEEN_PROMPTS) {
-            console.log('Rate limited: too soon since last prompt');
-            return;
-        }
-        
-        checkAndRefreshGeolocation();
+        // Fetch server status and decide what to do
+        checkGeolocationStatus();
     }
 
-    function checkAndRefreshGeolocation() {
+    /**
+     * Check server for current geolocation status and decide action.
+     */
+    function checkGeolocationStatus() {
         fetch('/api/geolocation/status/', {
             method: 'GET',
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
@@ -405,57 +421,90 @@
             return response.json();
         })
         .then(data => {
-            console.log('Geolocation status:', data);
-            
-            // Location is current - no action needed
-            if (data.has_location && !data.needs_refresh) {
-                console.log('Location is current:', data.city, data.state);
-                return;
-            }
-            
-            console.log('Location needs refresh, requesting browser geolocation...');
-            localStorage.setItem(GEO_STATE.LAST_PROMPT, Date.now().toString());
-            requestBrowserGeolocation();
+            console.log('[Geo] Server status:', data);
+            handleGeolocationDecision(data);
         })
         .catch(error => {
-            console.error('Error checking geolocation status:', error);
-            // Don't spam on errors - just log and continue
+            console.error('[Geo] Error checking status:', error);
+            // On network error, don't do anything - user still sees feed
         });
     }
 
+    /**
+     * Core decision logic based on server status.
+     * Implements the workflow flowchart.
+     */
+    function handleGeolocationDecision(serverStatus) {
+        const { has_location, needs_refresh, browser_updated_at } = serverStatus;
+        
+        // CASE 1: Browser location is fresh → Use existing location, done
+        if (has_location && !needs_refresh && browser_updated_at) {
+            console.log('[Geo] Browser location is fresh:', serverStatus.city, serverStatus.state);
+            return;
+        }
+        
+        // CASE 2: User previously denied permission → Use IP (don't prompt browser)
+        if (isWithinCooldown(GEO_STATE.PERMISSION_DENIED, GEO_COOLDOWNS.AFTER_DENIAL)) {
+            console.log('[Geo] User denied permission recently');
+            
+            // If we already have IP location, use it
+            if (has_location) {
+                console.log('[Geo] Using existing IP location:', serverStatus.city);
+                return;
+            }
+            
+            // No location at all - try IP fallback (if not done recently)
+            if (!isWithinCooldown(GEO_STATE.IP_FALLBACK_DONE, GEO_COOLDOWNS.IP_FALLBACK)) {
+                console.log('[Geo] No location, triggering IP fallback');
+                triggerIPFallback();
+            }
+            return;
+        }
+        
+        // CASE 3: Need to prompt for browser location
+        console.log('[Geo] Requesting browser geolocation...');
+        requestBrowserGeolocation();
+    }
+
+    /**
+     * Request browser geolocation permission.
+     * On success: Update browser location.
+     * On failure/denial: Fall back to IP geolocation.
+     */
     function requestBrowserGeolocation() {
         // Check if Geolocation API is available
         if (!navigator.geolocation) {
-            console.log('Geolocation API not supported, using IP fallback');
+            console.log('[Geo] Browser API not supported, using IP fallback');
             triggerIPFallback();
             return;
         }
 
-        // localhost is considered secure context, so only check for non-localhost
-        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        // Check secure context (localhost is considered secure)
+        const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
         if (!window.isSecureContext && !isLocalhost) {
-            console.log('Requires HTTPS (not localhost), using IP fallback');
+            console.log('[Geo] Requires HTTPS, using IP fallback');
             triggerIPFallback();
             return;
         }
 
-        console.log('Requesting browser geolocation permission...');
+        console.log('[Geo] Prompting for browser permission...');
 
         navigator.geolocation.getCurrentPosition(
+            // SUCCESS: User allowed permission
             (position) => {
-                // Success - clear any denial flag and send to server
-                localStorage.removeItem(GEO_STATE.PERMISSION_DENIED);
+                localStorage.removeItem(GEO_STATE.PERMISSION_DENIED); // Clear any old denial
                 const { latitude, longitude } = position.coords;
-                console.log('Got browser location:', latitude, longitude);
-                updateServerGeolocation(latitude, longitude);
+                console.log('[Geo] Browser location received:', latitude.toFixed(4), longitude.toFixed(4));
+                updateBrowserLocation(latitude, longitude);
             },
+            // ERROR: User denied or other failure
             (error) => {
-                console.log('Geolocation error:', error.code, error.message);
+                console.log('[Geo] Browser error:', error.code, error.message);
                 
                 if (error.code === error.PERMISSION_DENIED) {
-                    // User denied - remember this to avoid re-prompting
-                    console.log('Permission denied, will not prompt again for 24 hours');
+                    // Remember denial to avoid re-prompting for 24 hours
                     localStorage.setItem(GEO_STATE.PERMISSION_DENIED, Date.now().toString());
+                    console.log('[Geo] Permission denied, will use IP fallback');
                 }
                 
                 // All errors fall back to IP geolocation
@@ -464,18 +513,62 @@
             {
                 enableHighAccuracy: true,
                 timeout: 10000,
-                maximumAge: 0
+                maximumAge: 300000  // Accept cached position up to 5 minutes old
             }
         );
     }
 
+    /**
+     * Send browser coordinates to server.
+     * Updates browser_location_updated_at timestamp.
+     */
+    function updateBrowserLocation(latitude, longitude) {
+        fetch('/api/geolocation/update/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken(),
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({ latitude, longitude })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                console.log('[Geo] Browser location saved successfully');
+                markLocationUpdatedAndReload();
+            } else {
+                console.error('[Geo] Server rejected browser location:', data.error);
+                // Fall back to IP if browser update fails
+                triggerIPFallback();
+            }
+        })
+        .catch(error => {
+            console.error('[Geo] Network error saving browser location:', error);
+            // Fall back to IP on network error
+            triggerIPFallback();
+        });
+    }
+
+    /**
+     * Trigger server-side IP geolocation.
+     * Used when browser geolocation is unavailable or denied.
+     * 
+     * In development: Server uses GEOLOCATION_DEV_FALLBACK from settings.
+     * In production: Server calls real IP geolocation APIs.
+     */
     function triggerIPFallback() {
-        /**
-         * Server-side IP geolocation fallback.
-         * In development, server uses configured fallback coordinates.
-         * In production, server uses real IP geolocation APIs.
-         */
-        console.log('Triggering IP-based geolocation fallback...');
+        // Don't retry IP fallback too frequently
+        if (isWithinCooldown(GEO_STATE.IP_FALLBACK_DONE, GEO_COOLDOWNS.IP_FALLBACK)) {
+            console.log('[Geo] IP fallback done recently, skipping');
+            return;
+        }
+        
+        console.log('[Geo] Triggering IP-based geolocation...');
         
         fetch('/api/geolocation/ip-fallback/', {
             method: 'POST',
@@ -486,52 +579,44 @@
             },
             credentials: 'same-origin'
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                // Server returned error status
+                return response.json().then(data => {
+                    throw new Error(data.error || `HTTP ${response.status}`);
+                });
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
-                console.log('IP fallback successful:', data.city, data.state, data.country);
-                // Mark that we just updated (prevents reload loop)
-                localStorage.setItem(GEO_STATE.LOCATION_UPDATED, Date.now().toString());
-                // Reload to show local feed with new location
-                if (getFeedTypeFromURL() === 'local') {
-                    window.location.reload();
-                }
+                console.log('[Geo] IP fallback successful:', data.city, data.state, data.country);
+                // Mark IP fallback as done (prevents rapid retries)
+                localStorage.setItem(GEO_STATE.IP_FALLBACK_DONE, Date.now().toString());
+                markLocationUpdatedAndReload();
             } else {
-                console.warn('IP fallback failed:', data.error);
-                // Don't retry - just continue without location-based ranking
+                throw new Error(data.error || 'Unknown error');
             }
         })
         .catch(error => {
-            console.error('Error in IP fallback:', error);
+            console.warn('[Geo] IP fallback failed:', error.message);
+            // Mark as attempted to prevent rapid retries
+            localStorage.setItem(GEO_STATE.IP_FALLBACK_DONE, Date.now().toString());
+            // User will see Local feed without location-based ranking
+            // They can try again in 1 hour or on next browser location prompt in 24h
         });
     }
 
-    function updateServerGeolocation(latitude, longitude) {
-        fetch('/api/geolocation/update/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCSRFToken(),
-            },
-            body: JSON.stringify({ latitude, longitude })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                console.log('Browser geolocation saved successfully');
-                // Mark that we just updated (prevents reload loop)
-                localStorage.setItem(GEO_STATE.LOCATION_UPDATED, Date.now().toString());
-                // Reload to show local feed with new location
-                if (getFeedTypeFromURL() === 'local') {
-                    window.location.reload();
-                }
-            } else {
-                console.error('Failed to save geolocation:', data.error);
-            }
-        })
-        .catch(error => {
-            console.error('Error saving geolocation:', error);
-        });
+    /**
+     * Mark location as updated and reload page.
+     * The LOCATION_UPDATED flag prevents infinite reload loops.
+     */
+    function markLocationUpdatedAndReload() {
+        localStorage.setItem(GEO_STATE.LOCATION_UPDATED, Date.now().toString());
+        if (getFeedTypeFromURL() === 'local') {
+            console.log('[Geo] Reloading Local feed with new location...');
+            window.location.reload();
+        }
     }
 
     // Initialize when DOM is ready
