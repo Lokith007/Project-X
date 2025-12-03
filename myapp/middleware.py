@@ -13,8 +13,10 @@ class UpdateLastSeenMiddleware(MiddlewareMixin):
 class AutoGeolocationMiddleware(MiddlewareMixin):
     """
     Middleware to auto-detect user location from IP address.
-    Only runs once per user (when they don't have coordinates set).
-    Uses a session flag to avoid repeated API calls.
+    Runs periodically to refresh stale location data.
+    Uses a session flag to avoid repeated API calls within the same session.
+    
+    Location is refreshed every 24 hours to handle users who move.
     """
     
     def process_view(self, request, view_func, view_args, view_kwargs):
@@ -30,14 +32,13 @@ class AutoGeolocationMiddleware(MiddlewareMixin):
         
         user_info = request.user.info
         
-        # Skip if user already has coordinates
-        if user_info.latitude and user_info.longitude:
-            return None
-        
-        # Try to get location from IP (async-friendly, non-blocking)
+        # Try to update location from IP (handles staleness check internally)
         try:
-            from .utils.geolocation import update_user_location_from_ip
-            update_user_location_from_ip(user_info, request)
+            from .utils.geolocation import update_user_location_from_ip, is_location_stale
+            
+            # Only make API call if location is stale or not set
+            if is_location_stale(user_info):
+                update_user_location_from_ip(user_info, request)
         except Exception:
             # Don't break the request if geolocation fails
             pass

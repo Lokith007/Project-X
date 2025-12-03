@@ -4,14 +4,21 @@ Geolocation utilities for auto-detecting user location.
 Supports:
 1. IP-based geolocation (server-side, automatic)
 2. Browser Geolocation API (client-side, more accurate)
+3. Periodic refresh to handle users who move locations
 """
 
 import requests
 import logging
 from decimal import Decimal
+from datetime import timedelta
 from django.conf import settings
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
+
+# Location refresh configuration
+LOCATION_REFRESH_HOURS = 24  # Refresh IP-based location every 24 hours
+BROWSER_LOCATION_REFRESH_HOURS = 168  # Refresh browser location every 7 days (more accurate, less frequent)
 
 
 # Free IP geolocation services (in order of preference)
@@ -111,20 +118,45 @@ def get_location_from_ip(ip_address):
     return None
 
 
-def update_user_location_from_ip(user_info, request):
+def is_location_stale(user_info, refresh_hours=LOCATION_REFRESH_HOURS):
+    """
+    Check if user's location data is stale and needs refresh.
+    
+    Args:
+        user_info: The userinfo model instance
+        refresh_hours: Hours after which location is considered stale
+    
+    Returns:
+        bool: True if location needs refresh, False otherwise
+    """
+    # No location set - definitely needs update
+    if not user_info.latitude or not user_info.longitude:
+        return True
+    
+    # No timestamp - treat as stale (legacy data)
+    if not user_info.location_updated_at:
+        return True
+    
+    # Check if location is older than refresh threshold
+    stale_threshold = timezone.now() - timedelta(hours=refresh_hours)
+    return user_info.location_updated_at < stale_threshold
+
+
+def update_user_location_from_ip(user_info, request, force=False):
     """
     Auto-update user's latitude/longitude from their IP address.
-    Only updates if user doesn't already have coordinates set.
+    Updates if location is stale or not set.
     
     Args:
         user_info: The userinfo model instance
         request: The Django request object
+        force: If True, update regardless of staleness
     
     Returns:
         bool: True if location was updated, False otherwise
     """
-    # Skip if user already has coordinates
-    if user_info.latitude and user_info.longitude:
+    # Check if update is needed (unless forced)
+    if not force and not is_location_stale(user_info, LOCATION_REFRESH_HOURS):
         return False
     
     ip_address = get_client_ip(request)
@@ -138,20 +170,21 @@ def update_user_location_from_ip(user_info, request):
     try:
         user_info.latitude = location_data['latitude']
         user_info.longitude = location_data['longitude']
+        user_info.location_updated_at = timezone.now()
         
-        # Also update city/state/country if not set
-        if not user_info.city and location_data['city']:
+        # Also update city/state/country if not set or if significantly different
+        if not user_info.city or location_data['city']:
             user_info.city = location_data['city']
-        if not user_info.state and location_data['state']:
+        if not user_info.state or location_data['state']:
             user_info.state = location_data['state']
-        if not user_info.country and location_data['country']:
+        if not user_info.country or location_data['country']:
             user_info.country = location_data['country']
         
         user_info.save(update_fields=[
-            'latitude', 'longitude', 'city', 'state', 'country'
+            'latitude', 'longitude', 'location_updated_at', 'city', 'state', 'country'
         ])
         
-        logger.info(f"Updated location for user {user_info.user.username}: "
+        logger.info(f"Updated IP location for user {user_info.user.username}: "
                    f"({location_data['latitude']}, {location_data['longitude']})")
         return True
         
@@ -164,6 +197,7 @@ def update_user_location_from_browser(user_info, latitude, longitude):
     """
     Update user's location from browser Geolocation API.
     This is more accurate than IP-based geolocation.
+    Always updates when called (browser location is user-initiated).
     
     Args:
         user_info: The userinfo model instance
@@ -176,7 +210,8 @@ def update_user_location_from_browser(user_info, latitude, longitude):
     try:
         user_info.latitude = Decimal(str(latitude))
         user_info.longitude = Decimal(str(longitude))
-        user_info.save(update_fields=['latitude', 'longitude'])
+        user_info.location_updated_at = timezone.now()
+        user_info.save(update_fields=['latitude', 'longitude', 'location_updated_at'])
         
         logger.info(f"Updated browser location for user {user_info.user.username}: "
                    f"({latitude}, {longitude})")
@@ -185,3 +220,14 @@ def update_user_location_from_browser(user_info, latitude, longitude):
     except Exception as e:
         logger.error(f"Failed to update browser location: {e}")
         return False
+
+
+def should_request_browser_location(user_info):
+    """
+    Check if we should request browser geolocation from the user.
+    Returns True if location is stale or not set.
+    
+    Browser location is more accurate but requires user permission,
+    so we request it less frequently than IP-based updates.
+    """
+    return is_location_stale(user_info, BROWSER_LOCATION_REFRESH_HOURS)

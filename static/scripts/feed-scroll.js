@@ -312,14 +312,44 @@
     // Browser Geolocation (for Local feed accuracy)
     // ==========================================================================
     function initGeolocation() {
-        // Check if we should request geolocation (only on Local tab or first visit)
         const feedType = getFeedTypeFromURL();
-        const hasRequestedBefore = localStorage.getItem('geolocation_requested');
         
-        // Request geolocation when viewing Local tab for the first time
-        if (feedType === 'local' && !hasRequestedBefore) {
-            requestBrowserGeolocation();
+        // On Local tab, check if we need to refresh location
+        if (feedType === 'local') {
+            checkAndRefreshGeolocation();
         }
+    }
+
+    function checkAndRefreshGeolocation() {
+        // Check server for current geolocation status
+        fetch('/api/geolocation/status/', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Request browser location if:
+            // 1. No location set, OR
+            // 2. Location is stale (needs_refresh = true)
+            if (!data.has_location || data.needs_refresh) {
+                console.log('Location needs refresh, requesting browser geolocation...');
+                requestBrowserGeolocation();
+            } else {
+                console.log('Location is current:', data.city, data.state);
+            }
+        })
+        .catch(error => {
+            console.error('Error checking geolocation status:', error);
+            // Fall back to checking localStorage
+            const lastRequest = localStorage.getItem('geolocation_last_request');
+            const dayAgo = Date.now() - (24 * 60 * 60 * 1000);
+            
+            if (!lastRequest || parseInt(lastRequest) < dayAgo) {
+                requestBrowserGeolocation();
+            }
+        });
     }
 
     function requestBrowserGeolocation() {
@@ -329,8 +359,8 @@
             return;
         }
 
-        // Mark as requested (don't spam the user)
-        localStorage.setItem('geolocation_requested', 'true');
+        // Update last request timestamp
+        localStorage.setItem('geolocation_last_request', Date.now().toString());
 
         // Request position with high accuracy
         navigator.geolocation.getCurrentPosition(

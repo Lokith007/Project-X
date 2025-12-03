@@ -28,6 +28,7 @@ class userinfo(models.Model):
     # Geo-coordinates for Local feed algorithm (auto-set by system)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, db_index=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, db_index=True)
+    location_updated_at = models.DateTimeField(null=True, blank=True, help_text="When coordinates were last updated")
     website = models.URLField(blank=True, null=True)
     phone = PhoneNumberField(blank=True, null=True)
     gender = models.CharField(max_length=25, null=True, blank=True, choices=GENDER_CHOICES)

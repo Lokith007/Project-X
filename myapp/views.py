@@ -1047,17 +1047,22 @@ def update_user_geolocation(request):
 def get_user_geolocation_status(request):
     """
     Get current user's geolocation status.
-    Returns whether coordinates are set and their approximate values.
+    Returns whether coordinates are set, their values, and if refresh is needed.
     """
+    from .utils.geolocation import should_request_browser_location
+    
     user_info = request.user.info
     
     has_location = bool(user_info.latitude and user_info.longitude)
+    needs_refresh = should_request_browser_location(user_info)
     
     return JsonResponse({
         'has_location': has_location,
+        'needs_refresh': needs_refresh,
         'latitude': float(user_info.latitude) if user_info.latitude else None,
         'longitude': float(user_info.longitude) if user_info.longitude else None,
         'city': user_info.city,
         'state': user_info.state,
         'country': user_info.country,
+        'last_updated': user_info.location_updated_at.isoformat() if user_info.location_updated_at else None,
     })
