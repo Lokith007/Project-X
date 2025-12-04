@@ -136,9 +136,11 @@
                     </div>
 
                     <!-- What's Hot Now Section (Mobile Only) -->
+                    {% if feed_items %}
                     <div class="block lg:hidden">
                         {% include 'includes/trending_logs.html' %}
                     </div>
+                    {% endif %}
 
                     {% if feed_items %}
                         <div class="flex flex-col gap-y-6 lg:mt-2 -mt-4" id="feed-container">
@@ -163,11 +165,13 @@
             </div>
 
             <!-- Right Sidebar (Desktop Only) -->
+            {% if feed_items %}
             <div class="hidden lg:block w-80 flex-shrink-0">
                 <div class=" top-6">
                     {% include 'includes/trending_logs.html' %}
                 </div>
             </div>
+            {% endif %}
 
         </div>
             </div>
