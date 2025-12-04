@@ -3,14 +3,13 @@ from myapp.models import follow
 import urllib.parse
 from django.utils import timezone
 from datetime import timedelta
+from django.utils.timesince import timesince
 
 register = template.Library()
 
 @register.filter
 def is_following(user,otheruser):
     return follow.objects.filter(follower = user, following = otheruser).exists()
-
-
 
 @register.filter
 def lstrip(value):
@@ -67,3 +66,9 @@ def linkify_usernames(text):
     linked_text = re.sub(pattern, replace_mention, text)
     
     return mark_safe(linked_text)
+
+@register.filter
+def timesince_short(value):
+    full = timesince(value)  # e.g. "13 hours, 51 minutes"
+    short = full.split(',')[0]  # Take only the largest unit
+    return short

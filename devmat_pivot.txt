@@ -32,7 +32,7 @@ Core Features
 What is a Log?
 A log is a structured micro-post that developers create to share their daily work activity.
 Log Composition:
-255-character text (main update/thought)
+280-character text (main update/thought)
 1 image attachment (screenshot, diagram, UI mockup, terminal output)
 1 hyperlink (documentation, Stack Overflow, GitHub repo, article)
 1 code snippet (200 characters max - for quick examples, not full implementations)
@@ -174,7 +174,7 @@ Threaded discussions under logs
 Developers can ask questions, share related experiences, or offer solutions
 Share/Repost:
 Share logs to your own followers with optional commentary
-Repost with quote (add your own 255-char comment)
+Repost with quote (add your own -char comment)
 Share externally (Twitter, LinkedIn) with embed preview
 Follow System:
 Follow developers whose work you want to see
@@ -437,7 +437,7 @@ Advantage: Purpose-built for dev work, streaks system, heat maps
 2. Dev.to / Hashnode
 Overlap: Developer community, content sharing
 Difference: DevMate is micro-logs vs. long-form articles, daily habit focus
-Advantage: Lower friction (255 chars vs. 1000+ word article), streaks gamification
+Advantage: Lower friction (280 chars vs. 1000+ word article), streaks gamification
 3. GitHub
 Overlap: Public work visibility, contribution graph
 Difference: DevMate shows process/learning, not just commits
@@ -476,7 +476,7 @@ Mitigation:
 ✅ Daily streak reminders (push notifications)
 ✅ Social pressure (leaderboards, public streak counts)
 ✅ Loss aversion (breaking 30-day streak is painful)
-✅ Make logging extremely low-friction (255 chars, mobile-optimized)
+✅ Make logging extremely low-friction (280 chars, mobile-optimized)
 Risk 3: Toxic Community / Spam
 Probability: Medium (all social platforms face this)
 Impact: Quality users leave, reputation damaged
