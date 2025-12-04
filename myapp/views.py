@@ -314,9 +314,6 @@ def user_profile(request, user_name):
     log_year_count =  sum(log_map.values())
     years_available = logs.dates('timestamp', 'year')
     
-    #latest 5 logs 
-    recent_logs = logs[:5]
-    
     section = request.GET.get('section', 'overview') 
     print(section)
     
