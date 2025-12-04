@@ -1,8 +1,9 @@
 {% load static %}
+{% load custom_filter %}
 
 {# What's Hot Now - Trending Logs Section #}
 {% if trending_logs %}
-<div class="w-full mb-6">
+<div class="w-full mb-4 min-[1110px]:mb-0">
     <!-- Header with Warm Aesthetic -->
     <div class="flex items-center justify-between mb-5 px-2 pb-3 border-b border-[#30363d]/30">
         <div class="flex items-center gap-2.5">
@@ -17,10 +18,10 @@
     
     <!-- Trending Logs List -->
     <div class="flex gap-4 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-[#30363d] scrollbar-track-transparent hover:scrollbar-thumb-[#484f58] 
-                snap-x snap-mandatory lg:flex-col lg:overflow-visible lg:pb-0 lg:gap-3">
+                snap-x snap-mandatory min-[1110px]:flex-col min-[1110px]:overflow-visible min-[1110px]:pb-0 min-[1110px]:gap-3">
         {% for log in trending_logs %}
         <a href="{% url 'view_log_in_feed' log.sig %}?from=trending" 
-           class="min-w-[300px] sm:min-w-[340px] lg:min-w-0 flex-shrink-0 snap-start
+           class="w-[300px] min-[1110px]:w-auto flex-shrink-0 snap-start
                   group flex items-start gap-4 p-4 rounded-xl bg-[#0f151d] hover:bg-[#1c2128]/80 
                   transition-all duration-300 cursor-pointer border border-[#30363d]/40 hover:border-[#444c56]/60 
                   relative hover:shadow-lg hover:shadow-black/10">
@@ -44,12 +45,12 @@
                         @{{ log.user.user.username }}
                     </span>
                     <span class="text-[9px] text-[#6e7681] flex-shrink-0 font-mono">
-                        {{ log.timestamp|timesince }}
+                        {{ log.timestamp|timesince_short }} ago
                     </span>
                 </div>
                 
                 <!-- Log Content (Emphasized) -->
-                <p class="text-[#c9d1d9] text-sm leading-relaxed line-clamp-2 group-hover:text-[#e6edf3] transition-colors font-normal">
+                <p class="text-[#c9d1d9] text-xs leading-relaxed line-clamp-2 group-hover:text-[#e6edf3] transition-colors font-normal">
                     {{ log.content|truncatechars:110 }}
                 </p>
                 

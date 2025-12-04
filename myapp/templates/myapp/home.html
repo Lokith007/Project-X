@@ -114,9 +114,9 @@
                     </form>
 
                     <!-- Horizontal line with filter toggle at the end -->
-                    <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center justify-between">
                         <!-- Horizontal line -->
-                        <div class="flex-1 border-t border-gray-600"></div>
+                        <div class="flex-1 border-t border-gray-800"></div>
                         
                         <!-- Filter toggle at the end of the line -->
                         <div class="ml-4 flex items-center bg-[#1a1f2b]/80 border border-gray-700/50 rounded-lg p-0.5 backdrop-blur-sm">
@@ -135,10 +135,12 @@
                         </div>
                     </div>
 
-                    <!-- What's Hot Now Section (Mobile Only) -->
-                    <div class="block lg:hidden">
+                    <!-- What's Hot Now Section (Mobile/Tablet Only - Global Tab) -->
+                    {% if feed_items and feed_type == 'global' and trending_logs %}
+                    <div class="block min-[1110px]:hidden">
                         {% include 'includes/trending_logs.html' %}
                     </div>
+                    {% endif %}
 
                     {% if feed_items %}
                         <div class="flex flex-col gap-y-6" id="feed-container">
@@ -148,20 +150,36 @@
                             <span class="text-gray-500">Loading...</span>
                         </div>
                     {% else %}
-                        <div class='mt-4 flex flex-col gap-y-6 items-center mx-auto'>
-                            <img src='{% static "assets/no_feed.svg" %}' class='h-60 w-60'>
-                            <p class=''>No items in your feed yet!</p>
-                        </div>
+                        {% if populate_popular_developers %}
+                            <!-- Show popular developers for empty Network feed -->
+                            {% include "myapp/popular_developers_empty_feed.html" %}
+                        {% else %}
+                            <!-- Generic empty state for other feed types -->
+                            <div class='mt-4 flex flex-col gap-y-6 items-center mx-auto'>
+                                <img src='{% static "assets/no_feed.svg" %}' class='h-60 w-60'>
+                                <p class=''>No items in your feed yet!</p>
+                            </div>
+                        {% endif %}
                     {% endif %}
                 </div>
             </div>
 
             <!-- Right Sidebar (Desktop Only) -->
-            <div class="hidden lg:block w-80 flex-shrink-0">
-                <div class=" top-6">
-                    {% include 'includes/trending_logs.html' %}
+            {% if feed_items %}
+            <div class="hidden min-[1110px]:block min-[1110px]:w-72 flex-shrink-0">
+                <div class="top-6 space-y-6">
+                    <!-- Nearby Developers (Desktop - Local Tab Only) -->
+                    {% if feed_type == 'local' and nearby_developers %}
+                        {% include 'includes/nearby_developers.html' %}
+                    {% endif %}
+                    
+                    <!-- What's Hot Now (Global Tab Only) -->
+                    {% if feed_type == 'global' and trending_logs %}
+                        {% include 'includes/trending_logs.html' %}
+                    {% endif %}
                 </div>
             </div>
+            {% endif %}
 
         </div>
             </div>

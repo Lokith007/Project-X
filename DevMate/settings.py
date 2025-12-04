@@ -270,6 +270,11 @@ if DEBUG:
         'state': 'Karnataka',
         'country': 'India',
     }
+    
+    # Global Feed Algorithm Toggle (Early-Stage Mode)
+    # When True, uses pure-recency sorting to prevent shallow/inactive feed appearance
+    # When False, uses sophisticated multi-factor ranking algorithm
+    GLOBAL_FEED_USE_RECENCY_MODE = config('GLOBAL_FEED_USE_RECENCY_MODE', cast=bool, default=True)
 else:
     # Production SMTP configuration
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

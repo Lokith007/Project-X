@@ -1,70 +1,60 @@
 {% load static %}
 
 <!-- Desktop Sidebar (Fixed Left) -->
-<aside class="hidden lg:flex flex-col w-60 h-screen fixed left-0 top-0 bg-[#0e1217] border-r border-[#2d323b] z-50">
+<aside class="hidden lg:flex flex-col w-20 h-screen fixed left-0 top-0 bg-[#0e1217] border-r border-[#2d323b] z-50">
     
     <!-- Brand Header -->
-    <div class="flex items-center px-6 py-4 border-b border-[#2d323b] bg-[#161b22]">
-        <a href="{% url 'index' %}" class="flex items-center gap-3 group">
-            <span class="text-xl font-mono text-white tracking-tight">DevMate</span>
+    <div class="flex items-center justify-center py-2 border-b border-[#2d323b] bg-[#191919]">
+        <a href="{% url 'index' %}" class="flex items-center justify-center group" title="DevMate">
+            <!-- Logo Icon -->
+            <img src="{% static 'assets/devmate-favicon.png' %}" class="w-12 h-12">
         </a>
     </div>
 
     <!-- Navigation -->
-    <nav class="flex-1 overflow-y-auto px-3 space-y-1 mt-8">
+    <nav class="flex-1 overflow-y-auto px-2 space-y-4 mt-8 flex flex-col items-center">
         
         <!-- Home -->
-        <a href="{% url 'index' %}" class="flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 group
-            {% if active_home %}bg-white/5 text-white font-medium{% else %}text-[#a8b3cf] hover:bg-[#161b22] hover:text-white{% endif %}">
-            <i class="fa-solid fa-house text-xl w-6 text-center"></i>
-            <span class="text-[16px]">Home</span>
+        <a href="{% url 'index' %}" class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-200 group relative
+            {% if active_home %}bg-white/10 text-white{% else %}text-[#a8b3cf] hover:bg-[#161b22] hover:text-white{% endif %}" title="Home">
+            <i class="fa-solid fa-house text-xl"></i>
         </a>
 
         <!-- Discover -->
-        <a href="{% url 'explore_dev' %}" class="flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 group
-            {% if active_explore_dev %}bg-white/5 text-white font-medium{% else %}text-[#a8b3cf] hover:bg-[#161b22] hover:text-white{% endif %}">
-            <i class="fa-solid fa-compass text-xl w-6 text-center"></i>
-            <span class="text-[16px]">Discover</span>
+        <a href="{% url 'explore_dev' %}" class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-200 group relative
+            {% if active_explore_dev %}bg-white/10 text-white{% else %}text-[#a8b3cf] hover:bg-[#161b22] hover:text-white{% endif %}" title="Discover">
+            <i class="fa-solid fa-compass text-xl"></i>
         </a>
 
         <!-- Notifications -->
-        <a href="{% url 'notification_page' %}" class="flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 group relative
-            {% if active_notifications %}bg-white/5 text-white font-medium{% else %}text-[#a8b3cf] hover:bg-[#161b22] hover:text-white{% endif %}">
+        <a href="{% url 'notification_page' %}" class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-200 group relative
+            {% if active_notifications %}bg-white/10 text-white{% else %}text-[#a8b3cf] hover:bg-[#161b22] hover:text-white{% endif %}" title="Notifications">
             <div class="relative">
-                <i class="fa-solid fa-bell text-xl w-6 text-center"></i>
+                <i class="fa-solid fa-bell text-xl"></i>
                 <span class="notification-badge absolute -top-1 -right-1 bg-green-600 text-white text-[9px] font-bold rounded-full h-4 w-4 flex items-center justify-center hidden"></span>
             </div>
-            <span class="text-[16px]">Notifications</span>
         </a>
 
-
         <!-- Settings -->
-        <a href="{% url 'settings_page' %}" class="flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 group
-            {% if active_settings %}bg-white/5 text-white font-medium{% else %}text-[#a8b3cf] hover:bg-[#161b22] hover:text-white{% endif %}">
-            <i class="fa-solid fa-gear text-xl w-6 text-center"></i>
-            <span class="text-[16px]">Settings</span>
+        <a href="{% url 'settings_page' %}" class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-200 group relative
+            {% if active_settings %}bg-white/10 text-white{% else %}text-[#a8b3cf] hover:bg-[#161b22] hover:text-white{% endif %}" title="Settings">
+            <i class="fa-solid fa-gear text-xl"></i>
         </a>
 
     </nav>
 
     <!-- Footer - Profile & Logout -->
-    <div class="p-3 mt-auto border-t border-[#2d323b] space-y-2">
+    <div class="p-2 mt-auto border-t border-[#2d323b] space-y-4 flex flex-col items-center py-6">
         <!-- Profile Link with Picture -->
-        <a href="{% url 'user_profile' user.username %}" class="flex items-center gap-3 w-full px-3 py-3 rounded-xl hover:bg-[#161b22] transition-all duration-200 group">
+        <a href="{% url 'user_profile' user.username %}" class="relative group" title="Profile">
             <img src="{{ user.info.profile_image.url }}?v={{ user.info.updated_at.timestamp }}" class="w-10 h-10 rounded-full object-cover border-2 border-[#2d323b] group-hover:border-green-500 transition-colors" alt="">
-            <div class="flex-1 min-w-0">
-                <p class="text-sm font-semibold text-white truncate">{{ user.first_name }}</p>
-                <p class="text-xs text-[#a8b3cf] truncate">@{{ user.username }}</p>
-            </div>
-            <i class="fa-solid fa-chevron-right text-[#a8b3cf] text-sm opacity-0 group-hover:opacity-100 transition-opacity"></i>
         </a>
 
         <!-- Logout Button -->
-        <form method="POST" action="{% url 'account_logout' %}" class="w-full">
+        <form method="POST" action="{% url 'account_logout' %}" class="w-full flex justify-center">
             {% csrf_token %}
-            <button type="submit" class="flex items-center gap-4 w-full px-4 py-2.5 text-[#a8b3cf] hover:text-red-400 hover:bg-[#161b22] rounded-xl transition-all duration-200 group">
-                <i class="fa-solid fa-right-from-bracket text-lg w-6 text-center"></i>
-                <span class="text-[15px]">Logout</span>
+            <button type="submit" class="flex items-center justify-center w-10 h-10 text-[#a8b3cf] hover:text-red-400 hover:bg-[#161b22] rounded-xl transition-all duration-200 group" title="Logout">
+                <i class="fa-solid fa-right-from-bracket text-lg"></i>
             </button>
         </form>
     </div>
@@ -138,7 +128,7 @@
 </div>
 
 <!-- Spacer for Desktop Sidebar -->
-<div class="hidden lg:block w-64 shrink-0"></div>
+<div class="hidden lg:block w-20 shrink-0"></div>
 
 <script>
     function toggleMobileMenu() {
