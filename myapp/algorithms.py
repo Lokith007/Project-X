@@ -1009,6 +1009,85 @@ def _get_global_recommendation_reason(log, user_skills):
     }
 
 
+def get_global_feed_recency_mode(page=1, per_page=7):
+    """
+    INDEPENDENT Global feed algorithm for GLOBAL_FEED_USE_RECENCY_MODE.
+    
+    Highly optimized for performance:
+    - Single SELECT query with LIMIT/OFFSET (no COUNT query)
+    - Minimal field fetching via select_related()
+    - Direct slicing instead of Paginator for speed
+    - Lightweight page-like wrapper for template compatibility
+    
+    Returns all logs ordered strictly by timestamp (newest first).
+    
+    Args:
+        page: Current page number
+        per_page: Number of logs per page
+    
+    Returns:
+        Lightweight page-like object with logs
+    """
+    from logs.models import Log
+    
+    # Calculate offset for pagination
+    offset = (page - 1) * per_page
+    
+    # Ultra-efficient: Single query with select_related, no COUNT
+    # Fetch per_page + 1 to determine if more pages exist
+    logs = list(
+        Log.objects
+        .select_related('user__user')  # Prevents N+1 queries
+        .order_by('-timestamp')        # Index-optimized ordering
+        [offset:offset + per_page + 1] # Direct slicing (LIMIT/OFFSET)
+    )
+    
+    # Check if more pages exist
+    has_next = len(logs) > per_page
+    has_previous = page > 1
+    
+    if has_next:
+        logs = logs[:per_page]  # Trim to exact page size
+    
+    # Add minimal metadata for template compatibility (in-memory, no DB hit)
+    for log in logs:
+        log.feed_score = 0
+        log.feed_type = 'global'
+        log.is_secondary_network = False
+        log.recommendation_reason = None
+    
+    # Create lightweight page-like object
+    class SimplePage:
+        def __init__(self, object_list, number, has_next, has_previous):
+            self.object_list = object_list
+            self.number = number
+            self.has_next_page = has_next
+            self.has_previous_page = has_previous
+        
+        def __iter__(self):
+            return iter(self.object_list)
+        
+        def __len__(self):
+            return len(self.object_list)
+        
+        def __getitem__(self, index):
+            return self.object_list[index]
+        
+        def has_next(self):
+            return self.has_next_page
+        
+        def has_previous(self):
+            return self.has_previous_page
+        
+        def next_page_number(self):
+            return self.number + 1 if self.has_next_page else None
+        
+        def previous_page_number(self):
+            return self.number - 1 if self.has_previous_page else None
+    
+    return SimplePage(logs, page, has_next, has_previous)
+
+
 def get_global_feed_logs(user, base_queryset, per_page, viewed_log_ids, reacted_log_ids, commented_log_ids):
     """
     Get logs for Global feed with advanced multi-factor ranking.
@@ -1149,7 +1228,7 @@ def get_personalized_feed(request, type='network', page=1, per_page=7, cursor=No
     Feed types:
     - 'network': Logs from followed users + secondary network suggestions
     - 'local': Logs from same location/organization (future)
-    - 'global': All logs, globally ranked
+    - 'global': All logs, globally ranked (configurable mode)
     
     Scoring Formula:
     Score = (engagement_score + 1) * recency_multiplier * freshness_penalty
@@ -1160,6 +1239,11 @@ def get_personalized_feed(request, type='network', page=1, per_page=7, cursor=No
     - freshness_penalty = 0.3 (viewed), 0.1 (reacted), 0.05 (commented)
     """
     from logs.models import Log, Reaction, Comment
+    from django.conf import settings
+    
+    # EARLY EXIT: If global feed + recency mode enabled, use independent algorithm
+    if type == 'global' and getattr(settings, 'GLOBAL_FEED_USE_RECENCY_MODE', False):
+        return get_global_feed_recency_mode(page=page, per_page=per_page)
     
     user = request.user.info
     
@@ -1239,7 +1323,7 @@ def get_personalized_feed(request, type='network', page=1, per_page=7, cursor=No
         logs_list = unique_logs
         
     elif type == 'global':
-        # GLOBAL FEED: Sophisticated multi-factor ranking with exclusions
+        # GLOBAL FEED: Sophisticated multi-factor ranking
         # Excludes: primary network, secondary network, nearby users (<100km)
         # Weights: quality(35%), trending(25%), personalization(20%), recency(12%), diversity(8%)
         logs_list = get_global_feed_logs(
