@@ -1,23 +1,13 @@
 from django.db import migrations
 
 def populate_logos(apps, schema_editor):
-    CodingStyle = apps.get_model('myapp', 'CodingStyle')
+    """
+    DEPRECATED: This migration originally populated CodingStyle logos.
     
-    mapping = {
-        'Coffee Coder': 'coffee-coder.svg',
-        'Debug Duck': 'debug-duck.svg',
-        'Terminal Samurai': 'terminal-samurai.svg',
-        'Zen Refactorer': 'zen-refactorer.svg',
-        'Error Collector': 'error-collector.svg',
-        'Night Owl': 'night-owl.svg',
-        'Precision Sprinter': 'precision-sprinter.svg',
-        'Team Player': 'team-player.svg'
-    }
-    
-    for style in CodingStyle.objects.all():
-        if style.name in mapping:
-            style.logo = mapping[style.name]
-            style.save()
+    Data seeding has been disabled to allow exclusive management via Django admin.
+    All coding style logos should now be set through the admin panel.
+    """
+    pass  # No-op: Do not seed data via migrations
 
 class Migration(migrations.Migration):
 
@@ -26,5 +16,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(populate_logos),
+        migrations.RunPython(populate_logos, reverse_code=migrations.RunPython.noop),
     ]
