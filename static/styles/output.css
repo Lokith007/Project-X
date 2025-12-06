@@ -2619,6 +2619,13 @@
       }
     }
   }
+  .group-hover\:border-\[\#238636\]\/50 {
+    &:is(:where(.group):hover *) {
+      @media (hover: hover) {
+        border-color: color-mix(in oklab, #238636 50%, transparent);
+      }
+    }
+  }
   .group-hover\:border-green-500 {
     &:is(:where(.group):hover *) {
       @media (hover: hover) {
@@ -2758,6 +2765,13 @@
     &:hover {
       @media (hover: hover) {
         border-color: #30363d;
+      }
+    }
+  }
+  .hover\:border-\[\#238636\]\/50 {
+    &:hover {
+      @media (hover: hover) {
+        border-color: color-mix(in oklab, #238636 50%, transparent);
       }
     }
   }
