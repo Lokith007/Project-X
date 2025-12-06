@@ -264,7 +264,7 @@ if DEBUG:
 else:
     # Brevo HTTP API Email Backend (Production)
     EMAIL_BACKEND = 'helpers.brevo.brevo_backend.BrevoEmailBackend'
-    BREVO_API_KEY = config('BREVO_API_KEY', default='your-brevo-api-key-here')
+    BREVO_API_KEY = config('BREVO_API_KEY')
     DEFAULT_FROM_EMAIL = "DevMate Space <admin@devmate.space>"
 
 # Logging
