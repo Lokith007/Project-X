@@ -5,21 +5,18 @@
 {% if nearby_developers %}
 <div class="nearby-developers-section w-full">
     <!-- Desktop: Main Card Container -->
-    <div class="min-[1110px]:bg-[#161b22] min-[1110px]:border min-[1110px]:border-[#30363d] min-[1110px]:rounded-xl min-[1110px]:overflow-hidden">
+    <div class="min-[1110px]:bg-[#10141a] min-[1110px]:border min-[1110px]:border-[#30363d] min-[1110px]:rounded-xl min-[1110px]:overflow-hidden">
         
         <!-- Header -->
-        <div class="flex items-center justify-between mb-4 px-1 min-[1110px]:mb-0 min-[1110px]:px-4 min-[1110px]:py-3 min-[1110px]:bg-[#161b22]">
+        <div class="flex items-center justify-between mb-4 px-1 min-[1110px]:mb-0 min-[1110px]:px-4 min-[1110px]:py-3 min-[1110px]:bg-[#161b22] min-[1110px]:border-b min-[1110px]:border-[#30363d]">
             <div class="flex items-center gap-2">
-                <i class="fa-solid fa-location-dot text-[#238636] text-xs"></i>
-                <p class="text-xs font-semibold text-[#e6edf3] min-[1110px]:text-sm">Nearby developers</p>
+                <i class="fa fa-location text-[#e6edf3] text-sm"></i>
+                <p class="text-xs font-light text-[#e6edf3] min-[1110px]:text-sm">Nearby developers</p>
             </div>
             {% if nearby_developers|length >= 5 %}
-            <a href="{% url 'explore' %}?tab=nearby" class="text-[11px] text-[#238636] hover:underline font-medium">See all</a>
+            <a href="{% url 'explore_dev' %}?tab=nearby" class="text-[11px] text-[#238636] hover:underline font-medium">See all</a>
             {% endif %}
         </div>
-        
-        <!-- Visual Separator -->
-        <div class="hidden min-[1110px]:block h-px bg-[#30363d] mx-4"></div>
         
         <!-- Content Area -->
         <div class="flex gap-3 overflow-x-auto pb-3 scrollbar-thin scrollbar-thumb-[#30363d] scrollbar-track-transparent snap-x snap-mandatory
@@ -27,7 +24,7 @@
             
             {% for developer, distance in nearby_developers %}
             <!-- Item Card -->
-            <div class="group w-[200px] flex-shrink-0 snap-start bg-[#161b22] border border-[#30363d] rounded-xl p-5
+            <div class="group w-[200px] flex-shrink-0 snap-start bg-[#10141a] border border-[#30363d] rounded-xl p-5
                         hover:border-[#238636]/50 hover:bg-[#1c2128] transition-all duration-200
                         flex flex-col items-center text-center
                         min-[1110px]:w-auto min-[1110px]:flex-shrink min-[1110px]:flex-row min-[1110px]:items-center min-[1110px]:text-left min-[1110px]:p-4
@@ -47,7 +44,7 @@
                 <div class="flex-1 min-w-0 w-full min-[1110px]:w-auto flex flex-col items-center min-[1110px]:items-start">
                     <!-- Username -->
                     <a href="{% url 'user_profile' developer.user.username %}" 
-                       class="block text-[15px] font-semibold text-[#e6edf3] hover:text-[#238636] truncate transition-colors mb-1.5 min-[1110px]:text-sm min-[1110px]:mb-0.5">
+                       class="block text-[15px] font-medium text-[#e6edf3] hover:text-[#238636] truncate transition-colors mb-1.5 min-[1110px]:text-sm min-[1110px]:mb-0.5">
                         {{ developer.user.username }}
                     </a>
                     

@@ -848,9 +848,6 @@
   .w-\[1px\] {
     width: 1px;
   }
-  .w-\[160px\] {
-    width: 160px;
-  }
   .w-\[200px\] {
     width: 200px;
   }
@@ -1559,6 +1556,9 @@
   .bg-\[\#388bfd\]\/15 {
     background-color: color-mix(in oklab, #388bfd 15%, transparent);
   }
+  .bg-\[\#404a58\] {
+    background-color: #404a58;
+  }
   .bg-\[\#8957e5\] {
     background-color: #8957e5;
   }
@@ -2183,6 +2183,9 @@
   .text-\[\#ffffff\] {
     color: #ffffff;
   }
+  .text-\[e6edf3\] {
+    color: e6edf3;
+  }
   .text-amber-600 {
     color: var(--color-amber-600);
   }
@@ -2598,13 +2601,6 @@
       }
     }
   }
-  .group-hover\:border-\[\#58a6ff\]\/50 {
-    &:is(:where(.group):hover *) {
-      @media (hover: hover) {
-        border-color: color-mix(in oklab, #58a6ff 50%, transparent);
-      }
-    }
-  }
   .group-hover\:border-\[\#161b22\] {
     &:is(:where(.group):hover *) {
       @media (hover: hover) {
@@ -2744,13 +2740,6 @@
     &:hover {
       @media (hover: hover) {
         border-color: #58a6ff;
-      }
-    }
-  }
-  .hover\:border-\[\#58a6ff\]\/50 {
-    &:hover {
-      @media (hover: hover) {
-        border-color: color-mix(in oklab, #58a6ff 50%, transparent);
       }
     }
   }
@@ -3383,11 +3372,6 @@
       margin-top: calc(var(--spacing) * 0);
     }
   }
-  .min-\[1110px\]\:mr-3 {
-    @media (width >= 1110px) {
-      margin-right: calc(var(--spacing) * 3);
-    }
-  }
   .min-\[1110px\]\:mr-4 {
     @media (width >= 1110px) {
       margin-right: calc(var(--spacing) * 4);
@@ -3401,11 +3385,6 @@
   .min-\[1110px\]\:mb-0\.5 {
     @media (width >= 1110px) {
       margin-bottom: calc(var(--spacing) * 0.5);
-    }
-  }
-  .min-\[1110px\]\:ml-2 {
-    @media (width >= 1110px) {
-      margin-left: calc(var(--spacing) * 2);
     }
   }
   .min-\[1110px\]\:ml-4 {
@@ -3428,24 +3407,9 @@
       display: none;
     }
   }
-  .min-\[1110px\]\:inline {
-    @media (width >= 1110px) {
-      display: inline;
-    }
-  }
-  .min-\[1110px\]\:h-9 {
-    @media (width >= 1110px) {
-      height: calc(var(--spacing) * 9);
-    }
-  }
   .min-\[1110px\]\:h-10 {
     @media (width >= 1110px) {
       height: calc(var(--spacing) * 10);
-    }
-  }
-  .min-\[1110px\]\:w-9 {
-    @media (width >= 1110px) {
-      width: calc(var(--spacing) * 9);
     }
   }
   .min-\[1110px\]\:w-10 {
@@ -3569,9 +3533,19 @@
       border-color: #30363d;
     }
   }
+  .min-\[1110px\]\:bg-\[\#0d1117\] {
+    @media (width >= 1110px) {
+      background-color: #0d1117;
+    }
+  }
   .min-\[1110px\]\:bg-\[\#161b22\] {
     @media (width >= 1110px) {
       background-color: #161b22;
+    }
+  }
+  .min-\[1110px\]\:bg-\[\#10141a\] {
+    @media (width >= 1110px) {
+      background-color: #10141a;
     }
   }
   .min-\[1110px\]\:bg-transparent {
@@ -3579,19 +3553,9 @@
       background-color: transparent;
     }
   }
-  .min-\[1110px\]\:p-2\.5 {
-    @media (width >= 1110px) {
-      padding: calc(var(--spacing) * 2.5);
-    }
-  }
   .min-\[1110px\]\:p-4 {
     @media (width >= 1110px) {
       padding: calc(var(--spacing) * 4);
-    }
-  }
-  .min-\[1110px\]\:px-1 {
-    @media (width >= 1110px) {
-      padding-inline: calc(var(--spacing) * 1);
     }
   }
   .min-\[1110px\]\:px-3 {
@@ -3602,11 +3566,6 @@
   .min-\[1110px\]\:px-4 {
     @media (width >= 1110px) {
       padding-inline: calc(var(--spacing) * 4);
-    }
-  }
-  .min-\[1110px\]\:py-1 {
-    @media (width >= 1110px) {
-      padding-block: calc(var(--spacing) * 1);
     }
   }
   .min-\[1110px\]\:py-1\.5 {
@@ -3635,11 +3594,6 @@
       line-height: var(--tw-leading, var(--text-sm--line-height));
     }
   }
-  .min-\[1110px\]\:text-\[13px\] {
-    @media (width >= 1110px) {
-      font-size: 13px;
-    }
-  }
   .min-\[1110px\]\:last\:border-b-0 {
     @media (width >= 1110px) {
       &:last-child {
@@ -3653,15 +3607,6 @@
       &:hover {
         @media (hover: hover) {
           background-color: #1c2128;
-        }
-      }
-    }
-  }
-  .min-\[1110px\]\:hover\:bg-\[\#161b22\] {
-    @media (width >= 1110px) {
-      &:hover {
-        @media (hover: hover) {
-          background-color: #161b22;
         }
       }
     }
