@@ -312,104 +312,54 @@ def get_local_feed_logs(user, base_queryset, per_page, viewed_log_ids, reacted_l
     Get logs for Local feed ranked by proximity and relevance.
     
     Strategy:
-    1. If user has coordinates, use haversine distance
-    2. If no coordinates, fall back to same city/state/country
-    3. Include skill-based suggestions even if far away
+    - Only include logs from users with GPS coordinates
+    - Use haversine distance for precise geographic ranking
+    - Users without coordinates will see an empty Local feed
     """
     user_lat = user.latitude
     user_lon = user.longitude
     user_skills = set(user.skills.values_list('id', flat=True)) if hasattr(user, 'skills') else set()
     
-    # Get all users with location data, excluding current user
     candidate_logs = []
     
-    if user_lat and user_lon:
-        # User has coordinates - use distance-based ranking
-        # Fetch logs from users who have coordinates
-        nearby_logs = list(
-            base_queryset.exclude(user=user)
-            .filter(user__latitude__isnull=False, user__longitude__isnull=False)
-            .select_related('user__user')
-            .order_by('-timestamp')[:500]  # Fixed limit for consistent coverage
+    # Only show Local feed if user has coordinates
+    if not user_lat or not user_lon:
+        return []
+    
+    # Fetch logs only from users who have coordinates
+    nearby_logs = list(
+        base_queryset.exclude(user=user)
+        .filter(user__latitude__isnull=False, user__longitude__isnull=False)
+        .select_related('user__user')
+        .order_by('-timestamp')[:500]  # Fixed limit for consistent coverage
+    )
+    
+    # Calculate distances and score each log
+    for log in nearby_logs:
+        author_lat = log.user.latitude
+        author_lon = log.user.longitude
+        
+        if author_lat and author_lon:
+            distance = haversine_distance(user_lat, user_lon, author_lat, author_lon)
+        else:
+            continue  # Skip logs without coordinates
+        
+        score = calculate_local_log_score(
+            log, user, distance, user_skills,
+            viewed_log_ids, reacted_log_ids, commented_log_ids
         )
         
-        # Calculate distances and score each log
-        for log in nearby_logs:
-            author_lat = log.user.latitude
-            author_lon = log.user.longitude
-            
-            if author_lat and author_lon:
-                distance = haversine_distance(user_lat, user_lon, author_lat, author_lon)
-            else:
-                distance = None
-            
-            score = calculate_local_log_score(
-                log, user, distance, user_skills,
-                viewed_log_ids, reacted_log_ids, commented_log_ids
-            )
-            
-            # Calculate shared skills for recommendation label
-            author_skills = set(log.user.skills.values_list('id', flat=True)) if hasattr(log.user, 'skills') else set()
-            shared_count = len(user_skills.intersection(author_skills))
-            
-            log.feed_score = score
-            log.feed_type = 'local'
-            log.is_secondary_network = False
-            log.recommendation_reason = _get_local_recommendation_reason(log, distance, shared_count)
-            # Use minimal noise for tie-breaking only (controlled randomness)
-            noise = random.random() * LOCAL_NOISE_FACTOR
-            candidate_logs.append((score, noise, log))
-    
-    # Fallback: Include logs from same city/state/country (for users without coordinates)
-    fallback_filters = []
-    if user.city:
-        fallback_filters.append(Q(user__city__iexact=user.city))
-    if user.state:
-        fallback_filters.append(Q(user__state__iexact=user.state))
-    if user.country:
-        fallback_filters.append(Q(user__country__iexact=user.country))
-    
-    if fallback_filters:
-        # Combine with OR
-        fallback_query = fallback_filters[0]
-        for f in fallback_filters[1:]:
-            fallback_query |= f
+        # Calculate shared skills for recommendation label
+        author_skills = set(log.user.skills.values_list('id', flat=True)) if hasattr(log.user, 'skills') else set()
+        shared_count = len(user_skills.intersection(author_skills))
         
-        # Get logs from same region (excluding already fetched)
-        existing_log_ids = {log.id for _, _, log in candidate_logs}
-        
-        region_logs = list(
-            base_queryset.exclude(user=user)
-            .exclude(id__in=existing_log_ids)
-            .filter(fallback_query)
-            .select_related('user__user')
-            .order_by('-timestamp')[:300]  # Fixed limit for consistent coverage
-        )
-        
-        for log in region_logs:
-            # No coordinates, estimate based on matching fields
-            if log.user.city and user.city and log.user.city.lower() == user.city.lower():
-                distance = 10  # Same city ~ 10km estimate
-            elif log.user.state and user.state and log.user.state.lower() == user.state.lower():
-                distance = 50  # Same state ~ 50km estimate
-            else:
-                distance = 150  # Same country ~ 150km estimate
-            
-            score = calculate_local_log_score(
-                log, user, distance, user_skills,
-                viewed_log_ids, reacted_log_ids, commented_log_ids
-            )
-            
-            author_skills = set(log.user.skills.values_list('id', flat=True)) if hasattr(log.user, 'skills') else set()
-            shared_count = len(user_skills.intersection(author_skills))
-            
-            log.feed_score = score
-            log.feed_type = 'local'
-            log.is_secondary_network = False
-            log.recommendation_reason = _get_local_recommendation_reason(log, distance, shared_count)
-            # Use minimal noise for tie-breaking only (controlled randomness)
-            noise = random.random() * LOCAL_NOISE_FACTOR
-            candidate_logs.append((score, noise, log))
+        log.feed_score = score
+        log.feed_type = 'local'
+        log.is_secondary_network = False
+        log.recommendation_reason = _get_local_recommendation_reason(log, distance, shared_count)
+        # Use minimal noise for tie-breaking only (controlled randomness)
+        noise = random.random() * LOCAL_NOISE_FACTOR
+        candidate_logs.append((score, noise, log))
     
     # Sort by score and deduplicate
     candidate_logs.sort(key=lambda x: (-x[0], x[1]))
