@@ -134,17 +134,18 @@ def home_page(request):
     # Get feed type from query params
     feed_type = request.GET.get('feed', 'network')
     
-    # Fetch personalized feed
+    # Fetch personalized feed (cursor-based pagination)
     from .algorithms import get_personalized_feed
-    feed_items = get_personalized_feed(request, type=feed_type, page=1, per_page=20)
+    feed_result = get_personalized_feed(request, type=feed_type, per_page=20, cursor=None)
+    feed_items = feed_result['items']
+    next_cursor = feed_result['next_cursor']
+    has_next = feed_result['has_next']
     
     # Fetch trending logs (What's Hot Now) - Only for Global tab
     trending_logs = []
     if feed_type == 'global':
         from logs.utils.trending import get_trending_logs
         trending_logs = get_trending_logs(limit=5, hours=24)
-    
-    print(feed_items)
     
     logform = LogForm()
     
@@ -167,6 +168,8 @@ def home_page(request):
         'trending_logs': trending_logs,
         'populate_popular_developers': popular_developers,
         'nearby_developers': nearby_developers,
+        'next_cursor': next_cursor,
+        'has_next': has_next,
     }
 
     # User is authenticated and profile is complete
@@ -177,18 +180,23 @@ def load_more_feed(request):
     if not request.user.is_authenticated:
         return JsonResponse({'error': 'Unauthorized'}, status=401)
 
-    page = int(request.GET.get('page', 1))
+    cursor = request.GET.get('cursor', None)
     type = request.GET.get('feed', 'all')
 
     suggested_peoples = get_explore_users(filter_dev=userinfo.objects.all(), request=request, count=7, order_by='?')
-    offset = (page - 1) * 10
-    feed_page = get_personalized_feed(request, type=type, page=page, per_page=7)
-    print(feed_page)
-    html = render_to_string('myapp/feed_items.html', {'feed_items': feed_page, 'suggested_peoples': suggested_peoples, 'offset': offset}, request=request)
+    
+    # Use cursor-based pagination
+    feed_result = get_personalized_feed(request, type=type, per_page=7, cursor=cursor)
+    
+    html = render_to_string('myapp/feed_items.html', {
+        'feed_items': feed_result['items'], 
+        'suggested_peoples': suggested_peoples
+    }, request=request)
 
     return JsonResponse({
         'html': html,
-        'has_next': feed_page.has_next()
+        'has_next': feed_result['has_next'],
+        'next_cursor': feed_result['next_cursor']
     })
 
 @login_required
@@ -211,9 +219,10 @@ def view_log_in_feed(request, log_sig):
     feed_type = request.GET.get('feed', 'network')
     source = request.GET.get('from', 'notification')  # 'notification' or 'trending'
     
-    # Fetch personalized feed
+    # Fetch personalized feed (cursor-based pagination)
     from .algorithms import get_personalized_feed
-    feed_items = get_personalized_feed(request, type=feed_type, page=1, per_page=20)
+    feed_result = get_personalized_feed(request, type=feed_type, per_page=20, cursor=None)
+    feed_items = feed_result['items']
     
     # Check if target log is in feed, if not prepend it
     log_in_feed = any(item.id == target_log.id for item in feed_items)
@@ -233,6 +242,8 @@ def view_log_in_feed(request, log_sig):
         'highlighted_log_sig': log_sig,  # Pass to template for highlighting
         'source': source,  # 'notification' or 'trending'
         'active_home': True,
+        'next_cursor': feed_result.get('next_cursor'),
+        'has_next': feed_result.get('has_next', False),
     }
     
     return render(request, 'myapp/home.html', context)

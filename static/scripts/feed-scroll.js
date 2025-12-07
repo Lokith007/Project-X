@@ -31,7 +31,7 @@
     // ==========================================================================
     // State
     // ==========================================================================
-    let currentPage = 1;
+    let nextCursor = null;
     let isLoading = false;
     let hasMoreContent = true;
     let currentFeedType = 'network';
@@ -89,6 +89,18 @@
         }
 
         currentFeedType = getFeedTypeFromURL();
+        
+        // Initialize cursor from data attribute (set by server on initial load)
+        const initialCursor = feedContainer.dataset.nextCursor;
+        if (initialCursor && initialCursor !== 'None') {
+            nextCursor = initialCursor;
+        }
+        
+        // Check if there's more content from server
+        const hasNext = feedContainer.dataset.hasNext;
+        if (hasNext !== undefined) {
+            hasMoreContent = hasNext === 'True' || hasNext === 'true';
+        }
 
         // Create loading indicator if it doesn't exist
         if (!loadingIndicator) {
@@ -120,7 +132,7 @@
     }
 
     function loadMoreContent() {
-        if (isLoading || !hasMoreContent) return;
+        if (isLoading || !hasMoreContent || !nextCursor) return;
 
         isLoading = true;
         const loadingIndicator = document.getElementById('loading');
@@ -130,9 +142,10 @@
             loadingIndicator.classList.remove('hidden');
         }
 
-        currentPage++;
+        // Use cursor-based pagination
+        const url = `/load-more-feed/?cursor=${encodeURIComponent(nextCursor)}&feed=${currentFeedType}`;
 
-        fetch(`/load-more-feed/?page=${currentPage}&feed=${currentFeedType}`, {
+        fetch(url, {
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
@@ -161,7 +174,9 @@
                 }
             }
 
+            // Update cursor and hasMoreContent from response
             hasMoreContent = data.has_next;
+            nextCursor = data.next_cursor;
 
             if (!hasMoreContent && loadingIndicator) {
                 loadingIndicator.innerHTML = `
@@ -175,7 +190,7 @@
         })
         .catch(error => {
             console.error('Error loading more content:', error);
-            currentPage--; // Revert page increment on error
+            // Don't revert cursor on error - keep trying from same position
         })
         .finally(() => {
             isLoading = false;
